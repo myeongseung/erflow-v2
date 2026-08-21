@@ -1,0 +1,47 @@
+header .nav-item .nav-link {
+  font-family: "Nanum Gothic", sans-serif;
+  margin: 0px 5px;
+  font-size: 20px;
+}
+
+header .container-fluid .empty-place { /*로고 이미지와 검색창 사이 빈공간*/
+  padding-right: 20px;
+}
+
+.wrap{
+  width: 100%;
+  height: calc(100vh - 87px);
+}
+
+.main-search-container {
+  display: flex;
+  align-items: center;  
+  border: 1px solid #ccc;
+  width: 400px;
+  border-radius: 25px; 
+  padding: 5px;
+}
+
+.container-fluid .navbar-brand img {
+  width: 32px;
+  height: 32px;
+}
+.dropdown-item>i{
+	font-size: 16px;
+}
+
+.dropdown-item>span{
+	font-size: 14px;
+	margin-left: 10px;
+}
+
+.dropdown-item:last-child>span{
+	text-align: center;
+}
+
+.section2{
+  width: 100%;
+  height:30px;
+  background-color: #005b9e;
+  box-shadow: #004c83;
+}

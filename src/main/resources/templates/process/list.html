@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!--/*
+  공정 관리.
+  출처: legacy/ERFlow/src/main/webapp/process/processList.jsp
+
+  공정은 앞뒤로 이어진 사슬이라 이전·현재·다음 공정ID 를 나란히 보여준다.
+  «현재 공정명» 을 누르면 이름만 고치는 작은 창이 뜬다(600x400).
+
+  검색은 셋이다 — 공정ID·공정명은 부분 일치, 우선순위는 정확히 같은 값이다.
+
+  숨은 readFrm 의 keyfield·keyword 가 빈 값으로 시작한다. 레거시가 그 자리에 값을
+  채워 주지 않아 **검색한 뒤 페이지를 넘기면 검색이 풀린다.** 그대로 옮긴다(D-074).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('공정 관리 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/process/processList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/process/processList.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 생산관리 &gt; 공정 관리</span>
+        </div>
+
+        <form th:action="@{/process/delete-proc}" method="post" name="processFrm">
+
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button"
+                            name="flag" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="id" th:selected="${keyfield == 'id'}">현재
+                            공정ID</option>
+                        <option value="name" th:selected="${keyfield == 'name'}">공정명</option>
+                        <option value="priority" th:selected="${keyfield == 'priority'}">우선
+                            순위</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search"
+                                   placeholder="공정 검색" aria-label="Search" name="keyword">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" id="searchIcon"
+                               title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">이전 공정ID</th>
+                    <th scope="col">현재 공정ID</th>
+                    <th scope="col">다음 공정ID</th>
+                    <th scope="col">현재 공정명</th>
+                    <th scope="col">우선순위</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="process : ${processes}">
+                    <th scope="col"><input type="checkbox" name="processId"
+                                           th:value="${process.id}"></th>
+                    <td th:text="${process.prevId} ?: ''">이전</td>
+                    <td th:text="${process.id}">현재</td>
+                    <td th:text="${process.nextId} ?: ''">다음</td>
+                    <!--/* 레거시는 onclick 으로 창 크기를 정했다. 스크립트로 옮겼다(D-035) */-->
+                    <td><a th:href="@{/process/update(id=${process.id},name=${process.name})}"
+                           target="_blank" class="process-name"
+                           th:text="${process.name}">공정명</a></td>
+                    <td th:text="${process.priority}">0</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="5"></td>
+                <td></td>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/process/list}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}"> <input
+                type="hidden" name="keyfield" value=""> <input
+                type="hidden" name="keyword" value="">
+        </form>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+               class="disabled">이전</a>
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}"><a
+                        th:href="|javascript:paging('${number}')|"
+                        th:classappend="${number == page.nowPage} ? 'disabled'"
+                        th:text="${number}">1</a></li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+        </div>
+
+
+    </div>
+</div>
+</body>
+</html>

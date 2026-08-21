@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 출처: legacy/ERFlow/src/main/java/service/implementation/CommentServiceImpl.java -->
+<mapper namespace="com.erflow.post.CommentMapper">
+
+    <sql id="commentColumns">
+        id, user_id AS userId, name AS userName, post_id AS postId,
+        ref_id AS refId, comment, depth, created_at AS createdAt
+    </sql>
+
+    <!-- 레거시 getCommentViews: select * from comment_view where post_id = ? order by ref_id -->
+    <select id="findByPost" resultType="com.erflow.post.CommentRow">
+        SELECT <include refid="commentColumns"/>
+          FROM comment_view
+         WHERE post_id = #{postId}
+         ORDER BY ref_id
+    </select>
+
+    <select id="findById" resultType="com.erflow.post.CommentRow">
+        SELECT <include refid="commentColumns"/>
+          FROM comment_view
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시: insert into comment_tbl values (0, ?, 0, ?, ?, 0, now())
+      위치 기반이라 컬럼 순서에 의존했다. 컬럼명을 적어도 넣는 값은 같다.
+      ref_id 를 0 으로 넣고 등록 직후 자기 자신으로 갱신한다.
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="write.id">
+        INSERT INTO comment_tbl
+                    (post_tbl_id, comment_tbl_ref_id, user_tbl_id, comment, depth, created_at)
+             VALUES (#{write.postId}, 0, #{write.userId}, #{write.comment}, 0, now())
+    </insert>
+
+    <update id="pointToSelf">
+        UPDATE comment_tbl
+           SET comment_tbl_ref_id = #{id}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: insert into comment_tbl values (0, ?, ?, ?, ?, 1, now()) -->
+    <insert id="insertReply">
+        INSERT INTO comment_tbl
+                    (post_tbl_id, comment_tbl_ref_id, user_tbl_id, comment, depth, created_at)
+             VALUES (#{write.postId}, #{write.refId}, #{write.userId}, #{write.comment}, 1, now())
+    </insert>
+
+    <!-- 레거시: update comment_tbl set comment = ? where id = ? -->
+    <update id="update">
+        UPDATE comment_tbl
+           SET comment = #{comment}
+         WHERE id = #{id}
+    </update>
+
+    <!--
+      레거시 hasReply: select count(*) from comment_tbl
+                       where comment_tbl_ref_id = ? and id != ?
+      자기 자신을 빼고 센다. 뿌리 댓글은 자기를 가리키기 때문이다.
+    -->
+    <select id="countReplies" resultType="int">
+        SELECT COUNT(*)
+          FROM comment_tbl
+         WHERE comment_tbl_ref_id = #{id}
+           AND id != #{id}
+    </select>
+
+    <!-- 레거시: delete from comment_tbl where id = ? -->
+    <delete id="delete">
+        DELETE FROM comment_tbl
+         WHERE id = #{id}
+    </delete>
+
+    <!-- 레거시: update comment_tbl set comment = '삭제된 댓글입니다.' where id = ? -->
+    <update id="markDeleted">
+        UPDATE comment_tbl
+           SET comment = '삭제된 댓글입니다.'
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: delete from comment_tbl where post_tbl_id = ? -->
+    <delete id="deleteByPost">
+        DELETE FROM comment_tbl
+         WHERE post_tbl_id = #{postId}
+    </delete>
+
+</mapper>

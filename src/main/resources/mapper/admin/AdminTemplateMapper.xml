@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/TemplateServiceImpl.java
+
+  `<>` 는 XML 에서 그대로 쓸 수 없어 `!=` 로 적었다. MariaDB 에서 같은 연산자다.
+-->
+<mapper namespace="com.erflow.admin.document.AdminTemplateMapper">
+
+    <!--
+      레거시 getTemplates(): select * from template_tbl where id <> 0
+
+      `id = 0` 을 거르는 조건이다. 자동 증가 번호가 0 이 될 일은 없으므로 지금은
+      아무것도 걸러내지 않는다. ORDER BY 는 없다 — 화면에 찍히는 순서가 달라진다.
+    -->
+    <select id="findAll" resultType="com.erflow.admin.document.TemplateRow">
+        SELECT id, subject, content
+          FROM template_tbl
+         WHERE id != 0
+    </select>
+
+    <!-- 레거시 getTemplate(id): select * from template_tbl where id = ? -->
+    <select id="findById" resultType="com.erflow.admin.document.TemplateRow">
+        SELECT id, subject, content
+          FROM template_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!-- 레거시: insert into template_tbl values (null, ?, ?) -->
+    <insert id="insertTemplate">
+        INSERT INTO template_tbl (subject, content)
+             VALUES (#{subject}, #{content})
+    </insert>
+
+    <!-- 레거시: update template_tbl set subject = ?, content = ? where id = ? -->
+    <update id="updateTemplate">
+        UPDATE template_tbl
+           SET subject = #{subject},
+               content = #{content}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: delete from template_tbl where id = ? -->
+    <delete id="deleteTemplate">
+        DELETE FROM template_tbl WHERE id = #{id}
+    </delete>
+
+</mapper>

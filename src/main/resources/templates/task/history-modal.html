@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--/*
+  수·발주 내역 모달.
+  출처: legacy/ERFlow/src/main/webapp/task/createModal.jsp
+
+  목록의 «내역 보기» 가 window.open 으로 여는 작은 창이다. 한 수·발주의 제품·수량을
+  보여준다. 종료 버튼(js/main/taskHistory.js)이 창을 닫는다. 공통 레이아웃을 쓰지
+  않는다 — 레거시도 그렇다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수/발주 제품 등록 페이지</title>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/main/taskHistory.js}"></script>
+</head>
+<body>
+<div class="modal-content">
+    <div id="table-content">
+        <button type="button" class="btn btn-danger" id="cancel">종료</button>
+        <div class="proposal-right-wrap">
+            <div class="proposal-comment-list">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="product-number">제품 번호</th>
+                        <th class="product-name">제품명</th>
+                        <th class="product-quantity">수량</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="history : ${histories}">
+                        <td th:text="${history.productId}">031002</td>
+                        <td th:text="${history.name}">환공어묵</td>
+                        <td th:text="${history.count}">1</td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="3"></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--/*
+  사용자 찾기 팝업.
+  출처: legacy/ERFlow/src/main/webapp/findUser.jsp
+
+  설비 등록·쪽지 쓰기·결재선 등록이 window.open 으로 여는 작은 창이다. 고른 사번을
+  js/main/findUser.js 가 ; 로 이어 window.opener.updateSelect 에 넘긴다.
+
+  레거시는 form 과 div 가 서로 교차해 닫혀 있다(form 을 div 안에서 열고 div 를 먼저
+  닫는다). Thymeleaf 는 그런 마크업을 읽지 못한다. 브라우저가 실제로 만드는 DOM —
+  form 은 div 경계에서 닫히고 표는 form 밖에 남는다 — 을 그대로 적었다. D-037 참조.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--/* 레거시 그대로다. 편집기 기본값이 남은 것이지만 창 제목은 이 글자다. */-->
+    <title>Document</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/main/findUser.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common/page.css}">
+    <link rel="stylesheet" th:href="@{/css/main/header.css}">
+    <link rel="stylesheet" th:href="@{/css/main/index.css}">
+    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/main/findUser.css}">
+</head>
+<body>
+
+<div class="search-message-wrap">
+    <div class="search-message-body">
+        <div class="search-select-option-wrap">
+            <div class="search-select-option">
+                <!--/* 부서, 직급 선택후 제출하는 폼 */-->
+                <form method="get" th:action="@{/find/user}" name="searchFrm">
+                    <select class="search-people-dept" name="deptKeyfield">
+                        <option value="">전체부서</option>
+                        <option th:each="dept : ${departments}" th:value="${dept}"
+                                th:selected="${dept == deptKeyfield}"
+                                th:text="${dept}">경영지원부</option>
+                    </select>
+                    <select class="search-people-job" name="jobKeyfield">
+                        <option value="">전체직급</option>
+                        <option th:each="job : ${jobs}" th:value="${job}"
+                                th:selected="${job == jobKeyfield}"
+                                th:text="${job}">부장</option>
+                    </select>
+                    <input type="text" name="keyword" th:value="${keyword}">
+                    <button class="btn btn-secondary" type="submit">찾기</button>
+                </form>
+            </div>
+            <!--/*
+              고른 사람을 부모 창에 돌려주는 폼이다. 레거시도 이 폼을 제출하지 않는다 —
+              findUser.js 가 click 을 가로채 preventDefault 하고 updateSelect 를 부른다.
+              그래서 method·action 도 쓰이지 않는다. 마크업만 레거시 그대로 둔다.
+            */-->
+            <form method="post" name="search-people-body" id="selectFrm">
+                <input type="hidden" name="receivers">
+                <div class="search-button">
+                    <button class="btn btn-primary" type="submit">선택</button>
+                </div>
+            </form>
+        </div>
+
+        <hr>
+        <table class="search-people-body table">
+            <thead>
+            <tr>
+                <th><input type="checkbox" id="chkAll"></th>
+                <th>사번</th>
+                <th>이름</th>
+                <th>부서</th>
+                <th>직급</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td class="search-people-body-check">
+                    <input name="userId" type="checkbox" th:value="${user.id}">
+                </td>
+                <td class="search-people-body-receiver-id" th:text="${user.id}">20230001</td>
+                <td class="search-people-body-receiver" th:text="${user.name}">홍길동</td>
+                <td class="search-people-body-dept" th:text="${user.deptName}">경영지원부</td>
+                <td class="search-people-body-job" th:text="${user.jobName}">부장</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="5">made by 김시찬</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+</body>
+</html>

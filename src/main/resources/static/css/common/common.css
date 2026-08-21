@@ -1,0 +1,67 @@
+*,html,body{
+    margin: 0px;
+    padding: 0px;
+}
+
+body{
+    background-color: #e4e6ea;
+}
+/* 글꼴 적용 */
+* {
+    font-family: 'Nanum Gothic', sans-serif;
+    font-size: 12px;
+    box-sizing: border-box;
+}
+
+/* 스크롤바 스타일 설정 */
+*::-webkit-scrollbar {
+    width: 10px; /* 스크롤바의 너비 설정 */
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #9b9696; /* 스크롤바 색상 설정 */
+    border-radius: 5px; /* 스크롤바 모서리를 둥글게 설정 */
+}
+ul, li{
+    list-style-type: none;
+}
+a{
+    text-decoration: none;
+}
+.wrap{
+    width:100%;
+    height:1200px;
+    background-color: #e4e6ea;
+}
+
+#container {
+    margin: 0px auto;
+    /* width: 1400px; */
+}
+
+input, textarea {
+    outline: none;
+}
+
+input, select, textarea {
+    padding: 5px;
+    cursor: pointer;
+}
+
+button {
+    border: 1px solid #dbdbdb;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: white;
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: default;
+}
+
+button:not(:disabled):hover {
+    background-color: #fafafa;
+    color: #3e3e3e;
+}
+

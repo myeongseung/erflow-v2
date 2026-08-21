@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--/*
+  제품 찾기 팝업 — 한 개.
+  출처: legacy/ERFlow/src/main/webapp/findProduct.jsp
+
+  입출고 등록 화면이 window.open 으로 여는 작은 창이다. 고른 값은
+  js/main/findProduct.js 가 window.opener.receiveProductInfo 로 돌려준다.
+  그 스크립트가 문서의 모든 <a> 에 걸리므로 이 화면에 다른 링크를 두면 안 된다.
+
+  레거시는 onclick 방식 마크업을 주석으로 남겨 두고 data 속성 방식을 쓴다.
+  주석은 옮기지 않았다 — 화면에 없는 것이고, 그 갈림은 D-035 에 적혀 있다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>제품 찾기</title>
+    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/main/findProduct.js}"></script>
+</head>
+<body>
+<form th:action="@{/find/product}">
+    <div class="container">
+        <div class="search-box">
+            <!--/* id 가 findWork-input 이다. 레거시가 업종 찾기를 복사해 만들었다 */-->
+            <input type="text" placeholder="예) 제품 코드 or 제품 명 검색" name="search"
+                   id="findWork-input" th:value="${search == null ? '' : search}">
+            <button type="submit">검색</button>
+        </div>
+        <hr>
+
+        <!--/* 창을 처음 열었을 때. 검색어를 비운 채 누른 것과는 다르다. */-->
+        <div class="tips" th:if="${entries == null}">
+            <h3>tip</h3>
+            <p>아래와 같은 조합으로 검색하면 더욱 정확한 검색 결과가 제공됩니다.</p>
+
+            <div class="tip-item">
+                <strong>제품 코드</strong><br> 예) 031002 -&gt; 환공어묵
+            </div>
+            <div class="tip-item">
+                <strong>제품 명</strong><br> 예) 환공어묵 -&gt; 031002
+            </div>
+        </div>
+
+        <div class="product" th:if="${entries != null}">
+            <p th:each="entry : ${entries}">
+                <a href="javascript:void(0)"
+                   th:data-key="${entry.id}" th:data-value="${entry.name}"
+                   th:text="' ' + ${entry.id} + ' ' + ${entry.name} + ' '">031002 환공어묵</a>
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="footer">
+            Powered by 권명승시치<br> © 제품 코드 찾기 서비스 제공
+        </div>
+    </div>
+    <input type="hidden" id="productId" name="productId">
+    <input type="hidden" id="productName" name="productName">
+</form>
+</body>
+</html>

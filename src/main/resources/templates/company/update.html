@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--/*
+  협력업체 관리 — 수정.
+  출처: legacy/ERFlow/src/main/webapp/company/companyUpdate.jsp
+
+  등록 화면과 다른 곳이 둘 있다.
+    - 구분이 hidden + 읽기전용 표시가 아니라 고를 수 있는 select 다
+    - 업종·은행은 코드와 이름을 함께 보여준다
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('협력업체 수정 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/companyRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/companyRegister.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="company-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name"
+                  th:text="|사용자 > ${flag == 0 ? '영업' : '구매'} > 협력업체 수정|">사용자 &gt; 구매 &gt; 협력업체 수정</span>
+        </div>
+        <div class="company-insert">
+            <div class="company-form">
+                <form th:action="@{/company/update}" method="post">
+                    <input type="hidden" name="id" th:value="${company.id}">
+                    <div class="form-group">
+                        <label for="companyName">회사명</label>
+                        <input type="text" id="companyName" name="companyName" placeholder="회사명"
+                               th:value="${company.name}">
+                        <select name="status">
+                            <option value="0" th:selected="${company.subcontract == 0}">상청</option>
+                            <option value="1" th:selected="${company.subcontract == 1}">하청</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="input4">회사 주소:</label>
+                        <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode"
+                               th:value="${company.postalCode}">
+                        <input type="text" id="sample6_extraAddress" placeholder="참고항목">
+                        <input type="button" class="btn_execDaumPostcode" value="우편 찾기">
+                        <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"
+                               th:value="${company.address1}"><br>
+                        <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2"
+                               th:value="${company.address2}">
+                    </div>
+                    <div class="form-group">
+                        <label for="companyPhone">업체 전화번호</label>
+                        <input type="text" id="companyPhone" name="companyPhone" placeholder="업체 전화 번호"
+                               th:value="${company.phone}">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessNumber">사업자 등록번호</label>
+                        <input type="text" id="businessNumber" name="businessNumber"
+                               placeholder="사업자 등록번호" th:value="${company.businessCode}">
+                    </div>
+                    <div class="form-group">
+                        <label for="workCode">업체 종목 선택</label>
+                        <input type="text" id="workCode" name="workCode" placeholder="업체코드"
+                               th:value="${company.field}" readonly>
+                        <input type="text" id="workName" name="workName" placeholder="업체명"
+                               th:value="${fieldName}" readonly>
+                        <input type="button" onclick="findWorkCode()" id="find-work" value="업체 찾기">
+                    </div>
+                    <div class="form-group">
+                        <label for="bankCode">은행 선택</label>
+                        <input type="text" id="bankCode" name="bankCode" placeholder="은행 코드"
+                               th:value="${company.bankCode}" readonly>
+                        <input type="text" id="bankName" name="bankName" placeholder="은행명"
+                               th:value="${bankName}" readonly>
+                        <input type="button" id="find-bank" value="은행 찾기">
+                    </div>
+                    <div class="form-group">
+                        <label for="bankAccount">은행 계좌번호</label>
+                        <input type="text" id="bankAccount" name="bankAccount" placeholder="계좌 번호"
+                               th:value="${company.bankAccount}">
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="form-Register-btn">제출</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

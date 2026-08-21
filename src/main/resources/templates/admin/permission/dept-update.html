@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!--/*
+  부서 수정.
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/deptUpdate.jsp
+
+  직급 수정과 같은 모양에 주소가 붙는다. 체크박스 규칙도 같다.
+
+  **주소칸이 비어 있다.** 레거시가 값을 채워 주지 않는데 처리는 그 빈 값을 그대로
+  저장한다 — 부서를 고칠 때마다 주소가 지워진다(D-059). 화면은 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부서 수정 페이지</title>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/location.js}"></script>
+    <script th:src="@{/js/admin/permissions.js}"></script>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/deptRegister.css}">
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/admin/permission/dept-update-proc}" method="post">
+        <h2>부서 수정</h2>
+        <div>
+            <label for="position">기존 부서 명칭: [[${form.dept.name}]]</label>
+            <input type="hidden" name="deptId" th:value="${form.dept.id}">
+            <input type="text" id="position" name="deptName" th:value="${form.dept.name}">
+        </div>
+
+
+        <!--/*
+          레거시는 주소칸을 언제나 비워 뒀다. 부서 이름만 고치러 들어와도 저장하면
+          그 빈 값이 주소를 덮었다 — 라이브 데이터에 실제로 지워진 부서가 남아
+          있다(D-059). 2단계에서 현재 값을 채운다(D-105). readonly 입력의 value 는
+          화면 글자라 signature 가 바뀌므로 allowlist 에 화면을 좁혀 등록했다.
+        */-->
+        <label for="input4">부서 주소:</label>
+        <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode"
+               th:value="${form.dept.postalCode}" readonly>
+        <input type="text" id="sample6_extraAddress" placeholder="동/읍/면" readonly>
+        <button type="button" class="btn btn-primary btn_execDaumPostcode">우편 번호 찾기</button>
+        <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"
+               th:value="${form.dept.address1}" readonly><br>
+        <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2"
+               th:value="${form.dept.address2}">
+
+        <div class="checkbox-container">
+            <label>부서 권한:</label><br>
+            <div class="input-group">
+                <input type="checkbox" id="chkAll">
+                <label for="chkAll">전체 선택</label>
+            </div>
+            <br>
+            <div class="input-group" th:each="choice, i : ${form.choices}">
+                <input type="checkbox" id="permission" th:id="|permission${i.count}|"
+                       name="permissions" th:value="${choice.classId}"
+                       th:checked="${choice.checked}">
+                <label for="permission" th:for="|permission${i.count}|">[[${choice.name}]]</label>
+            </div>
+            <button type="submit">수정하기</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

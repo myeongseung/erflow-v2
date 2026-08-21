@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/ProcessServiceImpl.java
+-->
+<mapper namespace="com.erflow.process.ProcessMapper">
+
+    <!--
+      레거시 getProcesses(keyfield, keyword, start, cnt):
+        select * from process_tbl [where <칸> like ? | where priority = ?] order by id limit ?, ?
+
+      우선순위만 정확히 같은 값을 찾는다. 나머지 둘은 부분 일치다.
+    -->
+    <sql id="searchCondition">
+        <if test="search.byText">
+            WHERE ${search.column} LIKE #{search.keywordPattern}
+        </if>
+        <if test="search.byPriority">
+            WHERE priority = #{search.priority}
+        </if>
+    </sql>
+
+    <select id="findPage" resultType="com.erflow.process.ProcessRow">
+        SELECT id,
+               process_tbl_prev_id AS prevId,
+               process_tbl_next_id AS nextId,
+               name,
+               priority
+          FROM process_tbl
+        <include refid="searchCondition"/>
+         ORDER BY id
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시 processesCount: select count(*) from process_tbl [조건] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM process_tbl
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 레거시 getProcess(id): select * from process_tbl where id = ? -->
+    <select id="findById" resultType="com.erflow.process.ProcessRow">
+        SELECT id,
+               process_tbl_prev_id AS prevId,
+               process_tbl_next_id AS nextId,
+               name,
+               priority
+          FROM process_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시: insert into process_tbl values(?, ?, ?, ?, ?)
+      바인딩 순서는 id, prevId, nextId, name, priority 다.
+    -->
+    <insert id="insertProcess">
+        INSERT INTO process_tbl
+                    (id, process_tbl_prev_id, process_tbl_next_id, name, priority)
+             VALUES (#{id}, #{prevId}, #{nextId}, #{name}, #{priority})
+    </insert>
+
+    <!-- 레거시 updateProcess: update process_tbl set name = ? where id = ? -->
+    <update id="updateName">
+        UPDATE process_tbl SET name = #{name} WHERE id = #{id}
+    </update>
+
+    <!--
+      레거시 deleteProcess: {call DeleteProcess(?)}
+
+      **저장 프로시저다.** 지우면서 앞뒤 고리를 다시 잇는 것으로 보이지만 그 안을 볼 수
+      없다 — 우리 계정에는 루틴 조회 권한이 없고, 복제한 DB 에도 그 프로시저가 없다.
+      호출을 그대로 옮긴다. 없으면 예외가 나고 레거시와 같은 «삭제에 실패했습니다» 가
+      뜬다(D-073). 지어내지 않는다.
+    -->
+    <update id="callDeleteProcess" statementType="CALLABLE">
+        {call DeleteProcess(#{id, mode=IN, jdbcType=VARCHAR})}
+    </update>
+
+</mapper>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--/*
+  처리 결과.
+  출처: boundRegisterProc.jsp (수정·삭제도 이 화면을 쓴다)
+
+  레거시 *Proc.jsp 는 처리 전용이었다. alert 로 결과를 알리고 목록으로 돌아간다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+    location.href = /*[[${nextPage}]]*/ '/';
+    /*]]>*/
+</script>
+</body>
+</html>

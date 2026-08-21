@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--/*
+  수·발주 수정.
+  출처: legacy/ERFlow/src/main/webapp/task/taskUpdate.jsp
+
+  기존 값을 채우되 의뢰 시각은 비우고 상태는 미리 고르지 않는다(레거시 그대로).
+  협력업체 항목이 없다 — 수정 대상이 아니다. 제품 표는 현재 이력을 글자로 보여주고,
+  «제품 찾기» 로 다시 고르면 task.js 가 입력이 달린 행으로 갈아 끼운다.
+
+  라벨의 for 값은 레거시 그대로다. 의뢰 ID 만 입력 id 와 맞고(그래서 라벨이 «의뢰 ID»),
+  나머지는 일부러 어긋나 있어(input1/input2/input8) 라벨 대신 placeholder·값·name 이
+  잡힌다 — 맞추면 게이트가 어긋난다.
+
+  type 은 언제나 0 이라 발주 수정은 실패한다(D-044). 화면은 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isSell=${flag == 'sell'}">
+<head th:replace="~{fragments/head :: head(${isSell ? '수주 관리 수정 페이지' : '발주 관리 수정 페이지'}, ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/jquery-ui.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/taskRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/task.js', '/js/datepicker.js', '/js/main/task.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="task-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name"
+                  th:text="|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 수정|">사용자 &gt; 구매 &gt; 발주 수정</span>
+        </div>
+        <div class="task-insert">
+            <div class="task-form">
+                <form th:action="@{/task/update}" method="post" name="taskFrm">
+                    <input type="hidden" name="flag" th:value="${flag}">
+
+                    <div class="form-group">
+                        <label for="taskId">의뢰 ID</label>
+                        <input type="text" id="taskId" name="taskId" placeholder="의뢰 ID"
+                               th:value="${task.id}" readonly>
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input2">담당 직원:</label>
+                        <input type="text" id="userName" name="userName" placeholder="담당직원명"
+                               th:value="${userName}" readonly>
+                        <input type="text" id="userId" name="userId" th:value="${userId}"><br>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-user" value="직원 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">제품:</label>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-multi-product" value="제품 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2" id="table-form">
+                        <table id="myTable" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>제품번호</th>
+                                <th>이름</th>
+                                <th>수량</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="history : ${histories}">
+                                <td th:text="${history.productId}">031002</td>
+                                <td th:text="${history.name}">환공어묵</td>
+                                <td th:text="${history.count}">1</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">문서:</label>
+                        <input type="text" id="documentId" name="documentId" placeholder="문서번호"
+                               th:value="${task.documentId}" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-document" value="문서 찾기">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input8">의뢰 시각</label>
+                        <input type="text" id="datepicker" name="taskAt" placeholder="의뢰 시각">
+                    </div>
+                    <div class="form-group">
+                        <label for="input8">의뢰 상태</label>
+                        <select name="status" id="">
+                            <option value="1">진행중</option>
+                            <option value="2">완료</option>
+                            <option value="3">미확인</option>
+                        </select>
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="form-Register-btn">제출</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+.main-notice {
+	/*헤더 부분의 글자있는 부분*/
+	width: 100%;
+	display: flex;
+	padding: 20px;
+	justify-content: space-around;
+	min-width: 1024px;
+}
+
+.main-search-container {
+	display: flex;
+	align-items: center;
+	border: 1px solid #ccc;
+	width: 180px;
+	height: 30px;
+	border-radius: 10px;
+	padding: 5px;
+}
+
+.main-search-icon {
+	margin: 0 10px;
+}
+
+.main-search-border {
+	display: flex;
+	align-items: center;
+	flex-grow: 1;
+	border: none;
+}
+
+.main-search-text {
+	border: none;
+	background-color: transparent;
+	width: 160px;
+}
+
+.main-search-select {
+	background-color: #E4E6EA;
+}
+
+.left-subject,
+.right-subject {
+	font-size: 20px;
+	font-weight: bold;
+	background-color: #ced4da;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-evenly;
+}
+
+.admin-menu {
+	height: 30px;
+}
+
+.empty-space {
+	/*div사이의 공백공간*/
+	margin-bottom: 15px;
+	box-sizing: border-box;
+}
+
+.table-striped {
+	white-space: nowrap;
+}
+
+.main-notice table tbody tr td,
+.main-notice table thead tr th {
+	/*메인 테이블 부분*/
+	text-align: center;
+	height: 30px;
+	padding: 8px;
+}
+
+.left {
+	width: 35%;
+}
+
+.right {
+	width: 50%;
+}
+
+.main-leftgroup {
+	display: flex;
+}
+
+a {
+	text-decoration: none;
+}
+
+.left-group, .right-group-left {
+	display: flex;
+	justify-content: space-between;
+}

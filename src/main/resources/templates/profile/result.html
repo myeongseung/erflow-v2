@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--/*
+  처리 결과.
+  출처: passwordCheckProc.jsp / profileUpdateProc.jsp
+
+  비밀번호가 맞았을 때는 아무 말 없이 넘어간다 — 알림은 «틀렸을 때만» 뜬다.
+  그래서 message 가 없을 수 있고, 그때는 alert 자체를 내지 않는다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var message = /*[[${message}]]*/ '';
+    if (message) {
+        alert(message);
+    }
+    location.href = /*[[${nextPage}]]*/ '/profile';
+    /*]]>*/
+</script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--/*
+  프로필 수정.
+  출처: legacy/ERFlow/src/main/webapp/profileUpdate.jsp
+
+  «주민 번호» 는 언제나 비어 있다. 레거시가 로그인할 때 세션에 담기 전에 지웠고,
+  화면은 그 지워진 값을 읽는다. 읽기 전용이라 채울 수도 없다.
+
+  «개인 번호» 는 레거시에서 언제나 비어 있었다 — 값을 꺼내 두고 넣는 것을 잊었고,
+  저장이 그 빈 칸을 받아 적어 **저장할 때마다 전화번호가 지워졌다**(D-080).
+  2단계에서 고쳤다: 현재 값을 채운다(D-100). 1단계 커밋까지는 레거시 그대로였다.
+
+  우편번호·도로명은 읽기 전용이고 «우편 찾기» 버튼으로만 바뀐다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 수정 페이지</title>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/location.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common/page.css}">
+    <link rel="stylesheet" th:href="@{/css/main/header.css}">
+    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/userRegister.css}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="user-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; [[${owner.name}]]님의 프로필 수정</span>
+        </div>
+        <div class="user-insert">
+            <div class="user-form">
+                <form th:action="@{/profile/update-proc}" method="post">
+                    <div class="form-group">
+                        <label for="input1">사원 번호:</label> <input type="text" id="input1"
+                            name="id" placeholder="사원 번호" th:value="${owner.id}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="input2">이름:</label> <input type="text" id="input2"
+                            name="name" placeholder="사원 이름" th:value="${owner.name}">
+                    </div>
+                    <div class="form-group">
+                        <!--/* 세션에서 지워진 값을 읽던 자리라 언제나 빈칸이다. */-->
+                        <label for="input8">주민 번호:</label> <input type="text" id="input8"
+                            name="socialNumber" placeholder="ex)990115-1234567"
+                            value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="input3">Email</label> <input type="email" id="input3"
+                            name="email" placeholder="사원 이메일" th:value="${owner.emailText}">
+                    </div>
+                    <div class="form-group">
+                        <label for="input4">사원 주소:</label> <input type="text"
+                            id="sample6_postcode" placeholder="우편번호" name="postalCode"
+                            th:value="${owner.postalCodeText}" readonly> <input type="text"
+                            id="sample6_extraAddress" placeholder="동/읍/면" readonly>
+                        <input type="button" class="btn_execDaumPostcode" value="우편 찾기">
+                        <input type="text" id="sample6_address"
+                            placeholder="도로명 주소" name="address1"
+                            th:value="${owner.address1Text}"
+                            readonly><br> <input type="text"
+                            id="sample6_detailAddress" placeholder="상세주소" name="address2"
+                            th:value="${owner.address2Text}">
+                    </div>
+                    <div class="form-group">
+                        <!--/* 레거시는 이 칸을 비워 뒀고 저장하면 빈칸이 그대로 들어갔다(D-080).
+                               2단계에서 현재 값을 채운다(D-100). */-->
+                        <label for="input7">개인 번호</label> <input type="text" id=""
+                            name="mobilePhone" placeholder="휴대전화"
+                            th:value="${owner.mobilePhoneText}">
+                    </div>
+                    <div class="btn-group">
+                        <button class="userRegister-btn" type="submit">사원 수정</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--/*
+  쪽지 전송 결과.
+  출처: registerProc.jsp
+
+  레거시는 팝업에서 alert 로 알리고, 여는 창(목록)을 새로 고친 뒤 자신을 닫았다.
+  그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+    if (window.opener) {
+        window.opener.document.location.href = window.opener.document.location.href;
+    }
+    window.close();
+    /*]]>*/
+</script>
+</body>
+</html>

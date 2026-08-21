@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<!--/*
+  게시판 처리 결과.
+  출처: post/postRegisterProc.jsp / postReplyProc.jsp / postUpdateProc.jsp /
+        postDeleteProc.jsp / comment*Proc.jsp
+
+  레거시 *Proc.jsp 는 화면이 아니라 처리 전용이었다. 결과를 alert 로 알린 뒤
+  게시글 목록으로 보낸다. 댓글 처리는 보던 글로 돌아간다.
+
+  redirect 로 바꾸는 편이 요즘 방식이지만 alert 가 사라져 흐름이 달라진다.
+  이관에서는 동작을 유지하고 개선은 별도 안건으로 둔다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+    location.href = /*[[${nextPage}]]*/ '/';
+    /*]]>*/
+</script>
+</body>
+</html>

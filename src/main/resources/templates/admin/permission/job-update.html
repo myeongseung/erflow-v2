@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--/*
+  직급 수정.
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/jobUpdate.jsp
+
+  목록에서 링크로 오는 화면인데 헤더·사이드메뉴가 없다. 레거시가 그렇다.
+
+  체크박스는 **자기 자신을 뺀** 나머지 직급이고, 이미 가진 비트에 체크가 켜져 있다.
+  저장하면 «자기 비트 + 체크된 비트» 가 된다 — 체크를 다 지워도 자기 자신은 남는다.
+
+  id/for 를 static 과 th: 로 둘 다 적는다. 렌더링은 th: 쪽이 이겨 permission1,
+  permission2... 로 나가고(레거시와 같다), 정적 대조는 앞의 것을 본다. 반복문 안에서
+  고유한 id 를 정적으로 적을 방법이 없어서다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직급 수정 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/jobRegister.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/permissions.js}"></script>
+</head>
+<body>
+
+<div class="container">
+    <form th:action="@{/admin/permission/job-update-proc}" method="post">
+        <h2>직급 수정</h2>
+
+        <label for="jobName">기존 직급 명칭: [[${form.name}]]</label>
+        <input type="hidden" id="jobId" name="jobId" th:value="${form.id}">
+        <input type="text" id="jobName" name="jobName" th:value="${form.name}">
+
+        <div class="checkbox-container">
+            <label>직급 권한:</label><br>
+            <div class="input-group">
+                <input type="checkbox" id="chkAll">
+                <label for="chkAll">전체 선택</label>
+            </div>
+            <br>
+            <div class="input-group" th:each="choice, i : ${form.choices}">
+                <input type="checkbox" id="permission" th:id="|permission${i.count}|"
+                       name="permissions" th:value="${choice.classId}"
+                       th:checked="${choice.checked}">
+                <label for="permission" th:for="|permission${i.count}|">[[${choice.name}]]</label>
+            </div>
+            <button type="submit">수정하기</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

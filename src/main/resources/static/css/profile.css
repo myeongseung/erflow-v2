@@ -1,0 +1,121 @@
+body{
+		position: relative;
+    margin-top:20px;
+    color: #1a202c;
+    text-align: left;
+    background-color: #e2e8f0;    
+}
+.main-body {
+    padding: 15px;
+}
+.card {
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06);
+}
+
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #fff;
+    background-clip: border-box;
+    border: 0 solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+}
+.main-body{
+	margin-top: 100px;
+}
+
+.right-align{
+	position: absolute;
+	top: 135px;
+	left: 1655px;
+}
+.menu-name{
+    font-size: 16px;
+    font-weight: 700;
+}
+.card-body {
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 1rem;
+}
+.card.mt-3 {
+    height: 268px !important; /* 원하는 세로 길이로 조절하세요 */
+    /* 기타 원하는 스타일 속성을 추가하세요 */
+}
+.gutters-sm {
+    margin-right: -8px;
+    margin-left: -8px;
+}
+
+.gutters-sm>.col, .gutters-sm>[class*=col-] {
+    padding-right: 8px;
+    padding-left: 8px;
+}
+.mb-3, .my-3 {
+    margin-bottom: 1rem!important;
+}
+
+.bg-gray-300 {
+    background-color: #e2e8f0;
+}
+.h-100 {
+    height: 100%!important;
+}
+.shadow-none {
+    box-shadow: none!important;
+}
+
+div.table-container {
+    height: 300px; /* 원하는 높이로 조절하세요 */
+    overflow-y: auto; /* 테이블이 높이를 초과할 경우 스크롤이 나타나도록 설정 (선택 사항) */
+}
+
+td.custom-cell-container {
+    height: 50px; /* 원하는 높이로 조절하세요 */
+}
+
+
+.work-title-color {
+   display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.box-wrapper {
+    display: flex;
+    align-items: center;
+    margin-right: 10px; /* 각 박스 사이의 간격 조절 */
+}
+.work-title-color #box {
+  width: 20px;
+  height: 20px;
+  border: 1px solid black;
+  margin-right: 10px; /* box와 p 사이의 간격을 조정합니다. */
+}
+
+.work-title-color p {
+  margin: 0; /* 기존의 마진을 제거합니다. */
+}
+
+.work-title-color .box1 {
+  background-color: greenyellow;
+}
+
+.work-title-color .box2 {
+  background-color: yellow;
+}
+
+.work-title-color .box3 {
+  background-color: skyblue;
+}
+
+.work-title-color .box4 {
+  background-color: #e51a2e;
+}
+
+.work-title-color .box5 {
+  background-color: #dbdbdb;
+}

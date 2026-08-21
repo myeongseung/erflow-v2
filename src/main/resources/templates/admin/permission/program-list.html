@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--/*
+  프로그램 리스트.
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/programList.jsp
+
+  «프로그램» 은 화면 묶음의 이름이고, 그 아래 부서 권한과 직급 권한을 따로 고친다.
+  그래서 수정 링크가 한 줄에 둘이다.
+
+  검색하면 줄은 나오는데 페이지가 그려지지 않는다 — 목록은 부분 일치인데 건수는
+  완전 일치로 세기 때문이다(D-064). 레거시 그대로다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로그램 리스트</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/programList.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/userList.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="table-wrap">
+            <div class="right-align">
+                <span class="menu-name">관리자 &gt; 권한 관리 &gt; 프로그램 리스트</span>
+            </div>
+            <form name="searchFrm">
+                <div class="search-option">
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" name="keyword"
+                                   placeholder="프로그램 검색" aria-label="Search" th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" onclick="search()"
+                               title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">번호</th>
+                    <th scope="col">프로그램ID</th>
+                    <th scope="col">프로그램 이름</th>
+                    <th scope="col">부서 권한</th>
+                    <th scope="col">직급 권한</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="program : ${programs}">
+                    <td th:text="${program.id}">1</td>
+                    <td th:text="${program.programId}">프로그램ID</td>
+                    <td th:text="${program.programName}">프로그램 이름</td>
+                    <td><a th:href="@{/admin/permission/program-dept-update(id=${program.id})}">수정</a></td>
+                    <td><a th:href="@{/admin/permission/program-job-update(id=${program.id})}">수정</a></td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td></td>
+                <td colspan="2"></td>
+                <td></td>
+                <td></td>
+                </tfoot>
+            </table>
+            <form name="readFrm" th:action="@{/admin/permission/program-list}" method="get">
+                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+            </form>
+        </div>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+               class="disabled">이전</a>
+            <ul class="page-numbers">
+                <a th:each="number : ${page.pageNumbers}"
+                   th:href="|javascript:paging('${number}')|"
+                   th:classappend="${number == page.nowPage} ? 'disabled'">
+                    <li th:text="${number}">1</li>
+                </a>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

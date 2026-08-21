@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--/*
+  목록에서 삭제한 결과.
+  출처: deleteProc.jsp
+
+  목록 화면(팝업 아님)이 제출한다. alert 로 알리고 쪽지함으로 돌아간다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+    location.href = /*[[${nextPage}]]*/ '/message';
+    /*]]>*/
+</script>
+</body>
+</html>

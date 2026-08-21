@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<!--/*
+  메인 화면.
+  출처: legacy/ERFlow/src/main/webapp/index.jsp
+
+  위젯 넷(공지사항·전자결재·자유게시판·받은 쪽지함)과 달력 하나.
+
+  위젯 머리의 아이콘 셋 중 **동작하는 것은 첫 번째뿐이다.** 새로고침과 추가는
+  `href=""` 라 지금 페이지를 다시 여는 것과 같다(D-085). 달력 위젯의 새로고침은
+  레거시에 개발자 PC 주소(localhost:5501)가 박혀 있었다 — 2단계에서 지우고 다른
+  위젯들과 같은 `href=""` 로 맞췄다(D-114). 게이트는 «같은 라벨, 다른 대상» 을
+  라우트 변경(MEDIUM)으로 보므로 allowlist 는 필요 없다.
+
+  자유게시판 위젯의 `<thead>` 가 두 번 열려 있다. 브라우저가 만드는 DOM 을 기준으로
+  옮기므로 한 번만 적는다(D-037).
+
+  달력은 FullCalendar 가 그린다. 일정은 /calendar/view 로 따로 받아 온다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--/* 달력이 JSON 을 POST 한다. 그때 실어 보낼 토큰이다(D-086). */-->
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
+    <title>Welcome to ERFlow</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.9/index.min.js}" type="module"></script>
+    <script th:src="@{https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/main/index.js}"></script>
+    <script th:src="@{/js/main/calendar.js}"></script>
+    <script th:src="@{/js/main/indexCalendar.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/main/modal.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/main/header.css}">
+    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
+    <link rel="stylesheet" th:href="@{/css/main/index.css}">
+    <link rel="stylesheet" th:href="@{/css/main/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/main/documentList.css}">
+</head>
+<body>
+<div class="wrap">
+
+    <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+    <div class="content-wrap">
+        <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+        <div>
+            <div class="main-content-wrap">
+                <div class="main-wrap">
+                    <div>
+                        <div class="main-table-container">
+                            <div class="table-panel-header">
+                                <div class="main-table-head">
+                                    <span class="widget-name">공지사항</span>
+                                </div>
+                                <div class="btn-group">
+                                    <a th:href="@{/post/list(boardId=1)}"><i class="fa-solid fa-arrow-up-right-from-square fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-arrows-rotate fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-plus fa-lg"></i></a>
+                                </div>
+                            </div>
+                            <div class="table-commend">
+                                <table class="table">
+                                    <thead class="main-thead">
+                                        <tr>
+                                            <th scope="col">번호</th>
+                                            <th scope="col">제목</th>
+                                            <th scope="col">작성자</th>
+                                            <th scope="col">작성일</th>
+                                            <th scope="col">조회수</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="post : ${notices}">
+                                            <td>[[${post.number}]]</td>
+                                            <td><a th:href="@{/post/view(boardId=1,id=${post.id})}">[[${post.subject}]]</a>
+                                                <a class="comment-count" href="">&#91;[[${post.commentCount}]]&#93;
+                                            </a></td>
+                                            <td>[[${post.author}]]</td>
+                                            <td>[[${post.createdAt}]]</td>
+                                            <td>[[${post.count}]]</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="main-table-container">
+                            <div class="table-panel-header">
+                                <div class="main-table-head">
+                                    <span class="widget-name">전자결재</span>
+                                </div>
+                                <div class="btn-group">
+                                    <a th:href="@{/proposal/list}"><i class="fa-solid fa-arrow-up-right-from-square fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-arrows-rotate fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-plus fa-lg"></i></a>
+                                </div>
+                            </div>
+                            <div class="table-commend">
+                                <table class="table">
+                                    <thead class="main-thead">
+                                        <tr>
+                                            <th scope="col">결재 번호</th>
+                                            <th scope="col">제목</th>
+                                            <th scope="col">문서 상세</th>
+                                            <th scope="col">결재 상태</th>
+                                            <th scope="col">도착 시각</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="proposal : ${proposals}">
+                                            <td>[[${proposal.id}]]</td>
+                                            <td>[[${proposal.subject}]]</td>
+                                            <td><a th:href="@{/proposal/document(proposalId=${proposal.id})}">문서
+                                                    보기</a></td>
+                                            <td>[[${proposal.statusLabel}]]</td>
+                                            <td>[[${proposal.receivedAt}]]</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <div class="main-table-container">
+                            <div class="table-panel-header">
+                                <div class="main-table-head">
+                                    <span class="widget-name">자유게시판</span>
+                                </div>
+                                <div class="btn-group">
+                                    <a th:href="@{/post/list(boardId=2)}"><i class="fa-solid fa-arrow-up-right-from-square fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-arrows-rotate fa-lg"></i></a>
+                                    <a href=""><i class="fa-solid fa-plus fa-lg"></i></a>
+                                </div>
+                            </div>
+                            <div class="table-commend">
+                                <table class="table">
+                                    <thead class="main-thead">
+                                        <tr>
+                                            <th scope="col">번호</th>
+                                            <th scope="col">제목</th>
+                                            <th scope="col">작성자</th>
+                                            <th scope="col">작성일</th>
+                                            <th scope="col">조회수</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="post : ${freePosts}">
+                                            <td>[[${post.number}]]</td>
+                                            <td><a th:href="@{/post/view(boardId=2,id=${post.id})}">[[${post.subject}]]</a>
+                                                <a class="comment-count" href="">&#91;[[${post.commentCount}]]&#93;
+                                            </a></td>
+                                            <td>[[${post.author}]]</td>
+                                            <td>[[${post.createdAt}]]</td>
+                                            <td>[[${post.count}]]</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="main-table-container">
+                            <div class="table-panel-header">
+                                <div class="main-table-head">
+                                    <span class="widget-name">받은 쪽지함</span>
+                                </div>
+                                <div class="btn-group">
+                                    <a th:href="@{/message}"><i
+                                        class="fa-solid fa-arrow-up-right-from-square fa-lg"></i></a> <a
+                                        href=""><i
+                                        class="fa-solid fa-arrows-rotate fa-lg"></i></a> <a href=""><i
+                                        class="fa-solid fa-plus fa-lg"></i></a>
+                                </div>
+                            </div>
+                            <div class="table-commend">
+                                <table class="table">
+                                    <thead class="main-thead">
+                                        <tr>
+                                            <th scope="col">번호</th>
+                                            <th scope="col">보낸이</th>
+                                            <th scope="col">내용</th>
+                                            <th scope="col">수신 시각</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="message : ${messages}">
+                                            <td>[[${message.number}]]</td>
+                                            <td>[[${message.sender}]]</td>
+                                            <td><a th:href="@{/message/read(messageId=${message.id})}">[[${message.content}]]</a></td>
+                                            <td>[[${message.createdAt}]]</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div>
+                    <div class="main-calendar-container">
+                        <div class="table-panel-header">
+                            <div class="main-table-head">
+                                <span class="widget-name">일정관리</span>
+                            </div>
+                            <div class="btn-group">
+                                <a href=""> <i class="fa-solid fa-arrow-up-right-from-square fa-lg"></i>
+                                </a>
+                                <!--/* 레거시는 여기가 개발자 PC 주소(localhost:5501)였다.
+                                       2단계에서 지웠다(D-114) — 다른 위젯의 새로고침과
+                                       같은 빈 href 다. */-->
+                                <a href=""><i
+                                    class="fa-solid fa-arrows-rotate fa-lg"></i></a> <a href="#">
+                                    <i class="fa-solid fa-plus fa-lg" data-bs-toggle="modal"
+                                    data-bs-target="#calendar-plus"></i>
+                                    <div class="modal fade" id="calendar-plus"
+                                         data-bs-backdrop="static" data-bs-keyboard="false"
+                                         tabindex="-1" aria-labelledby="calendar-plus-label"
+                                         aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <form>
+                                                    <input type="hidden" name="userId"
+                                                           th:value="${userId}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="calendar-plus-label">일정
+                                                            정하기</h5>
+                                                        <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body index-calendar-content">
+                                                        <table>
+                                                            <tr>
+                                                                <td>시작일</td>
+                                                                <td><input class="calendar-start"
+                                                                           type="datetime-local"></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>종료일</td>
+                                                                <td><input class="calendar-end"
+                                                                           type="datetime-local"></td>
+                                                            </tr>
+                                                        </table>
+                                                        <select class="form-select calendar-select">
+                                                            <option value="0">개인일정</option>
+                                                            <option value="1">부서일정</option>
+                                                            <option value="2">전체일정</option>
+                                                        </select>
+                                                        <div class="input-group mb-3">
+                                                            <span class="input-group-text" id="basic-addon1">제목</span>
+                                                            <input type="text"
+                                                                   class="form-control calendar-explanation calendar-subject">
+                                                            <span class="input-group-text" id="basic-addon1">내용</span>
+                                                            <input type="text"
+                                                                   class="form-control calendar-explanation calendar-content">
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="modal-footer index-calendar-button-group">
+                                                        <button type="button"
+                                                                class="btn btn-primary calendar-set">설정</button>
+                                                        <button type="button"
+                                                                class="btn btn-secondary calendar-cancel">취소</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </a>
+
+                            </div>
+                        </div>
+
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+            </div>
+            <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+        </div>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content-wrap">
+            <div class="modal-header">
+                <div class="modal-btn-group">
+                    <button type="button" class="btn btn-primary" id="update-button">수정</button>
+                    <button type="button" class="btn btn-danger" id="delete-button">삭제</button>
+                </div>
+                <h3 id="eventId"></h3>
+                <span class="close-button">×</span>
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">사번</span> <input
+                    type="text" id="userId"
+                    class="form-control calendar-explanation calendar-subject">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">제목</span> <input
+                    type="text" id="modalTitle"
+                    class="form-control calendar-explanation calendar-subject">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">내용</span> <input
+                    type="text" id="modalContent"
+                    class="form-control calendar-explanation calendar-subject">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">시작</span> <input
+                    type="datetime-local" id="modalStartDate"
+                    class="form-control calendar-explanation calendar-subject">
+
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1">종료</span> <input
+                    type="datetime-local" id="modalEndDate"
+                    class="form-control calendar-explanation calendar-subject">
+
+            </div>
+            <select class="form-select calendar-select" name="calendar-type" id="modalType">
+                <option value="0">개인일정</option>
+                <option value="1">부서일정</option>
+                <option value="2">전체일정</option>
+            </select>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

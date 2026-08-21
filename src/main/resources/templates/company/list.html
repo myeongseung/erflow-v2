@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--/*
+  협력업체 관리 — 목록.
+  출처: legacy/ERFlow/src/main/webapp/company/companyList.jsp
+
+  구매(flag=1)와 영업(flag=0)이 같은 화면을 쓴다. 제목도 권한도 flag 로 갈리므로
+  모든 링크가 flag 를 달고 다닌다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('협력업체 관리 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/companyList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/company.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name"
+                  th:text="|사용자 > ${flag == 0 ? '영업' : '구매'} > 협력업체 관리|">사용자 &gt; 구매 &gt; 협력업체 관리</span>
+        </div>
+
+        <form th:action="@{/company/delete}" method="post" name="companyFrm">
+            <input type="hidden" name="flag" th:value="${flag}">
+
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button"
+                            th:data-id="${flag}">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="name" th:selected="${keyfield == 'name'}">협력업체명</option>
+                        <option value="field" th:selected="${keyfield == 'field'}">업체 종목</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search"
+                                   placeholder="업체 검색" aria-label="Search" name="keyword"
+                                   th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" id="searchIcon"
+                               title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">번호</th>
+                    <th scope="col">이름</th>
+                    <th scope="col">주소</th>
+                    <th scope="col">전화 번호</th>
+                    <th scope="col">사업자 번호</th>
+                    <th scope="col">종목</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="company : ${companies}">
+                    <th scope="col">
+                        <input type="checkbox" name="companyId" th:value="${company.id}">
+                    </th>
+                    <td>
+                        <a th:href="@{/company/update(flag=${flag},id=${company.id})}"
+                           th:text="${company.id}">1</a>
+                    </td>
+                    <td th:text="${company.name}">이름</td>
+                    <td th:text="${company.fullAddress()}">주소</td>
+                    <td th:text="${company.phone}">전화</td>
+                    <td th:text="${company.businessCode}">사업자번호</td>
+                    <td th:text="${fieldNames[company.field]} ?: ''">종목</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="6"></td>
+                <td></td>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/company/list}" method="get">
+            <input type="hidden" name="flag" th:value="${flag}">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" th:value="${keyfield}">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+        </form>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}" class="disabled"
+               th:href="|javascript:paging(${page.previousBlockPage()})|">이전</a>
+
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}">
+                    <a th:href="|javascript:paging(${number})|"
+                       th:classappend="${number == page.nowPage} ? 'disabled'"
+                       th:text="${number}">1</a>
+                </li>
+            </ul>
+
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:paging(${page.nextBlockPage()})|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

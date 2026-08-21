@@ -1,0 +1,30 @@
+body{
+	background-color: #e9ecef;
+}
+
+.message-wrap{
+	display: flex;
+	justify-content: space-around;
+	
+}
+.readmessage-body{
+	min-width: 600px;
+	padding: 20px;
+	margin-top: 15px;
+	
+	border-radius:10px;
+	background-color: rgb(245,245,245);
+}
+.mb-3{
+	min-width: 560px;
+	min-height: 35px;
+}
+.input-group-text{
+	min-width: 150px;
+}
+.prev-name, .new-name{
+	font-size: 15px;
+}
+.readmessage-footer-button{
+	margin-left: 80%;
+}

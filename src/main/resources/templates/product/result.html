@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<!--/*
+  처리 결과.
+  출처: productRegisterProc.jsp / productUpdateProc.jsp / productDeleteProc.jsp
+
+  레거시 *Proc.jsp 는 화면이 아니라 처리 전용이었다. alert 로 알리고 그 분류의 목록으로
+  돌아간다 — 수정만 없는 주소로 갔다(D-071).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+    location.href = /*[[${nextPage}]]*/ '/product/ingredient-product';
+    /*]]>*/
+</script>
+</body>
+</html>

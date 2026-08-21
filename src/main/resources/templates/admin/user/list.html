@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--/*
+  사원 리스트.
+  출처: legacy/ERFlow/src/main/webapp/admin/user/userList.jsp
+
+  관리자 화면의 첫 이관이다. 사용자 쪽 화면과 골격이 다르다 — 헤더·사이드메뉴가
+  관리자 전용 조각이고, 바깥 div 두 겹(admin-wrap / admin-main-content)을 화면이
+  직접 감싼다. 레거시 조각이 그 둘을 열고 닫지 않기 때문이다(D-037).
+
+  표에 주민등록번호가 그대로 찍힌다. 레거시 그대로다 — 가리지 않는다(O-012).
+
+  페이징은 실제로 동작한다. js/admin/userList.js 에 block()/paging() 이 있다 —
+  쪽지함·결재처럼 죽어 있는 화면과 다르다(D-045).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유저 리스트 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/userListAddress.js}"></script>
+    <script th:src="@{/js/admin/userList.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/userList.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="table-wrap">
+            <div class="right-align">
+                <span class="menu-name">관리자 &gt; 사원 &gt; 사원관리</span>
+            </div>
+            <form name="searchFrm">
+                <div class="search-option">
+                    <select name="keyfield">
+                        <option value="" th:selected="${keyfield == ''}">전체 조회</option>
+                        <option value="id" th:selected="${keyfield == 'id'}">사번</option>
+                        <option value="name" th:selected="${keyfield == 'name'}">이름</option>
+                        <option value="dept_name" th:selected="${keyfield == 'dept_name'}">부서</option>
+                        <option value="job_name" th:selected="${keyfield == 'job_name'}">직급</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" name="keyword"
+                                   placeholder="검색" aria-label="Search" th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">사번</th>
+                    <th scope="col">이름</th>
+                    <th scope="col">주민등록번호</th>
+                    <th scope="col">성별</th>
+                    <th scope="col">내·외국인</th>
+                    <th scope="col">부서</th>
+                    <th scope="col">직급</th>
+                    <th scope="col">내선 번호</th>
+                    <th scope="col">개인 번호</th>
+                    <th scope="col">이메일</th>
+                    <th scope="col">입사일</th>
+                    <th scope="col">주소</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td><a th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
+                    <td th:text="${user.name}">이름</td>
+                    <td th:text="${user.socialNumber}">주민등록번호</td>
+                    <td th:text="${user.gender}">성별</td>
+                    <td th:text="${user.region}">내·외국인</td>
+                    <td th:text="${user.deptName}">부서</td>
+                    <td th:text="${user.jobName}">직급</td>
+                    <td th:text="${user.extensionPhone}">내선 번호</td>
+                    <td th:text="${user.mobilePhone}">개인 번호</td>
+                    <td th:text="${user.email}">이메일</td>
+                    <td th:text="${user.hiredAtLabel}">입사일</td>
+                    <!--/* 레거시는 onclick="openNewWindow('사번')" 이었다. Thymeleaf 가
+                           문자열을 JS 호출에 끼워 넣는 것을 거부해 data 속성으로 넘긴다
+                           (은행·제품 찾기 팝업과 같은 방식, D-035). 여는 창은 같다 */-->
+                    <td><a href="javascript:void(0);" class="a-user-address"
+                           th:data-id="${user.id}">보기</a></td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="12"></td>
+                </tr>
+                </tfoot>
+            </table>
+            <form name="readFrm">
+                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+                <input type="hidden" name="keyfield" th:value="${keyfield}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+            </form>
+        </div>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+               class="disabled">이전</a>
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}">
+                    <a th:href="|javascript:paging('${number}')|"
+                       th:classappend="${number == page.nowPage} ? 'disabled'"
+                       th:text="${number}">1</a>
+                </li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

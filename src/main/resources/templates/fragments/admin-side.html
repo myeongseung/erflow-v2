@@ -1,0 +1,59 @@
+<!--/*
+  관리자 사이드메뉴.
+  출처: legacy/ERFlow/src/main/webapp/admin/adminSide.jsp
+
+  사용자 쪽 사이드메뉴와 달리 **DB 에서 오지 않는다.** 레거시가 JSP 에 네 갈래를
+  그대로 적어 두었고, menu 테이블에도 screen 테이블에도 이 항목들이 없다. 하드코딩을
+  하드코딩으로 옮긴다 — 데이터로 만들면 정답에 없던 것을 지어내는 셈이다.
+
+  레거시 조각은 <div class="admin-wrap"> 를 열고 닫지 않는다(뒤따르는 adminHeader 가
+  또 하나를 열고, 화면 끝에서 둘을 한꺼번에 닫는다). Thymeleaf 는 그런 조각을 읽지
+  못하므로 브라우저가 만드는 DOM 을 기준으로 나눴다(D-037). 바깥 admin-wrap 은 화면이
+  갖는다.
+*/-->
+<div class="aside-bar" th:fragment="side" xmlns:th="http://www.thymeleaf.org">
+    <div class="logo-font">
+
+    </div>
+    <hr>
+    <aside class="sidebar">
+        <!--/* 사이드 바 */-->
+        <nav class="sidebar-nav">
+            <ul class="sidebar-ul">
+                <li class="sidebar-mainmenu">
+                    <span class="menu-title">사원 관리</span>
+                    <ul class="nav-flyout">
+                        <li>
+                            <a th:href="@{/admin/user/list}">사원 리스트</a>
+                        </li>
+                        <li>
+                            <a th:href="@{/admin/user/register}">사원 추가</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-mainmenu">
+                    <span class="menu-title">권한 관리</span>
+                    <ul class="nav-flyout">
+                        <li>
+                            <a th:href="@{/admin/permission/job-dept-list}">직급 및 부서 리스트</a>
+                        </li>
+                        <li>
+                            <a th:href="@{/admin/permission/program-list}">프로그램 리스트</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-mainmenu">
+                    <span class="menu-title">문서 관리</span>
+                    <ul class="nav-flyout">
+                        <li>
+                            <a th:href="@{/admin/document/form-list}">문서 양식 리스트</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="sidebar-mainmenu">
+                    <a th:href="@{/admin/board/list}"><span class="menu-title">게시판 관리</span></a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+</div>

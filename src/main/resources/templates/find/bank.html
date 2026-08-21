@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--/*
+  은행 찾기 팝업.
+  출처: legacy/ERFlow/src/main/webapp/findBank.jsp
+
+  등록 화면이 window.open 으로 여는 작은 창이다. 공통 레이아웃(헤더·사이드 메뉴)을
+  쓰지 않는다 — 레거시도 그렇다.
+
+  고른 값은 js/main/findBank.js 의 selectBank 가 부모 창에 돌려준다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>은행 찾기</title>
+    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
+    <script th:src="@{/js/main/findBank.js}"></script>
+</head>
+<body>
+<form th:action="@{/find/bank}">
+    <div class="container">
+        <div class="search-box">
+            <input type="text" placeholder="예) 은행 코드 or 은행 명 검색" name="search"
+                   id="findBack-input" th:value="${search == null ? '' : search}">
+            <button type="submit">검색</button>
+        </div>
+        <hr>
+
+        <!--/* 창을 처음 열었을 때. 검색어를 비운 채 누른 것과는 다르다. */-->
+        <div class="tips" th:if="${entries == null}">
+            <h3>tip</h3>
+            <p>아래와 같은 조합으로 검색하면 더욱 정확한 검색 결과가 제공됩니다.</p>
+
+            <div class="tip-item">
+                <strong>은행 코드</strong><br> 예) 002 -&gt; 산업은행
+            </div>
+            <div class="tip-item">
+                <strong>은행 명</strong><br> 예) 기업은행 -&gt; 003
+            </div>
+        </div>
+
+        <div th:if="${entries != null}">
+            <p th:each="entry : ${entries}">
+                <!--/*
+                  레거시는 onclick="selectBank('코드','이름')" 이었다. Thymeleaf 가
+                  문자열을 JS 호출에 끼워 넣는 것을 거부한다 — 이름에 따옴표가
+                  들어가면 코드가 되는 자리라 막는 것이 옳다. 업종 팝업이 이미 쓰는
+                  data 속성 방식으로 맞췄다. 화면과 동작은 같다. D-035 참조.
+                */-->
+                <a href="javascript:void(0);" class="a-bank-info"
+                   th:data-key="${entry.code}" th:data-value="${entry.name}"
+                   th:text="${entry.code} + ' ' + ${entry.name}">002 산업은행</a>
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="footer">
+            Powered by 권명승<br> © 은행 코드 찾기 서비스 제공
+        </div>
+    </div>
+    <input type="hidden" id="bankCode" name="bankCode">
+    <input type="hidden" id="bankName" name="bankName">
+</form>
+</body>
+</html>

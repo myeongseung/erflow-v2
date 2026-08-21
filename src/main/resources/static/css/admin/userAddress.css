@@ -1,0 +1,30 @@
+/* 기본 스타일 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif; /* 원하는 폰트로 변경 가능 */
+}
+
+.location-group {
+    background-color: #f7f7f7; /* 배경색 */
+    border-radius: 10px; /* 모서리 둥글게 */
+    padding: 20px; /* 내부 패딩 */
+    width: 300px; /* 너비 설정 */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    margin: 20px auto; /* 페이지 중앙 정렬을 위한 마진 설정 */
+}
+
+.location-group label {
+    font-size: 18px; /* 라벨 폰트 크기 */
+    color: #333; /* 폰트 색상 */
+    display: block; /* 한 줄을 전체 차지 */
+    margin-bottom: 15px; /* 아래로 마진 추가 */
+}
+
+.location-span {
+    display: block; /* 한 줄을 전체 차지 */
+    margin-bottom: 10px; /* 각 항목 간의 간격 */
+    font-size: 14px; /* 폰트 크기 */
+    color: #555; /* 폰트 색상 */
+}

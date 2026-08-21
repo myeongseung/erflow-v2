@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!--/*
+  사원 수정.
+  출처: legacy/ERFlow/src/main/webapp/admin/user/userUpdate.jsp
+
+  추가 화면과 거의 같은 폼인데 셋이 다르다.
+    · 사번·주민번호·우편번호·도로명 주소가 readonly 다(추가에서는 도로명이 열려 있다)
+    · 직급·부서 콤보가 이름순이다. 추가 화면은 DB 순서다(D-058)
+    · 값이 채워져 있다
+  버튼 글자는 여기서도 «사원 생성» 이다. 레거시 그대로 둔다.
+
+  고쳐서 저장하면 휴대 전화가 지워진다(D-057). 화면은 레거시 그대로 둔다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사원 수정 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/location.js}"></script>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/userRegister.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="user-insert-wrap">
+            <div class="right-align">
+                <span class="menu-name">관리자 &gt; 사원 &gt; 사원수정</span>
+            </div>
+            <div class="user-insert">
+                <div class="user-form">
+                    <form th:action="@{/admin/user/update-proc}" method="post">
+                        <div class="form-group">
+                            <label for="input1">사원 번호:</label> <input type="text" id="input1"
+                                name="id" placeholder="사원 번호" th:value="${user.id}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="input2">이름:</label> <input type="text" id="input2"
+                                name="name" placeholder="사원 이름" th:value="${user.name}">
+                        </div>
+                        <div class="form-group">
+                            <label for="input8">주민 번호:</label> <input type="text" id="input8"
+                                name="socialNumber" placeholder="ex)990115-1234567"
+                                th:value="${user.socialNumber} ?: ''" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="input3">Email</label> <input type="email" id="input3"
+                                name="email" placeholder="사원 이메일" th:value="${user.email} ?: ''">
+                        </div>
+                        <div class="form-group">
+                            <label for="input4">사원 주소:</label> <input type="text"
+                                id="sample6_postcode" placeholder="우편번호" name="postalCode"
+                                th:value="${user.postalCode} ?: ''" readonly>
+                            <input type="text" id="sample6_extraAddress" placeholder="동/읍/면" readonly>
+                            <input type="button" class="btn_execDaumPostcode" value="우편 찾기">
+                            <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"
+                                   th:value="${user.address1} ?: ''" readonly><br>
+                            <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2"
+                                   th:value="${user.address2} ?: ''">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="job">직급</label> <select name="job" id="job">
+                                <option th:each="job : ${options.jobs}"
+                                        th:value="${job.id}"
+                                        th:selected="${job.id == user.jobId}"
+                                        th:text="${job.name}">직급</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dept">부서</label> <select name="dept" id="dept">
+                                <option th:each="dept : ${options.departments}"
+                                        th:value="${dept.id}"
+                                        th:selected="${dept.id == user.deptId}"
+                                        th:text="${dept.name}">부서</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="input7">내선 번호</label> <input type="text" id="input7"
+                                name="extensionPhone" placeholder="사원 내선 번호"
+                                th:value="${user.extensionPhone} ?: ''">
+                        </div>
+                        <div class="form-group">
+                            <label for="input8">휴대 전화</label> <input type="text" id="input8"
+                                name="mobilePhone" placeholder="휴대 전화"
+                                th:value="${user.mobilePhone} ?: ''">
+                        </div>
+                        <div class="btn-group">
+                            <button class="userRegister-btn" type="submit">사원 생성</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

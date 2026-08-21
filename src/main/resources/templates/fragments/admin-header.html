@@ -1,0 +1,29 @@
+<!--/*
+  관리자 헤더.
+  출처: legacy/ERFlow/src/main/webapp/admin/adminHeader.jsp
+
+  레거시 조각은 <div class="admin-main-content"> 를 열고 닫지 않는다. 그 div 는 화면
+  본문까지 감싸므로 화면이 갖는다(D-037).
+
+  로고에 alt 가 없다. 장식 이미지라는 뜻이고 정답에도 요소로 잡히지 않는다 — 그대로
+  비워 둔다. 넣으면 발명이다.
+
+  «메인페이지» 는 링크 안에 버튼이 들어 있는 모양이라 정답에 링크와 버튼이 각각 하나씩
+  잡힌다. 겹쳐 보이지만 레거시 마크업 그대로다.
+*/-->
+<header class="admin-header" th:fragment="header" xmlns:th="http://www.thymeleaf.org">
+    <div class="logo-group">
+        <div>
+            <a th:href="@{/admin}">
+                <img th:src="@{/images/common/logo.png}" alt="">
+            </a>
+            <div class="logo-font2"></div>
+        </div>
+    </div>
+    <div>
+        <a th:href="@{/index}" target="_blank"><button class="goto-index">메인페이지</button></a>
+        <!--/* 레거시 그대로 링크 이동이다. 로그아웃은 GET 을 받는다(D-055).
+               th:onclick 에는 표현식을 넣을 수 없어(D-035) 주소를 글자로 적는다 */-->
+        <button class="admin-out-btn" onclick="location.href='/login/logout-proc'">로그아웃</button>
+    </div>
+</header>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처
+    UserServiceImpl.getUserViews(keyfield1, keyfield2, keyword, start, cnt)
+      select dept_name, job_name, id, name from user_view
+       where id <> 'admin' [and dept_name like ?] [and name like ?] limit ?, ?
+    UserServiceImpl.getUserTotalCount(keyfield1, keyfield2, keyword)
+      select count(*) from user_view where id <> 'admin' [같은 조건]
+
+  근태 화면은 keyfield2(직책)를 언제나 null 로 넘긴다. 화면의 콤보가 부서·이름
+  둘뿐이라 직책 조건은 여기 옮기지 않는다 — 쓰는 자리가 없는 조건을 만들지 않는다.
+
+  ORDER BY 가 없다. 레거시에도 없다 — 넣으면 다른 SQL 이 된다(D-091 과 같은 원칙).
+-->
+<mapper namespace="com.erflow.work.WorkMapper">
+
+    <sql id="filter">
+         WHERE id != 'admin'
+        <if test="dept != null and dept != ''">
+           AND dept_name LIKE CONCAT('%', #{dept}, '%')
+        </if>
+        <if test="name != null and name != ''">
+           AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+    </sql>
+
+    <select id="findUsers" resultType="com.erflow.work.WorkUserRow">
+        SELECT id,
+               name,
+               dept_name AS deptName,
+               job_name  AS jobName
+          FROM user_view
+        <include refid="filter"/>
+         LIMIT #{start}, #{count}
+    </select>
+
+    <select id="countUsers" resultType="int">
+        SELECT COUNT(*)
+          FROM user_view
+        <include refid="filter"/>
+    </select>
+
+</mapper>

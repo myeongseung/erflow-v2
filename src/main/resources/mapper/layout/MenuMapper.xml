@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  레거시에는 대응 SQL 이 없다. 메뉴가 indexSide.jsp / indexHeader.jsp 에 하드코딩돼
+  있었고, 그것을 테이블로 옮긴 것이 이 쿼리의 출처다.
+  설계: migration/design/01-menu-layout.md
+-->
+<mapper namespace="com.erflow.layout.MenuMapper">
+
+    <!--
+      record 는 세터가 없으므로 생성자로 매핑한다. children 은 넣지 않는다 —
+      List 에는 타입핸들러가 없고, 계층 조립은 MenuService 의 일이다.
+    -->
+    <resultMap id="menuNode" type="com.erflow.layout.MenuNode">
+        <constructor>
+            <idArg   column="menu_id"    javaType="_int"/>
+            <arg     column="placement"  javaType="java.lang.String"/>
+            <arg     column="parent_id"  javaType="java.lang.Integer"/>
+            <arg     column="sort_order" javaType="_int"/>
+            <arg     column="label"      javaType="java.lang.String"/>
+            <arg     column="visibility" javaType="java.lang.String"/>
+            <arg     column="icon"       javaType="java.lang.String"/>
+            <arg     column="separator_before" javaType="_boolean"/>
+            <arg     column="url"        javaType="java.lang.String"/>
+            <arg     column="screen_id"  javaType="java.lang.Integer"/>
+        </constructor>
+    </resultMap>
+
+    <select id="findByPlacement" resultMap="menuNode">
+        SELECT menu_id,
+               placement,
+               parent_id,
+               sort_order,
+               label,
+               visibility,
+               icon,
+               separator_before,
+               url,
+               screen_id
+          FROM menu
+         WHERE placement = #{placement}
+         ORDER BY parent_id IS NOT NULL, parent_id, sort_order
+    </select>
+
+</mapper>

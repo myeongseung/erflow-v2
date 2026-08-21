@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/CompanyServiceImpl.java
+  레거시 SQL 을 그대로 옮긴다. 정렬은 id 내림차순이다 — unit 과 반대이므로 주의.
+-->
+<mapper namespace="com.erflow.company.CompanyMapper">
+
+    <resultMap id="company" type="com.erflow.company.Company">
+        <constructor>
+            <idArg column="id"            javaType="_int"/>
+            <arg   column="name"          javaType="java.lang.String"/>
+            <arg   column="postal_code"   javaType="java.lang.String"/>
+            <arg   column="address1"      javaType="java.lang.String"/>
+            <arg   column="address2"      javaType="java.lang.String"/>
+            <arg   column="phone"         javaType="java.lang.String"/>
+            <arg   column="business_code" javaType="java.lang.String"/>
+            <arg   column="field"         javaType="java.lang.String"/>
+            <arg   column="bank_code"     javaType="java.lang.String"/>
+            <arg   column="bank_account"  javaType="java.lang.String"/>
+            <arg   column="subcontract"   javaType="_int"/>
+        </constructor>
+    </resultMap>
+
+    <!--
+      레거시 분기
+        keyfield=name   " and name like ?"
+        keyfield=field  업종코드를 미리 풀어  " and field in (?,?,...)"
+
+      업종 검색인데 걸리는 코드가 없으면 레거시는 빈 IN () 을 만들다 죽었다.
+      결과가 없다는 뜻이므로 아무것도 걸리지 않는 조건을 건다 (D-017).
+    -->
+    <sql id="searchCondition">
+        WHERE subcontract = #{subcontract}
+        <if test="search != null">
+            <choose>
+                <when test="search.byName">
+                    AND name LIKE #{search.pattern}
+                </when>
+                <when test="search.matchesNothing">
+                    AND 1 = 0
+                </when>
+                <when test="search.byField">
+                    AND field IN
+                    <foreach item="code" collection="search.fieldCodes" open="(" separator="," close=")">
+                        #{code}
+                    </foreach>
+                </when>
+            </choose>
+        </if>
+    </sql>
+
+    <!-- 레거시: select * from company_tbl where subcontract = ? [조건] order by id desc limit ?, ? -->
+    <select id="findPage" resultMap="company">
+        SELECT id, name, postal_code, address1, address2,
+               phone, business_code, field, bank_code, bank_account, subcontract
+          FROM company_tbl
+        <include refid="searchCondition"/>
+         ORDER BY id DESC
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from company_tbl where subcontract = ? [조건] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM company_tbl
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 레거시: select * from company_tbl where id = ? -->
+    <select id="findById" resultMap="company">
+        SELECT id, name, postal_code, address1, address2,
+               phone, business_code, field, bank_code, bank_account, subcontract
+          FROM company_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 getCompanies(): select * from company_tbl order by id
+
+      찾기 팝업이 쓴다. 구분(subcontract) 을 가리지 않는다 — 목록 화면과 다른
+      점이라 눈에 띄게 적어 둔다.
+    -->
+    <select id="findAllNames" resultType="com.erflow.company.CompanyRow">
+        SELECT id, name
+          FROM company_tbl
+         ORDER BY id
+    </select>
+
+    <!--
+      레거시: insert into company_tbl values(0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id 자리에 0 을 넣어 AUTO_INCREMENT 를 태웠다. 컬럼명을 적어도 같은 결과이며,
+      테이블 컬럼 순서가 바뀌어도 깨지지 않는다.
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="company.id">
+        INSERT INTO company_tbl
+                    (name, postal_code, address1, address2, phone,
+                     business_code, field, bank_code, bank_account, subcontract)
+             VALUES (#{company.name}, #{company.postalCode}, #{company.address1},
+                     #{company.address2}, #{company.phone}, #{company.businessCode},
+                     #{company.field}, #{company.bankCode}, #{company.bankAccount},
+                     #{company.subcontract})
+    </insert>
+
+    <!-- 레거시: update company_tbl set name = ?, ... , subcontract = ? where id = ? -->
+    <update id="update">
+        UPDATE company_tbl
+           SET name          = #{company.name},
+               postal_code   = #{company.postalCode},
+               address1      = #{company.address1},
+               address2      = #{company.address2},
+               phone         = #{company.phone},
+               business_code = #{company.businessCode},
+               field         = #{company.field},
+               bank_code     = #{company.bankCode},
+               bank_account  = #{company.bankAccount},
+               subcontract   = #{company.subcontract}
+         WHERE id = #{company.id}
+    </update>
+
+    <!-- 레거시: delete from company_tbl where id = ? -->
+    <delete id="delete">
+        DELETE FROM company_tbl
+         WHERE id = #{id}
+    </delete>
+
+</mapper>

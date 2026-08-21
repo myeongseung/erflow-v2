@@ -1,0 +1,124 @@
+.content-wrap {
+	background-color: #e9ecef;
+}
+
+.main-notice {
+	/*내용 전체*/
+	width:100%;
+	min-width: 1024px;
+	margin-top: 50px;
+	margin-bottom: 20px;
+	box-sizing: border-box;
+}
+
+#postlist-th{
+	padding: 0px;
+}
+
+
+
+.main-notice .table-name {
+	text-align: center;
+}
+
+
+.box{
+	margin:0 auto;
+	padding:0 25px;
+	width: 100%;
+}
+
+.main-notice .notice1 .box .table-striped {
+	/*테이블 크기조정*/
+	min-width: 1400px;
+}
+
+.table-striped .board-content {
+	cursor: pointer;
+}
+
+
+
+.userBoardList-search {
+	display: flex;
+	justify-content: space-around;
+	margin-left:70%;
+}
+
+.userBoardList-search .empty-left {
+	margin-left: 20px;
+}
+
+.userBoardList-search .main-search-container {
+	width: 300px;
+	padding: 0;
+}
+
+.userBoardList-search .main-search-container .main-search-text {
+	width: 220px;
+}
+
+.button {
+	width: 60px;
+	height: 30px;
+	letter-spacing: 2.5px;
+	font-weight: bold;
+	background-color: #fff;
+	border: none;
+	border-radius: 20px;
+	cursor: pointer;
+	outline: none;
+}
+
+.search-button {
+	color: #fff;
+	background-color: rgba(0, 123, 255, 1);
+}
+
+.search-button:hover:not(:disabled):hover {
+	color: #fff;
+	background-color: rgba(0, 86, 179, 1);
+}
+
+.userBoardList-footer .search-option{
+   display:flex;
+   margin-left: 5px;
+}
+
+.userBoardList-footer .main-search-container{
+   width: 250px;
+   margin-left: 5px;
+}
+
+.userBoardList-footer .main-search-border{
+   width: 200px;
+}
+
+.userBoardList-footer .button-group{
+   margin-bottom: 5px;
+}
+
+.userBoardInfo{
+	display: flex;
+	justify-content: space-between;
+	margin-right: 35px;
+}
+.right-align {
+    text-align: right;
+    margin-right: 35px;
+    margin-bottom: 10px;
+}
+
+.menu-name{
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.comment-reader {
+	color: red;
+	text-decoration: none;
+}
+
+.post-reader {
+	text-decoration: none;
+}

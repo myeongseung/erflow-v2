@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!--/*
+  쪽지함.
+  출처: legacy/ERFlow/src/main/webapp/message/index.jsp
+
+  받은쪽지함(receiver)과 보낸쪽지함(sender)이 같은 화면을 class 로 갈라 쓴다. 헤더는
+  공통 fragment 를 쓰되 사이드 메뉴는 없다 — 쪽지 화면은 자체 nav 를 쓴다(레거시도 그렇다).
+
+  삭제는 «지움» 이 아니라 그 쪽에서 «안 보이게» 하는 소프트 삭제다(목록 SQL 의
+  <class>_visible = 1 필터). 처리는 다음 단계에서 붙인다.
+
+  레거시는 페이징 링크가 부르는 block()/paging() 을 어디에도 정의하지 않아 페이징이
+  동작하지 않았다(D-045). 2단계에서 js/message/index.js 에 두 함수를 정의해
+  되살렸다(D-107).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isReceiver=${className == 'receiver'}">
+<head th:replace="~{fragments/head :: head('쪽지 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/bootcss/bootstrap.css', '/css/message/index.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/message/index.js', '/js/main/findUser.js'} })}">
+</head>
+<body>
+<div class="messageindex-wrap">
+    <div class="messageindex-body">
+        <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+        <div class="message-header">
+            <div class="message-header-leftside"></div>
+            <div class="message-header-rightside"></div>
+        </div>
+        <div class="message-nav-wrap">
+            <div class="message-nav">
+                <div class="message-nav-all">
+                    <div class="empty-space"></div>
+                    <div class="message-nav-button">
+                        <button class="btn btn-primary write-message">쪽지쓰기</button>
+                    </div>
+                    <div class="message-nav-list">
+                        <div th:classappend="${isReceiver} ? 'message-nav-list-subject' : 'message-nav-sent-message'">받은쪽지함</div>
+                        <div th:classappend="${!isReceiver} ? 'message-nav-list-subject' : 'message-nav-sent-message'">보낸쪽지함</div>
+                    </div>
+                </div>
+            </div>
+            <form method="" action="" name="messageFrm">
+                <input type="hidden" name="class" th:value="${className}">
+                <div class="message-main">
+                    <div class="message-main-header">
+                        <div class="middle-header-button-group">
+                            <button class="btn btn-danger delete-message" type="submit">삭제</button>
+                            <button class="btn btn-primary reply-message" type="submit"
+                                    th:if="${isReceiver}">답장</button>
+                        </div>
+                        <div class="message-main-header-search">
+                            <div class="search-option">
+                                <select class="searchkeyfield" name="keyfield" id="">
+                                    <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                                    <option value="sender" th:if="${isReceiver}"
+                                            th:selected="${keyfield == 'sender'}">보낸사람</option>
+                                    <option value="receiver" th:if="${!isReceiver}"
+                                            th:selected="${keyfield == 'receiver'}">받는사람</option>
+                                    <option value="content" th:selected="${keyfield == 'content'}">내용</option>
+                                </select>
+                                <div class="main-search-container">
+                                    <div class="main-search-border">
+                                        <input class="main-search-text" type="search" placeholder="검색"
+                                               aria-label="Search" name="keyword" th:value="${keyword}">
+                                    </div>
+                                    <div class="main-search-icon">
+                                        <i class="fa-solid fa-magnifying-glass fa-lg"
+                                           id="message-search" title="검색하기"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="message-body">
+                        <div class="message-body-table">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                <tr>
+                                    <th class="message-body-check"><input name="check" id="chkAll" type="checkbox"></th>
+                                    <th class="message-body-sender"
+                                        th:text="${isReceiver ? '보낸 사람' : '받는 사람'}">보낸 사람</th>
+                                    <th class="message-body-content read-message">내용</th>
+                                    <th class="message-body-date">날짜</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="message : ${messages}">
+                                    <td class="message-body-check">
+                                        <input type="checkbox" name="messageId" th:value="${message.id}">
+                                        <input type="hidden" name="senderId" th:value="${message.senderId}">
+                                    </td>
+                                    <td class="message-body-sender"
+                                        th:text="${isReceiver ? message.senderLabel() : message.receiverLabel()}">[부서] 이름 직급</td>
+                                    <td class="message-body-content read-message" th:text="${message.content}">내용</td>
+                                    <td class="message-body-date" th:text="${message.createdAt}">날짜</td>
+                                </tr>
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td colspan="5"></td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    <!--/*
+                      푸터(페이징)는 message-main **안**이다 — 소스만 보면 레거시도
+                      </form> 뒤에 푸터를 적지만, 레거시는 message-main 을 닫지 않은 채
+                      </form> 을 만난다. HTML 파서는 그때 form 만 스택에서 빼고 열린
+                      div 는 그대로 두므로, 뒤따르는 푸터가 message-main 의 자식이 된다.
+                      브라우저 DOM 이 기준이므로(D-037) 그 자리를 따른다(D-098).
+                      밖에 두면 message-nav-wrap 의 flex 형제가 되어 배치가 어긋난다.
+                    */-->
+                    <div class="message-footer">
+                        <!--/* 페이징 — 레거시엔 죽어 있던 것을 되살렸다(D-045→D-107) */-->
+                        <div class="page-controller">
+                            <a th:if="${page.hasPreviousBlock()}" class="disabled"
+                               th:href="|javascript:block(5, ${page.nowBlock - 1})|">이전</a>
+                            <ul class="page-numbers">
+                                <a th:each="number : ${page.pageNumbers}"
+                                   th:href="|javascript:paging(${number})|"
+                                   th:classappend="${number == page.nowPage} ? 'disabled'">
+                                    <li th:text="${number}">1</li>
+                                </a>
+                            </ul>
+                            <a th:if="${page.hasNextBlock()}"
+                               th:href="|javascript:block(5, ${page.nowBlock + 1})|">다음</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            <!--/*
+              레거시는 classFrm 이 푸터 안에 있다. 여기서는 바깥 form 이 아직 열려
+              있는 채로는 안 된다 — HTML 파서가 **중첩 form 을 버려서** JS 의
+              $('form[name=classFrm]') 이 빈손이 되고 받은/보낸함 전환이 죽는다.
+              레거시는 </form> 조기 닫힘 덕에 우연히 살았던 자리다. 숨은 입력뿐이라
+              화면에는 아무것도 그리지 않으므로 밖으로 뺀다(D-098).
+            */-->
+            <form name="classFrm" method="get" th:action="@{/message}">
+                <input type="hidden" name="keyfield" th:value="${keyfield}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+                <input type="hidden" name="class" th:value="${className}">
+                <!--/* 레거시에는 없던 칸이다. 페이징 링크가 부르는 block()/paging() 이
+                       레거시에는 정의돼 있지 않아 쪽지가 15건을 넘으면 1페이지 말고는
+                       볼 수 없었다(D-045). 2단계에서 두 함수를 정의해 페이징을
+                       되살렸고(D-107), 함수가 제출할 페이지 번호를 여기 담는다.
+                       allowlist 에 이 화면으로 좁혀 등록했다. */-->
+                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

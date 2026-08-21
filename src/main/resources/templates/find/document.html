@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--/*
+  문서 찾기 팝업.
+  출처: legacy/ERFlow/src/main/webapp/findDocument.jsp
+
+  은행·업종 팝업과 겉모습이 같지만 도움말이 뜨지 않는다. 레거시가 검색어를
+  빈 문자열로 채워 놓고 null 인지 검사하기 때문이다(D-036). 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문서 찾기</title>
+    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/main/findDocument.js}"></script>
+</head>
+<body>
+<form th:action="@{/find/document}">
+    <div class="container">
+        <div class="search-box">
+            <input type="text" placeholder="예) 문서 ID or 문서명 검색" name="search"
+                   id="findDocument-input" th:value="${search == null ? '' : search}">
+            <button type="submit">검색</button>
+        </div>
+        <hr>
+
+        <!--/*
+          레거시에도 도움말 마크업은 있다. 다만 조건이 절대 참이 되지 않아 화면에
+          뜨지 않는다. 정답에는 남아 있으므로 마크업도 그대로 둔다 — 지우면
+          누락으로 잡힌다. 조건은 레거시와 같이 «절대 참이 아닌 것»으로 맞춘다.
+        */-->
+        <div class="tips" th:if="${search == null}">
+            <h3>tip</h3>
+            <p>아래와 같은 조합으로 검색하면 더욱 정확한 검색 결과가 제공됩니다.</p>
+
+            <div class="tip-item">
+                <strong>문서 ID</strong><br> 예) 20010 -&gt; 21년 하반기 결산문서
+            </div>
+            <div class="tip-item">
+                <strong>문서 명</strong><br> 예) 21년 하반기 결산문서 -&gt; 20010
+            </div>
+        </div>
+
+        <div>
+            <p th:each="entry : ${entries}">
+                <a href="javascript:void(0)" class="a_document_info"
+                   th:data-key="${entry.id}" th:data-value="${entry.subject}"
+                   th:text="' ' + ${entry.id} + ' ' + ${entry.subject} + ' '">20010 21년 하반기 결산문서</a>
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="footer">
+            Powered by 권명승<br> © 문서 찾기 서비스 제공
+        </div>
+    </div>
+</form>
+</body>
+</html>

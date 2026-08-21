@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처
+    UserServiceImpl.getUser          select * from user_tbl where id = ?
+    PermissionServiceImpl            select permission from permission_dept_tbl where dept_tbl_id = ?
+                                     select permission from permission_job_tbl  where job_tbl_id  = ?
+
+  레거시는 세 번 나눠 조회했다. 한 번에 읽되 **값만** 가져온다.
+  비트 연산을 SQL 로 옮기면 안 된다 — MariaDB 의 비트 연산은 부호가 없어서
+  관리자 판정이 뒤집힌다. Permissions 클래스 주석 참조.
+-->
+<mapper namespace="com.erflow.auth.AuthMapper">
+
+    <!--
+      부서·직급 행이 없어도 사용자는 조회되어야 한다. 레거시는 권한 조회가 따로였고
+      결과가 없으면 0 이었다. INNER JOIN 으로 바꾸면 그런 사용자가 통째로 사라져
+      "없는 사용자" 가 되어 버린다.
+    -->
+    <select id="findAuthUser" resultType="com.erflow.auth.AuthUser">
+        SELECT u.id,
+               u.name,
+               u.password,
+               COALESCE(d.permission, 0) AS deptPermission,
+               COALESCE(j.permission, 0) AS jobPermission
+          FROM user_tbl u
+          LEFT JOIN permission_dept_tbl d ON u.dept_tbl_id = d.dept_tbl_id
+          LEFT JOIN permission_job_tbl  j ON u.job_tbl_id  = j.job_tbl_id
+         WHERE u.id = #{id}
+    </select>
+
+    <!--
+      요구 권한은 **레거시 표에서 읽는다**(D-063). `program` 은 경로를 프로그램에 잇는
+      생성물이라 이름과 번호만 들고 있다 — 권한 값은 관리자가 화면에서 바꾸는 운영
+      데이터이고, 생성물을 다시 만들 때마다 그 수정이 사라지면 안 된다.
+
+      권한 행이 없으면 0 이 되어 **아무도 못 들어간다.** 그 자리를 비워 두면
+      «권한 대상이 아닌 경로» 와 구별되지 않아 모두에게 열린다 — 잠기는 쪽이 옳다.
+    -->
+    <select id="findScreenAccess" resultType="com.erflow.auth.ScreenAccess">
+        SELECT s.route,
+               s.param_name  AS paramName,
+               s.param_value AS paramValue,
+               p.name        AS programName,
+               COALESCE(l.dept_level, 0) AS deptLevel,
+               COALESCE(l.job_level, 0)  AS jobLevel
+          FROM screen s
+          JOIN program p ON s.program_id = p.program_id
+          LEFT JOIN permission_program_tbl l ON l.program_id = p.program_id
+         WHERE s.route = #{route}
+         ORDER BY s.param_name IS NULL, s.screen_id
+    </select>
+
+    <!--
+      경로가 아니라 코드로 묻는다. 부서 일정 만들기(레거시 CalendarController)가
+      그렇다 — 화면이 아니라 코드에 박혀 있어 screen 표에 행이 없다.
+
+      여기서도 권한 행이 없으면 0 이 되어 아무도 통과하지 못한다. 위와 같은 이유다.
+    -->
+    <select id="findProgramAccess" resultType="com.erflow.auth.ScreenAccess">
+        SELECT NULL AS route,
+               NULL AS paramName,
+               NULL AS paramValue,
+               p.name AS programName,
+               COALESCE(l.dept_level, 0) AS deptLevel,
+               COALESCE(l.job_level, 0)  AS jobLevel
+          FROM program p
+          LEFT JOIN permission_program_tbl l ON l.program_id = p.program_id
+         WHERE p.program_id = #{programId}
+    </select>
+
+    <update id="updatePassword">
+        UPDATE user_tbl
+           SET password = #{password}
+         WHERE id = #{id}
+    </update>
+
+</mapper>

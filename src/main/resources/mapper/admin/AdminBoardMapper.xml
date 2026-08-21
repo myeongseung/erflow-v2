@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/BoardServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/PermissionServiceImpl.java
+        (changeBoardReadPermission / changeBoardWritePermission)
+
+  권한 마스크는 **읽고 쓰기만** 한다. 계산은 Java 에서 — MariaDB 의 비트 연산은
+  부호가 없어 관리자 비트가 걸리면 뒤집힌다.
+-->
+<mapper namespace="com.erflow.admin.board.AdminBoardMapper">
+
+    <!--
+      레거시 getBoards(keyword, start, cnt):
+        select * from board_tbl [where subject like ?] limit ?, ?
+
+      사용자 쪽 게시판 목록과 다르다. 그쪽은 LIMIT 이 없어 페이징이 죽어 있는데
+      (D-025) 관리자 목록은 살아 있다. ORDER BY 는 양쪽 다 없다.
+    -->
+    <select id="findPage" resultType="com.erflow.admin.board.AdminBoardRow">
+        SELECT id,
+               subject,
+               created_at AS createdAt
+          FROM board_tbl
+        <if test="keyword != null and !keyword.trim().equals('')">
+            WHERE subject LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시 getBoardCounts(keyword): select count(*) from board_tbl [where subject like ?] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM board_tbl
+        <if test="keyword != null and !keyword.trim().equals('')">
+            WHERE subject LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <!-- 레거시 hasBoardName(name): 같은 이름의 게시판이 있는지 -->
+    <select id="countByName" resultType="int">
+        SELECT COUNT(*) FROM board_tbl WHERE subject = #{subject}
+    </select>
+
+    <!--
+      레거시 createBoard: 게시판을 만들면서 권한 네 칸을 관리자 비트로 채운다.
+      값은 Java 가 넘긴다.
+    -->
+    <insert id="insertBoard">
+        INSERT INTO board_tbl
+                    (subject, created_at,
+                     permission_read_dept_level, permission_read_job_level,
+                     permission_write_dept_level, permission_write_job_level)
+             VALUES (#{subject}, NOW(), #{level}, #{level}, #{level}, #{level})
+    </insert>
+
+    <!-- 레거시 updateBoard: update board_tbl set subject = ? where id = ? -->
+    <update id="updateBoard">
+        UPDATE board_tbl SET subject = #{subject} WHERE id = #{id}
+    </update>
+
+    <!--
+      레거시 getPosts(boardId): select * from post_tbl where board_tbl_id = ?
+      게시판을 지울 때 그 안의 글을 훑기 위해 번호만 읽는다.
+    -->
+    <select id="findPostIds" resultType="int">
+        SELECT id FROM post_tbl WHERE board_tbl_id = #{boardId}
+    </select>
+
+    <!-- 레거시 deleteBoard: delete from board_tbl where id = ? -->
+    <delete id="deleteBoard">
+        DELETE FROM board_tbl WHERE id = #{id}
+    </delete>
+
+    <!--
+      레거시 changeBoardReadPermission:
+        update board_tbl set permission_read_dept_level = ?,
+                             permission_read_job_level = ? where id = ?
+
+      한 화면은 부서 또는 직급 한쪽만 고치지만 문장은 둘 다 쓴다. 고치지 않는 쪽은
+      읽어 온 값을 그대로 되돌려 놓는다 — 레거시가 그렇게 한다.
+    -->
+    <update id="updateReadPermission">
+        UPDATE board_tbl
+           SET permission_read_dept_level = #{deptLevel},
+               permission_read_job_level  = #{jobLevel}
+         WHERE id = #{boardId}
+    </update>
+
+    <update id="updateWritePermission">
+        UPDATE board_tbl
+           SET permission_write_dept_level = #{deptLevel},
+               permission_write_job_level  = #{jobLevel}
+         WHERE id = #{boardId}
+    </update>
+
+</mapper>

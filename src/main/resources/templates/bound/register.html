@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--/*
+  입·출고 등록.
+  출처: legacy/ERFlow/src/main/webapp/bound/boundRegister.jsp
+
+  화면 글자(입고/출고)와 권한이 flag 로 갈린다. 제품·직원 찾기 팝업이 값을 채우고,
+  창고 주소는 다음 우편번호 API(Daum)가 채운다. registerProc 로 넘어가던 것을
+  POST /bound/register-proc 로 받는다(CSRF 켜짐, D-013).
+
+  라벨의 for 값은 레거시 그대로다 — 수량만 입력 id 와 맞고(input7), 나머지는 어긋나
+  placeholder 가 라벨이 된다. 맞추면 게이트가 어긋난다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isInbound=${flag == 'inbound'}">
+<head th:replace="~{fragments/head :: head(${isInbound ? '입고 등록 페이지' : '출고 등록 페이지'}, ${ {'/css/bootcss/bootstrap.css', '/css/jquery-ui.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/boundRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/main/bound.js', '/js/datepicker.js', '/js/bootjs/bootstrap.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="bound-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name"
+                  th:text="|사용자 &gt; ${isInbound ? '구매' : '영업'} &gt; ${isInbound ? '입고' : '출고'} 등록|">사용자 &gt; 구매 &gt; 입고 등록</span>
+        </div>
+        <div class="bound-insert">
+            <div class="bound-form">
+                <form th:action="@{/bound/register-proc}" method="post" name="boundFrm">
+                    <input type="hidden" name="flag" th:value="${flag}">
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">제품명:</label>
+                        <input type="text" id="productName" name="productName" placeholder="제품명" readonly>
+                        <input type="hidden" id="productId" name="productId"><br>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-product" value="제품 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input2" th:text="|${isInbound ? '입고' : '출고'}자:|">입고자:</label>
+                        <input type="text" id="userId" name="userId"
+                               th:placeholder="|${isInbound ? '입고' : '출고'}자 사번|" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-each-user" value="직원 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input4">창고 주소:</label>
+                        <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode" readonly>
+                        <input type="text" id="sample6_extraAddress" placeholder="동/읍/면" readonly>
+                        <input type="button" value="우편번호 찾기" class="btn btn-secondary btn-lg btn_execDaumPostcode">
+                        <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"><br>
+                        <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="input7">수량</label>
+                        <input type="number" id="input7" name="count" placeholder="수량">
+                    </div>
+                    <div class="form-group">
+                        <label for="input8" th:text="|${isInbound ? '입고' : '출고'} 날짜|">입고 날짜</label>
+                        <input type="text" id="datepicker" name="boundedAt"
+                               th:placeholder="|${isInbound ? '입고' : '출고'}날짜|">
+                    </div>
+                    <div class="btn-group">
+                        <button class="boundRegister-btn" type="submit"
+                                th:text="|${isInbound ? '입고' : '출고'} 등록|">입고 등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

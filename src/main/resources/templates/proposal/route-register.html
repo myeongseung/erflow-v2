@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--/*
+  결재라인 등록.
+  출처: legacy/ERFlow/src/main/webapp/proposal/proposalRouteRegister.jsp
+
+  사용자 찾기로 결재자를 고르면 화면을 다시 그리는 self-reload 폼이다. 고른 사번을
+  Base64(URL 인코딩)로 감싸 receiver 로 넘기면, 서버가 풀어 결재자 표를 그린다.
+  결재 순서 맨 앞에는 만든 사람 자신이 들어간다(등록 처리에서).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('결재 생성', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/proposal/proposalRegister.css', '/css/main/header.css', '/css/main/aside.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/proposal/proposalRouteRegister.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="proposal-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 전자결재 &gt; 결재라인 등록</span>
+        </div>
+        <div class="proposal-insert">
+            <div class="proposal-form">
+                <form th:action="@{/proposal/route-register-proc}" method="post" name="proposalFrm">
+                    <input type="hidden" id="userId" name="userId" th:value="${userId}">
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재명:</span>
+                        </div>
+                        <input type="text" class="form-control" id="proposalName" placeholder="결재명"
+                               aria-label="nickname" aria-describedby="basic-addon1"
+                               name="nickname" th:value="${nickname}">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재라인:</span>
+                        </div>
+                        <input type="text" class="form-control" id="route" name="route"
+                               th:value="${routeUserNames}" placeholder="결재라인" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-user" value="직원 찾기">
+                    </div>
+                    <div class="form-group d-grid gap-2" id="table-form">
+                        <table id="myTable" class="table table-striped">
+                            <tr>
+                                <td>No</td>
+                                <td>이름</td>
+                                <td>사번</td>
+                                <td>직급</td>
+                            </tr>
+                            <tr th:each="u,stat : ${routeUsers}">
+                                <td th:text="${stat.count}">1</td>
+                                <td th:text="${u.name}">이름</td>
+                                <td>
+                                    <span th:text="${u.id}">사번</span>
+                                    <input type="hidden" name="routeId" th:value="${u.id}">
+                                </td>
+                                <td th:text="${u.jobName}">직급</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="proposalRegister-btn" type="submit">결재 등록</button>
+                    </div>
+                </form>
+                <form name="readFrm" th:action="@{/proposal/route-register}" method="get">
+                    <input type="hidden" name="receiver">
+                    <input type="hidden" name="nickname">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

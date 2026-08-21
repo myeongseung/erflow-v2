@@ -1,0 +1,32 @@
+<!--/*
+  사이드 메뉴.
+
+  레거시 indexSide.jsp 의 구조를 그대로 따른다. 다른 점은 항목이 어디서 오느냐뿐이다 —
+  하드코딩된 <li> 대신 menu 테이블에서 읽는다.
+
+  class 이름은 손대지 않는다. css/main/aside.css 가 이 이름들에 걸려 있고, 바꾸면
+  화면이 무너진다.
+*/-->
+<section class="app" th:fragment="side(menu)">
+    <aside class="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="sidebar-ul">
+                <li class="sidebar-mainmenu" th:each="item : ${menu}">
+
+                    <!--/* 펼침 전용 그룹은 글자만, 링크가 있으면 감싼다.
+                           레거시의 '게시판'이 후자다(최상위인데 바로 이동한다). */-->
+                    <span class="menu-title" th:if="${item.group}" th:text="${item.label}">그룹</span>
+                    <a th:unless="${item.group}" th:href="@{${item.url}}">
+                        <span class="menu-title" th:text="${item.label}">메뉴</span>
+                    </a>
+
+                    <ul class="nav-flyout" th:if="${!item.children.isEmpty()}">
+                        <li th:each="child : ${item.children}">
+                            <a th:href="@{${child.url}}" th:text="${child.label}">하위 메뉴</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+</section>

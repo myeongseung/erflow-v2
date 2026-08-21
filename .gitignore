@@ -1,0 +1,38 @@
+### 빌드 산출물 ###
+build/
+.gradle/
+out/
+bin/
+!gradle/wrapper/gradle-wrapper.jar
+
+### 접속 정보 — 절대 커밋하지 않는다 ###
+src/main/resources/application-local.yml
+**/application-*-local.yml
+.env
+*.pem
+*.key
+
+### 렌더링 산출물 ###
+**/build/rendered/
+
+### 도구 ###
+__pycache__/
+*.pyc
+.pytest_cache/
+
+### IDE ###
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### 세션 상태 ###
+.bkit/

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: service/implementation/ProposalServiceImpl.getRecentProposalViews(userId, start, cnt)
+-->
+<mapper namespace="com.erflow.index.IndexMapper">
+
+    <!--
+      레거시:
+        select * from recent_proposal_view
+         where original_user = ? or (user_id = ? and result = 3)
+         order by id desc limit ?, ?
+
+      original_user 는 기안자다. 즉 «내가 올린 것 전부» + «내 차례로 와 있는 진행중
+      결재» 다. 결재 리스트(proposal_view)와 조건이 다르므로 두 화면의 건수는 다르다.
+    -->
+    <select id="findRecentProposals" resultType="com.erflow.index.IndexProposalRow">
+        SELECT id,
+               subject,
+               received_at AS receivedAt,
+               result
+          FROM recent_proposal_view
+         WHERE original_user = #{userId}
+            OR (user_id = #{userId} AND result = 3)
+         ORDER BY id DESC
+         LIMIT #{start}, #{count}
+    </select>
+
+</mapper>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/BoundServiceImpl.java
+  레거시는 getInbounds(type=0)·getOutbounds(type=1)로 나뉘어 type 을 상수로 박았다.
+  여기서는 type 파라미터로 합친다. 정렬은 id 오름차순.
+
+  검색 컬럼을 문자열로 이어 붙이지 않고 분기로 고정한다.
+-->
+<mapper namespace="com.erflow.bound.BoundMapper">
+
+    <!--
+      레거시 검색 분기
+        id/productName/userName  and <col> like ?
+        date                     and bounded_at >= ?
+    -->
+    <sql id="searchCondition">
+        <if test="search != null and search.active">
+            <choose>
+                <when test="search.like">
+                    AND
+                    <choose>
+                        <when test="search.column == 'id'">id</when>
+                        <when test="search.column == 'product_name'">product_name</when>
+                        <when test="search.column == 'user_name'">user_name</when>
+                    </choose>
+                    LIKE #{search.pattern}
+                </when>
+                <when test="search.date">
+                    AND bounded_at &gt;= #{search.dateValue}
+                </when>
+            </choose>
+        </if>
+    </sql>
+
+    <!-- 레거시: select * from bound_view where type = ? [조건] order by id limit ?, ? -->
+    <select id="findPage" resultType="com.erflow.bound.BoundRow">
+        SELECT id,
+               product_name AS productName,
+               user_name    AS userName,
+               address1,
+               address2,
+               bounded_at   AS boundedAt,
+               count
+          FROM bound_view
+         WHERE type = #{type}
+        <include refid="searchCondition"/>
+         ORDER BY id
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from bound_view where type = ? [조건] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM bound_view
+         WHERE type = #{type}
+        <include refid="searchCondition"/>
+    </select>
+
+    <!--
+      레거시: insert into bound_tbl values(null, ?, ?, ?, ?, ?, ?, ?, <type>)
+      위치 기반이었다(입고는 마지막이 0, 출고는 1). 컬럼명을 명시하고 type 을 값으로
+      넘겨 한 구문으로 합쳤다 — 넣는 값은 같다.
+    -->
+    <insert id="insert">
+        INSERT INTO bound_tbl
+                    (product_tbl_id, user_tbl_id, postal_code, address1, address2,
+                     bounded_at, count, type)
+             VALUES (#{bound.productId}, #{bound.userId}, #{bound.postalCode},
+                     #{bound.address1}, #{bound.address2}, #{bound.boundedAt},
+                     #{bound.count}, #{bound.type})
+    </insert>
+
+    <!--
+      레거시 getBoundByType: select * from bound_view where id = ? and type = ?
+
+      레거시 extract 는 user_id 자리에 product_id 를 읽었다 — 직원을 다시 고르지
+      않고 저장하면 담당 사번이 제품 코드로 덮이는 조용한 손상이었다(D-048).
+      뷰에는 user_id 가 멀쩡히 있다. 2단계에서 그 컬럼을 읽는다(D-103).
+    -->
+    <select id="findForUpdate" resultType="com.erflow.bound.BoundDetail">
+        SELECT product_id   AS productId,
+               product_name AS productName,
+               user_id      AS userId,
+               user_name    AS userName,
+               postal_code  AS postalCode,
+               address1,
+               address2,
+               count
+          FROM bound_view
+         WHERE id = #{id} AND type = #{type}
+    </select>
+
+    <!--
+      레거시: update bound_tbl set product_tbl_id=?, user_tbl_id=?, postal_code=?,
+              address1=?, address2=?, count=? where id=? and type=?
+      bounded_at 은 바꾸지 않는다(레거시 SQL 에 없다).
+    -->
+    <update id="update">
+        UPDATE bound_tbl
+           SET product_tbl_id = #{bound.productId},
+               user_tbl_id    = #{bound.userId},
+               postal_code    = #{bound.postalCode},
+               address1       = #{bound.address1},
+               address2       = #{bound.address2},
+               count          = #{bound.count}
+         WHERE id = #{bound.id} AND type = #{bound.type}
+    </update>
+
+    <!-- 레거시: delete from bound_tbl where id = ? and type = ? -->
+    <delete id="delete">
+        DELETE FROM bound_tbl
+         WHERE id = #{id} AND type = #{type}
+    </delete>
+
+</mapper>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/DocumentServiceImpl.java
+-->
+<mapper namespace="com.erflow.document.DocumentMapper">
+
+    <!--
+      레거시 getDocumentViews(null, null, "user", userId) 가 만드는 SQL 이다.
+        select * from document_view where user_id = ? order by id desc
+    -->
+    <select id="findByUser" resultType="com.erflow.document.DocumentRow">
+        SELECT id, subject
+          FROM document_view
+         WHERE user_id = #{userId}
+         ORDER BY id DESC
+    </select>
+
+    <!--
+      레거시 hasProposal: select count(*) from proposal_tbl where document_tbl_id = ?
+
+      찾기 팝업이 문서마다 이것을 다시 부른다. 한 번의 조인으로 합치면 질의는
+      줄지만 결과가 같은지 따로 증명해야 한다. 게시판 목록에서와 같은 판단으로
+      호출 구조를 그대로 둔다 — 사용자 본인 문서만 훑으므로 건수가 작다.
+    -->
+    <select id="countProposals" resultType="int">
+        SELECT COUNT(*)
+          FROM proposal_tbl
+         WHERE document_tbl_id = #{documentId}
+    </select>
+
+    <!--
+      레거시 getDocumentViews(keyfield, keyword, "user", userId, start, cnt):
+        select * from document_view [where <조건>] [and|where user_id = ?]
+        order by id desc limit ?, ?
+
+      내 문서만 본다 — 목록 화면이 flag="user" 로 부르기 때문이다.
+      문서ID 검색만 정확히 같은 값이고 나머지 둘은 부분 일치다.
+    -->
+    <sql id="searchCondition">
+        <where>
+            <if test="search.bySubject">
+                subject LIKE #{search.keywordPattern} AND
+            </if>
+            <if test="search.byTemplate">
+                template_name LIKE #{search.keywordPattern} AND
+            </if>
+            <if test="search.byId">
+                id = #{search.id} AND
+            </if>
+            user_id = #{userId}
+        </where>
+    </sql>
+
+    <select id="findPage" resultType="com.erflow.document.DocumentListRow">
+        SELECT id,
+               subject,
+               template_name AS templateName,
+               created_at    AS createdAt,
+               updated_at    AS updatedAt,
+               doc_status    AS docStatus,
+               proposal_status AS proposalStatus
+          FROM document_view
+        <include refid="searchCondition"/>
+         ORDER BY id DESC
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시 getDocumentCount: select count(*) from document_view [조건] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM document_view
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 레거시 getDocumentView(id): select * from document_view where id = ? -->
+    <select id="findDetail" resultType="com.erflow.document.DocumentDetail">
+        SELECT id,
+               user_id AS userId,
+               subject,
+               content
+          FROM document_view
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시: insert into document_tbl values (null, ?, ?, ?, ?, ?, 0, 0, now(), null)
+      바인딩 순서는 userId, routeId, templateId, subject, content 다. 결재라인은
+      문서를 만들 때 정하지 않으므로 언제나 0 이 들어간다.
+    -->
+    <insert id="insertDocument">
+        INSERT INTO document_tbl
+                    (user_tbl_id, proposal_route_tbl_id, template_tbl_id,
+                     subject, content, doc_status, proposal_status, created_at, updated_at)
+             VALUES (#{userId}, 0, #{templateId}, #{subject}, #{content}, 0, 0, NOW(), NULL)
+    </insert>
+
+    <!--
+      레거시: update document_tbl set proposal_route_tbl_id = ?, template_tbl_id = ?,
+             subject = ?, content = ?, updated_at = now() where id = ?
+      결재라인 자리에도 0 이 들어간다 — 화면이 그 값을 보내지 않는다.
+    -->
+    <update id="updateDocument">
+        UPDATE document_tbl
+           SET proposal_route_tbl_id = 0,
+               template_tbl_id = #{templateId},
+               subject = #{subject},
+               content = #{content},
+               updated_at = NOW()
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: delete from document_tbl where id = ? -->
+    <delete id="deleteDocument">
+        DELETE FROM document_tbl WHERE id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<!--/*
+  게시판 관리.
+  출처: legacy/ERFlow/src/main/webapp/admin/board/adminBoardList.jsp
+
+  표가 둘이다. 왼쪽이 게시판, 오른쪽이 «고른 게시판의 글» 이고 페이징도 검색도 두
+  벌이다. 숨은 readFrm 하나가 그 값을 모두 들고 다니며, 검색·페이징·돋보기가 전부
+  그 폼에 값을 옮겨 담아 제출한다(js/admin/adminBoardList.js).
+
+  공지사항(1)과 자유게시판(2)에는 체크박스가 없다 — 지우지 못하게 막아 둔 것이다.
+
+  **오른쪽 페이징이 왼쪽 페이지 번호를 따라간다.** 레거시가 게시글 쪽 블록을
+  nowPage 가 아니라 nowBoard 로 계산한다(D-067). 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 관리 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/adminBoardList.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common/page.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminBoardList.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="empty-space"></div>
+        <div class="main-notice">
+
+            <div class="left">
+                <div class="empty-space"></div>
+                <div class="left-subject">게시판 목록</div>
+                <div class="empty-space"></div>
+
+                <div class="empty-space"></div>
+                <form name="boardFrm" th:action="@{/admin/board/delete-proc}" method="post">
+                    <div class="left-group">
+                        <div class="admin-menu">
+                            <button type="button" class="btn btn-secondary register-board">생성</button>
+                            <button type="button" class="btn btn-secondary update-board">수정</button>
+                            <button type="submit" class="btn btn-danger">삭제</button>
+                        </div>
+                        <div class="left-group">
+                            <div class="main-search-container">
+                                <div class="main-search-icon">
+                                    <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                                </div>
+                                <div class="main-search-border">
+                                    <input class="main-search-text" name="board" type="search"
+                                           placeholder="검색하기" aria-label="Search" th:value="${boardName}">
+                                </div>
+                            </div>
+                            <button type="button" id="boardSearch" class="btn btn-primary">검색</button>
+                        </div>
+                    </div>
+                    <div class="empty-space"></div>
+                    <!--/* 각 box안에 체크박스에 name태그로 변화를 둠 */-->
+                    <div class="box">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th style="width: 5%;"><input type="checkbox" id="chkAllBoard"></th>
+                                <th style="width: 30%;">게시판 이름</th>
+                                <th style="width: 20%;">최초 생성시각</th>
+                                <th style="width: 15%;">부서 읽기</th>
+                                <th style="width: 15%;">부서 쓰기</th>
+                                <th style="width: 15%;">직급 읽기</th>
+                                <th style="width: 15%;">직급 쓰기</th>
+                                <th style="width: 5%;"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="board : ${boards}">
+                                <td>
+                                    <input th:if="${board.deletable()}" type="checkbox"
+                                           name="boardId" th:value="${board.id}">
+                                </td>
+                                <td><a th:href="@{/post/list(boardId=${board.id})}"
+                                       th:text="${board.subject}">게시판 이름</a></td>
+                                <td th:text="${board.createdAt}">최초 생성시각</td>
+                                <td><a th:href="@{/admin/board/dept-update(id=${board.id},flag='read')}">수정</a></td>
+                                <td><a th:href="@{/admin/board/dept-update(id=${board.id},flag='write')}">수정</a></td>
+                                <td><a th:href="@{/admin/board/job-update(id=${board.id},flag='read')}">수정</a></td>
+                                <td><a th:href="@{/admin/board/job-update(id=${board.id},flag='write')}">수정</a></td>
+                                <td><i class="board-view fa-solid fa-magnifying-glass fa-lg"
+                                       th:data-id="${board.id}" title="보기"></i></td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <td colspan="8"></td>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <!--/* --box */-->
+                </form>
+
+            <!--/* 페이징 */-->
+            <div class="page-controller">
+                <a th:if="${boardPage.hasPreviousBlock()}"
+                   th:href="|javascript:blockBoard('${boardPage.pagePerBlock}', '${boardPage.nowBlock - 1}')|"
+                   class="disabled">이전</a>
+                <ul class="page-numbers">
+                    <li th:each="number : ${boardPage.pageNumbers}">
+                        <a th:href="|javascript:pagingBoard('${number}')|"
+                           th:classappend="${number == boardPage.nowPage} ? 'disabled'"
+                           th:text="${number}">1</a>
+                    </li>
+                </ul>
+                <a th:if="${boardPage.hasNextBlock()}"
+                   th:href="|javascript:blockBoard('${boardPage.pagePerBlock}', '${boardPage.nowBlock + 1}')|">다음</a>
+            </div>
+        </div>
+        <!--/* --left */-->
+        <div class="right">
+            <div class="empty-space"></div>
+            <div class="right-subject">게시글 목록</div>
+            <div class="empty-space"></div>
+            <div class="right-group">
+                <form name="postFrm" th:action="@{/admin/board/post-delete-proc}" method="post">
+                    <input type="hidden" name="boardId" th:value="${boardId}">
+                    <div class="right-group-left">
+                        <div class="admin-menu">
+                            <button type="submit" class="btn btn-danger">삭제</button>
+                        </div>
+                        <div class="main-leftgroup">
+                            <div class="main-search-select">
+                                <select name="keyfield">
+                                    <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                                    <option value="subject" th:selected="${keyfield == 'subject'}">제목</option>
+                                    <option value="author" th:selected="${keyfield == 'author'}">작성자</option>
+                                </select>
+                            </div>
+                            <div class="main-search-container">
+                                <div class="main-search-icon">
+                                    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+                                </div>
+                                <div class="main-search-border">
+                                    <!--/* 레거시는 여기에 class 를 두 번 적었다
+                                           (main-search-text 와 button). 브라우저는 앞의
+                                           것만 쓰고 뒤의 것을 버린다 — 그 DOM 을 기준으로
+                                           옮긴다(D-037). Thymeleaf 는 중복 속성을 아예
+                                           읽지 못한다 */-->
+                                    <input class="main-search-text" id="keyword" name="keyword" type="search"
+                                           placeholder="검색하기" aria-label="Search"
+                                           th:value="${keyword}">
+                                </div>
+                            </div>
+                            <button type="button" id="postSearch" class="btn btn-primary">검색</button>
+                        </div>
+                    </div>
+                    <div class="empty-space"></div>
+                    <div>
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th style="width: 5%;"><input type="checkbox" id="chkAllPost"></th>
+                                <th style="width: 10%;">글번호</th>
+                                <th style="width: 30%;">제목</th>
+                                <th style="width: 15%;">작성자</th>
+                                <th style="width: 30%;">작성날짜</th>
+                                <th style="width: 5%;">조회수</th>
+                                <th style="width: 5%;">댓글수</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="row : ${posts}">
+                                <td><input type="checkbox" name="postId" th:value="${row.post.id}"></td>
+                                <td th:text="${row.post.id}">1</td>
+                                <td><a th:href="@{/post/view(boardId=${boardId},id=${row.post.id})}"
+                                       th:text="${row.post.subject}">제목</a></td>
+                                <td><a th:href="@{/profile(id=${row.post.userId})}"
+                                       th:text="${row.post.name}">작성자</a></td>
+                                <td th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">작성날짜</td>
+                                <td th:text="${row.post.count}">0</td>
+                                <td th:text="${row.commentCount}">0</td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <td colspan="6"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </form>
+            </div>
+            <!--/* 페이징 */-->
+            <div class="page-controller">
+                <a th:if="${postBlock.hasPreviousBlock()}"
+                   th:href="|javascript:blockPost('${postBlock.pagePerBlock}', '${postBlock.nowBlock - 1}')|"
+                   class="disabled">이전</a>
+                <ul class="page-numbers">
+                    <li th:each="number : ${postBlock.pageNumbers}">
+                        <a th:href="|javascript:pagingPost('${number}')|"
+                           th:classappend="${number == postPage.nowPage} ? 'disabled'"
+                           th:text="${number}">1</a>
+                    </li>
+                </ul>
+                <a th:if="${postBlock.hasNextBlock()}"
+                   th:href="|javascript:blockPost('${postBlock.pagePerBlock}', '${postBlock.nowBlock + 1}')|">다음</a>
+            </div>
+            <form name="readFrm" th:action="@{/admin/board/list}" method="get">
+                <input type="hidden" name="nowBoard" th:value="${boardPage.nowPage}">
+                <input type="hidden" name="nowPage" th:value="${postPage.nowPage}">
+                <input type="hidden" name="board" th:value="${boardName}">
+                <input type="hidden" name="boardId" th:value="${boardId}">
+                <input type="hidden" name="keyfield" th:value="${keyfield}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

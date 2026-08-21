@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--/*
+  관리자 홈(대시보드).
+  출처: legacy/ERFlow/src/main/webapp/admin/admin.jsp
+
+  한 화면에 다섯 칸이다 — 근무 현황(원 그래프)·결재·수/발주 내역·공지사항·출퇴근관리.
+  그래프만 값을 따로 받아 온다(js/admin/adminGraph.js -> /admin/graph/view).
+
+  칸마다 페이징이 없다. 결재는 recent_proposal_view 를 그대로 다 찍고, 수·발주와
+  공지사항은 15건에서 끊는다. 레거시 그대로다.
+
+  결재 제목은 10글자, 이름은 6글자에서 잘라 «...» 을 붙인다. 근무 시간은 한 시간을
+  뺀 값이고(점심으로 보인다) 아직 퇴근하지 않은 사람은 «지금» 까지로 센다 — 화면을
+  열 때마다 늘어난다.
+
+  꼬리말(adminFooter)은 관리자 화면 중 여기에만 있다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERFlow Administrator Configuration</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/adminGraph.js}"></script>
+    <script th:src="@{/js/admin/adminCategory.js}"></script>
+    <script th:src="@{https://d3js.org/d3.v7.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="admin-body-wrap">
+            <div class="admin-body-left">
+                <div class="workstatus">
+                    <div class="graph-header">
+                        <div class="graph-header-name">근무 현황</div>
+                        <div>&nbsp;</div>
+                    </div>
+                    <svg id="graph" width="100%" height="100%"></svg>
+
+                </div> <!--/* 근무현황 */-->
+                <div class="approval">
+
+                    <div class="body-header">
+                        <div class="body-header-name">결재</div>
+                        <div>&nbsp;</div>
+                    </div>
+                    <div class="approval-content-div">
+                        <table class="approval-content">
+                            <tr>
+                                <th>사번</th>
+                                <th class="approval-subject">문서제목</th>
+                                <th class="approval-date">결재요청시각</th>
+                                <th class="approval-status">진행상황</th>
+                            </tr>
+                            <tr th:each="proposal : ${proposals}">
+                                <td th:text="${proposal.userId}">사번</td>
+                                <td colspan="3">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text">
+                                            <a th:href="@{/proposal/document(proposalId=${proposal.id})}"
+                                               style="text-decoration: none;"
+                                               th:text="${proposal.shortSubject()}">문서제목</a>
+                                        </span>
+                                        <input type="text" readonly class="category-date form-control"
+                                               th:value="${proposal.receivedAt}">
+                                        <span class="input-group-text"
+                                              th:style="|background-color: ${proposal.statusColor()};|">
+                                            <div class="category" th:text="${proposal.statusLabel()}">진행상황</div>
+                                        </span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div> <!--/* 결재 */-->
+                </div>
+            </div>
+            <div class="admin-body-right">
+                <div class="admin-right-group">
+                    <div class="right-group-element">
+                        <div class="basic-info">
+                            <div class="body-header">
+                                <div class="body-header-name">수/발주 내역</div>
+                                <div>&nbsp;</div>
+                            </div>
+                            <div class="temporary-div">
+                                <table class="temporary table">
+                                    <tr>
+                                        <th>등록인</th>
+                                        <th>수주/발주</th>
+                                        <th>요청일</th>
+                                        <th>상태</th>
+                                    </tr>
+                                    <tr th:each="task : ${tasks}">
+                                        <td th:text="${task.userName}">등록인</td>
+                                        <td th:text="${task.typeLabel()}">수주</td>
+                                        <td th:text="${task.createdAtLabel}">요청일</td>
+                                        <td th:text="${task.statusLabel()}">상태</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div> <!--/* 기본정보 */-->
+                        <div class="notification">
+                            <div class="body-header">
+                                <div class="body-header-name">공지사항</div>
+                                <div>&nbsp;</div>
+                            </div>
+                            <div class="notification-table-div">
+                                <table class="table table-bordered table-hover notification-table">
+                                    <thead>
+                                    <tr>
+                                        <th scope="col" class="notification-subject">제목</th>
+                                        <th scope="col" class="notification-date">작성일</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="row : ${notices}">
+                                        <td><a th:href="@{/post/view(boardId=1,id=${row.post.id})}"
+                                               style="text-decoration: none;"
+                                               th:text="${row.post.subject}">제목</a></td>
+                                        <td class="notification-date"
+                                            th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">작성일</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div> <!--/* 공지사항 */-->
+                    </div>
+                    <div class="attendance-management">
+                        <div class="body-header">
+                            <div class="body-header-name"><i class="fa-regular fa-clock fa-lg"></i> 출/퇴근관리</div>
+                            <div>&nbsp;</div>
+                        </div>
+                        <div class="attendance-management-content-div">
+                            <table class="attendance-management-content">
+                                <tr th:each="work : ${works}">
+                                    <td class="coworker" th:text="${work.shortName()}">이름</td>
+                                    <td colspan="2">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text">
+                                                <div class="category" th:text="${work.statusLabel()}">근무 중</div>
+                                            </span>
+                                            <input type="text" class="form-control time-cell" readonly
+                                                   th:value="${work.workedTime()}">
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div> <!--/* 출퇴근 관리 */-->
+                </div>
+                <th:block th:replace="~{fragments/admin-footer :: footer}"></th:block>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: service/implementation/CalendarServiceImpl
+-->
+<mapper namespace="com.erflow.calendar.CalendarMapper">
+
+    <!--
+      레거시:
+        select * from calendar_view
+         where type = 2 or (type = 1 and dept_id = ?) or (type = 0 and user_id = ?)
+
+      부서 번호는 세션에 담긴 사본에서 왔다. 여기서는 인증 주체가 부서를 들고 있지
+      않으므로 사번으로 그때 읽는다 — 값은 같고, 부서를 옮기면 바로 반영된다.
+    -->
+    <select id="findVisible" resultType="com.erflow.calendar.CalendarEvent">
+        SELECT c.id,
+               c.user_id    AS userId,
+               c.dept_id    AS deptId,
+               c.dept_name  AS deptName,
+               c.subject,
+               c.content,
+               <!-- FullCalendar 가 읽는 이름이 start/end 다. END 는 예약어라 감싼다 -->
+               c.started_at AS `start`,
+               c.ended_at   AS `end`,
+               c.type
+          FROM calendar_view c
+         WHERE c.type = 2
+            OR (c.type = 1
+                AND c.dept_id = (SELECT u.dept_tbl_id FROM user_tbl u WHERE u.id = #{userId}))
+            OR (c.type = 0 AND c.user_id = #{userId})
+    </select>
+
+    <!--
+      레거시:
+        insert into calendar_tbl (user_tbl_id, subject, content, started_at, ended_at, type)
+        values (?, ?, ?, ?, ?, ?)
+    -->
+    <insert id="insertEvent">
+        INSERT INTO calendar_tbl
+                    (user_tbl_id, subject, content, started_at, ended_at, type)
+             VALUES (#{event.userId}, #{event.subject}, #{event.content},
+                     #{event.start}, #{event.end}, #{event.type})
+    </insert>
+
+    <!--
+      레거시:
+        update calendar_tbl set subject = ?, content = ?, started_at = ?,
+               ended_at = ?, type = ? where id = ?
+
+      레거시는 **주인을 보지 않았다** — 번호만 맞으면 남의 일정도 고쳐졌다(D-083).
+      2단계에서 지우기와 같은 모양으로 주인 조건을 붙였다(D-101).
+    -->
+    <update id="updateEvent">
+        UPDATE calendar_tbl
+           SET subject    = #{event.subject},
+               content    = #{event.content},
+               started_at = #{event.start},
+               ended_at   = #{event.end},
+               type       = #{event.type}
+         WHERE id = #{event.id}
+           AND user_tbl_id = #{event.userId}
+    </update>
+
+    <!--
+      레거시:
+        delete from calendar_tbl where id = ? and user_tbl_id = ?
+
+      레거시부터 주인을 봤다. 고치는 쪽도 2단계에서 같은 모양이 됐다(D-101).
+    -->
+    <delete id="deleteEvent">
+        DELETE FROM calendar_tbl
+              WHERE id = #{id}
+                AND user_tbl_id = #{userId}
+    </delete>
+
+</mapper>

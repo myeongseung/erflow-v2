@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--/*
+  결재 리스트.
+  출처: legacy/ERFlow/src/main/webapp/proposal/proposalList.jsp
+
+  상태 필터(결재진행중/승인/반려)로 본다. 내가 결재선에 든 진행중 결재와, 내가 기안한
+  결재 중 선택 상태를 함께 보여준다. 등록·문서 상세·승인/반려는 다음 단계.
+
+  페이징 링크의 block()/paging() 은 정의하지 않는다 — 레거시도 이 화면에 두 함수를 두지
+  않아 페이징이 동작하지 않았다(message 와 같은 D-045). 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('결재 관리', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/proposal/proposalList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/proposal/proposal.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 전자결재 &gt; 결재 리스트</span>
+        </div>
+
+        <form action="" method="post" name="proposalFrm">
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-primary" id="register-button">생성</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="" class="selectbox">
+                        <option value="3" th:selected="${keyfield == 3}">결재진행중</option>
+                        <option value="1" th:selected="${keyfield == 1}">승인</option>
+                        <option value="2" th:selected="${keyfield == 2}">반려</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">번호</th>
+                    <th scope="col">문서번호</th>
+                    <th scope="col">문서제목</th>
+                    <th scope="col">문서보기</th>
+                    <th scope="col">생성날짜</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="proposal : ${proposals}">
+                    <th scope="col" class="proposal-id">
+                        <input type="checkbox" name="proposalId" th:value="${proposal.id}">
+                    </th>
+                    <td th:text="${proposal.id}">1</td>
+                    <td th:text="${proposal.documentId}">문서번호</td>
+                    <td th:text="${proposal.subject}">문서제목</td>
+                    <td><a th:href="@{/proposal/document(proposalId=${proposal.id})}">문서 보기</a></td>
+                    <td th:text="${proposal.receivedAt}">생성날짜</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="5"></td>
+                <td></td>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/proposal/list}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" th:value="${keyfield}">
+        </form>
+
+        <!--/* 페이징 — block()/paging() 은 정의되지 않는다(D-045) */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}" class="disabled"
+               th:href="|javascript:block(5, ${page.nowBlock - 1})|">이전</a>
+            <ul class="page-numbers">
+                <a th:each="number : ${page.pageNumbers}"
+                   th:href="|javascript:paging(${number})|"
+                   th:classappend="${number == page.nowPage} ? 'disabled'">
+                    <li th:text="${number}">1</li>
+                </a>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block(5, ${page.nowBlock + 1})|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/ProposalRouteServiceImpl.java
+-->
+<mapper namespace="com.erflow.proposal.ProposalRouteMapper">
+
+    <!--
+      레거시 getProposalRoutes("", "", 0, 1000, userId):
+        select * from proposal_route_view where user_id = ? order by id limit 0, 1000
+
+      start·cnt 가 파라미터지만 팝업은 언제나 0, 1000 을 넘긴다. 그 값을 여기 박아
+      둔다 — 페이지를 넘기는 화면이 아니라 «1000건까지»라는 상한이다.
+
+      route 는 사번을 ; 로 이은 문자열이다. 레거시는 이것을 쪼개 사용자마다 조회한 뒤
+      다시 같은 문자열로 이어 붙였다. 컬럼을 그대로 읽는다 — D-041 참조.
+    -->
+    <select id="findByUser" resultType="com.erflow.proposal.ProposalRouteRow">
+        SELECT id, nickname, route
+          FROM proposal_route_view
+         WHERE user_id = #{userId}
+         ORDER BY id
+         LIMIT 0, 1000
+    </select>
+
+    <!--
+      레거시 검색 분기(getProposalRoutes / getProposalRoutesCount)
+        id    where id = ?        (정확 일치)
+        route where route like ?
+      항상 user_id = ? 가 함께 걸린다(내 결재라인만).
+    -->
+    <sql id="searchCondition">
+        <if test="search != null and search.active">
+            <choose>
+                <when test="search.id">AND id = #{search.idValue}</when>
+                <when test="search.route">AND route LIKE #{search.routePattern}</when>
+            </choose>
+        </if>
+    </sql>
+
+    <!-- 레거시: select * from proposal_route_view where [조건 and] user_id = ? order by id limit ?, ? -->
+    <select id="findPage" resultType="com.erflow.proposal.ProposalRouteListRow">
+        SELECT id, nickname, route, created_at AS createdAt
+          FROM proposal_route_view
+         WHERE user_id = #{userId}
+        <include refid="searchCondition"/>
+         ORDER BY id
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from proposal_route_view where [조건 and] user_id = ? -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM proposal_route_view
+         WHERE user_id = #{userId}
+        <include refid="searchCondition"/>
+    </select>
+
+    <!--
+      레거시: insert into proposal_route_tbl values (null, ?, ?, ?, 0, now())
+      route 는 만든 사람 + 고른 결재자들의 사번을 ; 로 이은 문자열이다(type 0 고정).
+    -->
+    <insert id="insertRoute">
+        INSERT INTO proposal_route_tbl
+                    (user_tbl_id, nickname, route, type, created_at)
+             VALUES (#{userId}, #{nickname}, #{route}, 0, NOW())
+    </insert>
+
+    <!-- 레거시 getProposalRouteView(id) 중 화면이 쓰는 둘 -->
+    <select id="findForUpdate" resultType="com.erflow.proposal.ProposalRouteEdit">
+        SELECT nickname, route
+          FROM proposal_route_view
+         WHERE id = #{id}
+    </select>
+
+    <!-- 레거시: update proposal_route_tbl set nickname = ?, route = ? where id = ? -->
+    <update id="updateRoute">
+        UPDATE proposal_route_tbl
+           SET nickname = #{nickname},
+               route    = #{route}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: delete from proposal_route_tbl where id = ? -->
+    <delete id="deleteById">
+        DELETE FROM proposal_route_tbl
+         WHERE id = #{id}
+    </delete>
+
+</mapper>

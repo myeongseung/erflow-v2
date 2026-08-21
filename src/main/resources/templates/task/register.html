@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<!--/*
+  수·발주 등록.
+  출처: legacy/ERFlow/src/main/webapp/task/taskRegister.jsp
+
+  화면 글자(수주/발주)와 권한이 flag 로 갈린다. 직원·협력업체·문서·제품 찾기 팝업이
+  값을 채우고, 제품 표는 findMultiProduct 가 골라 준 제품으로 task.js 가 만든다.
+
+  registerProc 로 넘어가던 것을 POST /task/register 로 받는다(CSRF 켜짐, D-013).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isSell=${flag == 'sell'}">
+<head th:replace="~{fragments/head :: head(${isSell ? '수주 등록 페이지' : '발주 등록 페이지'}, ${ {'/css/bootcss/bootstrap.css', '/css/jquery-ui.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/taskRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '/js/main/index.js', '/js/admin/location.js', '/js/main/task.js', '/js/datepicker.js', '/js/bootjs/bootstrap.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
+</head>
+<body>
+<!--/*
+  이 점은 오타가 낳은 화면 글자다. 레거시 taskRegister.jsp:38 이 `</title>.` 로
+  끝나는데, head 안의 글자는 브라우저가 body 첫머리로 끌어내린다 — 그래서 화면
+  왼쪽 위에 점이 찍히고 전체가 그만큼 밀린다. 브라우저 DOM 이 기준이므로(D-037)
+  같은 자리에 같은 점을 둔다(D-097). 게이트는 head 를 건너뛰어 이것을 못 본다.
+*/-->.
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="task-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name"
+                  th:text="|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 등록|">사용자 &gt; 구매 &gt; 발주 등록</span>
+        </div>
+        <div class="task-insert">
+            <div class="task-form">
+                <form th:action="@{/task/register}" method="post" name="taskFrm">
+                    <input type="hidden" name="flag" th:value="${flag}">
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input2" th:text="|${isSell ? '수주' : '발주'}자:|">발주자:</label>
+                        <input type="text" id="userName" name="userName" placeholder="담당직원명" value="" readonly>
+                        <input type="hidden" id="userId" name="userId">
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-user" value="직원 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">협력업체:</label>
+                        <input type="text" id="companyName" name="companyName" placeholder="협력업체명" readonly>
+                        <input type="hidden" id="companyId" name="companyId"><br>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-company" value="협력 업체 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">문서:</label>
+                        <input type="text" id="documentId" name="documentId" placeholder="문서번호" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-document" value="문서 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2">
+                        <label>제품:</label>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-multi-product" value="제품 찾기">
+                    </div>
+
+                    <div class="form-group d-grid gap-2" id="table-form">
+                        <table id="myTable" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>제품번호</th>
+                                <th>이름</th>
+                                <th>수량</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+
+                    <input type="hidden" id="input7" th:value="${isSell ? 0 : 1}" name="type" placeholder="타입">
+
+                    <div class="form-group">
+                        <label for="input8">의뢰 시각</label>
+                        <input type="text" id="datepicker" name="taskAt" placeholder="의뢰 시각">
+                    </div>
+                    <div class="form-group">
+                        <label>의뢰 상태</label>
+                        <select name="status" id="">
+                            <option value="1">진행중</option>
+                            <option value="2">완료</option>
+                            <option value="3">미확인</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button class="taskRegister-btn" type="submit"
+                                th:text="|${isSell ? '수주' : '발주'} 등록|">발주 등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

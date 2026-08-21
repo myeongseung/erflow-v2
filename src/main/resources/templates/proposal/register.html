@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<!--/*
+  결재 등록.
+  출처: legacy/ERFlow/src/main/webapp/proposal/proposalRegister.jsp
+
+  문서 찾기로 결재 문서를, 결재라인 찾기로 결재선을 고른다. 저장에는 기안자·문서·
+  결재라인만 쓴다 — 결재경로/이름 문자열은 화면 표시용이다.
+
+  문서 ID·문서명 입력은 레거시가 value="<%=...%>" 로 써서 «dyn» 이고, 나머지 셋은
+  value="" 라 placeholder 가 라벨이 된다. 그 차이를 그대로 옮긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('결재 생성', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/proposal/proposalRegister.css', '/css/main/header.css', '/css/main/aside.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/proposal/proposalRegister.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="proposal-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 전자결재 &gt; 결재 생성</span>
+        </div>
+        <div class="proposal-insert">
+            <div class="proposal-form">
+                <form th:action="@{/proposal/register-proc}" method="post" name="proposalFrm">
+                    <input type="hidden" id="userId" name="userId" th:value="${userId}">
+
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재 문서:</span>
+                        </div>
+                        <input type="text" class="form-control" id="documentId" name="documentId"
+                               th:value="${documentId}" placeholder="결재 문서 ID" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-document" value="문서 찾기">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재 문서 명:</span>
+                        </div>
+                        <input type="text" class="form-control" id="documentName" name="documentName"
+                               th:value="${documentName}" placeholder="결재 문서 명" readonly>
+                    </div>
+                    <hr>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재 ID:</span>
+                        </div>
+                        <input type="text" class="form-control" id="routeId" name="routeId"
+                               value="" placeholder="결재라인 번호" readonly>
+                        <input type="button" class="btn btn-secondary btn-lg" id="find-route" value="결재라인 찾기">
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재 명:</span>
+                        </div>
+                        <input type="text" class="form-control" id="nickname" name="nickname"
+                               value="" placeholder="결재 명" readonly>
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" id="basic-addon1">결재 라인:</span>
+                        </div>
+                        <input type="text" class="form-control" id="route" name="route"
+                               value="" placeholder="결재라인" readonly>
+                    </div>
+                    <div class="btn-group">
+                        <button class="proposalRegister-btn" type="submit">결재 등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--/*
+  문서 양식 작성. 추가와 수정을 겸한다.
+  출처: legacy/ERFlow/src/main/webapp/admin/document/documentFormRegister.jsp
+
+  숨은 flag 가 insert/update 를 가른다. 화면 글자는 둘 다 «문서 양식 추가» 이고,
+  추가일 때 숨은 id 는 -1 이다. 레거시 그대로다.
+
+  본문은 CKEditor 4 가 만든다(CDN). 파일 선택은 .html 을 읽어 편집기에 부어 넣는
+  것이라 서버로 올라가지 않는다 — js/admin/documentFormRegister.js.
+
+  레거시가 화면 안에 <style> 과 CKEDITOR.replace 를 적어 두었다. 그대로 옮긴다 —
+  편집기 크기가 거기서 정해진다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문서 양식 작성</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{//cdn.ckeditor.com/4.22.1/full/ckeditor.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/documentFormRegister.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/userList.css}">
+    <link rel="stylesheet" th:href="@{/css/main/documentRegister.css}">
+    <style>
+        .form-control{
+            width:300px;
+        }
+        .body{
+            min-width: 1200px;
+        }
+    </style>
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="body">
+            <div class="right-align">
+                <span class="menu-name">관리자 &gt; 문서 관리 &gt; 문서 양식 추가</span>
+            </div>
+            <div class="section">
+                <form th:action="@{/admin/document/form-register-proc}" method="post">
+                    <input type="hidden" name="id" th:value="${templateId}">
+                    <input type="hidden" name="flag" th:value="${flag}">
+                    <ul class="column">
+                        <li class="title">양식명</li>
+                        <li><input class="form-control form-control-lg" type="text" name="subject"
+                                   th:value="${subject}">
+                        </li>
+                    </ul>
+                    <textarea id="editor1" name="content" class="ckeditor-textarea"
+                              rows="10" cols="80" th:text="${content}"></textarea>
+                    <input type="file" id="html-selector" accept=".htm, .html">
+                    <h2>
+                        <input type="submit" value="확인"/> <input type="reset" value="다시입력"/>
+                    </h2>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    CKEDITOR.replace("editor1", {
+        width : "80%",
+        height : "400px",
+    });
+</script>
+</body>
+</html>

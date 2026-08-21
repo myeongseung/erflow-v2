@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!--/*
+  사용자 찾기 팝업 — 한 명.
+  출처: legacy/ERFlow/src/main/webapp/findEachUser.jsp
+
+  근태·업무·내 정보 화면이 window.open 으로 여는 작은 창이다. 고른 사번과 이름을
+  js/main/findEachUser.js 가 window.opener.receiveEachUserInfo 에 넘긴다. 이름은
+  표의 .search-people-body-receiver 셀에서 읽어 간다 — 셀 class 가 계약이다.
+
+  find/user.html 과 화면이 같다. 다른 것은 셋뿐이다.
+    - 전체 선택 칸이 없다(첫 th 가 비어 있다)
+    - 체크박스가 아니라 라디오다
+    - «선택» 버튼이 type="button" 이다
+
+  레거시 마크업이 form 과 div 를 교차해 닫는 것도 같다. 브라우저가 만드는 DOM 을
+  기준으로 적었다 — D-037 참조.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EachUser</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/main/findEachUser.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/main/findUser.css}">
+</head>
+<body>
+
+<div class="search-message-wrap">
+    <div class="search-message-body">
+        <div class="search-select-option-wrap">
+            <div class="search-select-option">
+                <!--/* 부서, 직급 선택후 제출하는 폼 */-->
+                <form method="get" th:action="@{/find/each-user}" name="searchFrm">
+                    <select class="search-people-dept" name="deptKeyfield">
+                        <option value="">전체부서</option>
+                        <option th:each="dept : ${departments}" th:value="${dept}"
+                                th:selected="${dept == deptKeyfield}"
+                                th:text="${dept}">경영지원부</option>
+                    </select>
+                    <select class="search-people-job" name="jobKeyfield">
+                        <option value="">전체직급</option>
+                        <option th:each="job : ${jobs}" th:value="${job}"
+                                th:selected="${job == jobKeyfield}"
+                                th:text="${job}">부장</option>
+                    </select>
+                    <input type="text" name="keyword" th:value="${keyword}">
+                    <button class="btn btn-secondary" type="submit">찾기</button>
+                </form>
+            </div>
+            <!--/*
+              고른 사람을 부모 창에 돌려주는 폼이다. 이 화면은 «선택» 이 아예
+              type="button" 이라 제출될 일이 없다. findUser.jsp 는 submit 인데
+              스크립트가 막는다 — 같은 결과에 이르는 방식이 둘로 갈렸다.
+            */-->
+            <form method="post" name="search-people-body" id="selectFrm">
+                <input type="hidden" name="receivers">
+                <div class="search-button">
+                    <button class="btn btn-primary" type="button" id="select-button">선택</button>
+                </div>
+            </form>
+        </div>
+
+        <hr>
+        <table class="search-people-body table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>사번</th>
+                <th>이름</th>
+                <th>부서</th>
+                <th>직급</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td class="search-people-body-check">
+                    <input name="userId" type="radio" th:value="${user.id}">
+                </td>
+                <td class="search-people-body-receiver-id" th:text="${user.id}">20230001</td>
+                <td class="search-people-body-receiver" th:text="${user.name}">홍길동</td>
+                <td class="search-people-body-dept" th:text="${user.deptName}">경영지원부</td>
+                <td class="search-people-body-job" th:text="${user.jobName}">부장</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td colspan="5">made by 김시찬</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+</body>
+</html>

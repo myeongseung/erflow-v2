@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--/*
+  게시판 수정 (팝업).
+  출처: legacy/ERFlow/src/main/webapp/admin/board/boardUpdate.jsp
+
+  생성 화면과 같은 모양에 이름이 채워져 있다. 버튼 글자는 여기서도 «생성» 이다 —
+  레거시 그대로 둔다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시판 수정</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/boardRegister.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common/page.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/boardRegister.css}">
+</head>
+<body>
+<div class="message-wrap">
+    <div class="readmessage-body">
+        <form name="boardFrm" th:action="@{/admin/board/update-proc}" method="post">
+            <input type="hidden" name="id" th:value="${boardId}">
+            <table class="readmessage-info">
+                <tr>
+                    <td>
+                        <div class="input-group mb-3">
+                            <div class="new-name"><span class="input-group-text">게시판 이름</span></div>
+                            <input type="text" name="subject" class="form-control new-name"
+                                   placeholder="** 게시판" th:value="${subject}">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <hr>
+            <div class="readmessage-footer">
+                <div class="readmessage-footer-button">
+                    <button class="btn btn-primary" type="submit">생성</button>
+                    <button class="btn btn-danger cancel-board" type="button">취소</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

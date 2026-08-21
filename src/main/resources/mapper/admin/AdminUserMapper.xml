@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/UserServiceImpl.java
+        (getUserViews(keyfield, keyword, start, cnt) / getUserTotalCount(keyfield, keyword))
+
+  `<>` 는 XML 에서 그대로 쓸 수 없어 `!=` 로 적었다. MariaDB 에서 같은 연산자다.
+-->
+<mapper namespace="com.erflow.admin.user.AdminUserMapper">
+
+    <!--
+      레거시:
+        String additional = keyfield + " like ? and ";
+        "select * from user_view where " + additional + "id <> 'admin' order by dept_name, job_name limit ?, ?"
+
+      **칸 이름이 SQL 에 그대로 이어 붙는다.** 검색어는 `?` 로 묶이지만 칸 이름은
+      묶이지 않는다 — 요청 파라미터가 조건이 된다(D-054). 여기서도 `${}` 로 붙이되,
+      AdminUserSearch 가 화면이 주는 다섯 가지만 통과시킨다. 화이트리스트 밖의 값은
+      `active` 가 거짓이라 조건 자체가 붙지 않는다.
+
+      관리자를 빼는 것은 뷰가 아니라 이 조건이다. 사용자 찾기 팝업과 같다.
+    -->
+    <sql id="searchCondition">
+        WHERE
+        <if test="search.active">
+            ${search.column} LIKE #{search.keywordPattern} AND
+        </if>
+        id != 'admin'
+    </sql>
+
+    <!--
+      정렬은 부서·직급 이름순이다. 사번순도 이름순도 아니다.
+      한글 정렬 순서는 라이브 DB 도 general_ci 라 같다(O-005).
+
+      레거시는 여기서 끝이라 동순위(같은 부서·같은 직급)의 순서를 DB 가 정했고,
+      실행마다 달라질 수 있었다 — 실화면 대조가 그렇게 잡았다(D-091). 2단계에서
+      id 를 붙여 순서를 못 박았다(D-113). 화면에 보이는 줄은 같고 순서만 정해진다.
+    -->
+    <select id="findPage" resultType="com.erflow.admin.user.AdminUserRow">
+        SELECT id,
+               name,
+               social_number    AS socialNumber,
+               gender,
+               region,
+               dept_name        AS deptName,
+               job_name         AS jobName,
+               extension_phone  AS extensionPhone,
+               mobile_phone     AS mobilePhone,
+               email,
+               hired_at         AS hiredAt
+          FROM user_view
+        <include refid="searchCondition"/>
+         ORDER BY dept_name, job_name, id
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from user_view where [조건] id <> 'admin' -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM user_view
+        <include refid="searchCondition"/>
+    </select>
+
+    <!--
+      레거시 getUserView(id): select * from user_view where id = ?
+      주소 팝업이 쓰는 칸만 읽는다.
+    -->
+    <select id="findAddress" resultType="com.erflow.admin.user.AdminUserAddress">
+        SELECT name,
+               job_name    AS jobName,
+               postal_code AS postalCode,
+               address1,
+               address2
+          FROM user_view
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 getUser(id): select * from user_tbl where id = ?
+      수정 화면은 뷰가 아니라 원본 표를 읽는다 — 직급·부서를 번호로 골라야 하는데
+      뷰에는 이름만 있기 때문이다.
+    -->
+    <select id="findForUpdate" resultType="com.erflow.admin.user.AdminUserForm">
+        SELECT id,
+               name,
+               social_number   AS socialNumber,
+               email,
+               postal_code     AS postalCode,
+               address1,
+               address2,
+               job_tbl_id      AS jobId,
+               dept_tbl_id     AS deptId,
+               extension_phone AS extensionPhone,
+               mobile_phone    AS mobilePhone
+          FROM user_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 getJobs(null) / getDepts(null):
+        select * from job_tbl  where id <> -1
+        select * from dept_tbl where id <> -1
+
+      ORDER BY 가 없다. 넣지 않는다 — 등록 화면의 콤보가 이 순서 그대로 그려진다.
+      수정 화면만 이름순으로 다시 정렬하는데, 그 정렬은 레거시가 Java 에서 했으므로
+      Service 에 둔다(D-058).
+
+      `id = -1` 은 «없음» 을 뜻하는 자리다. 레거시가 목록마다 이 조건으로 걸러낸다.
+      권한 관리 화면도 같은 표를 읽는다 — 그쪽을 옮길 때 이 자리를 함께 본다.
+    -->
+    <select id="findJobs" resultType="com.erflow.admin.AdminOption">
+        SELECT id, name
+          FROM job_tbl
+         WHERE id != -1
+    </select>
+
+    <select id="findDepartments" resultType="com.erflow.admin.AdminOption">
+        SELECT id, name
+          FROM dept_tbl
+         WHERE id != -1
+    </select>
+
+    <!--
+      레거시 register(session, user):
+        insert into user_tbl (id, job_tbl_id, dept_tbl_id, name, password, social_number,
+                              postal_code, address1, address2, extension_phone,
+                              mobile_phone, email, hired_at)
+        values(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, now())
+
+      비밀번호는 사번을 해시한 값이다 — 최초 로그인에서 비밀번호 변경 화면으로 가는
+      조건이 «비밀번호 == 사번» 이므로, 새 사원은 반드시 그 상태로 시작한다.
+
+      레거시 처리는 address1·address2·mobile_phone 을 읽지 않아 언제나 null 이
+      들어갔다(D-057). 2단계에서 컨트롤러가 셋을 받아 넘긴다(D-104).
+    -->
+    <insert id="insertUser">
+        INSERT INTO user_tbl
+                    (id, job_tbl_id, dept_tbl_id, name, password, social_number,
+                     postal_code, address1, address2, extension_phone,
+                     mobile_phone, email, hired_at)
+             VALUES (#{user.id}, #{user.jobId}, #{user.deptId}, #{user.name}, #{password},
+                     #{user.socialNumber}, #{user.postalCode}, #{user.address1},
+                     #{user.address2}, #{user.extensionPhone}, #{user.mobilePhone},
+                     #{user.email}, NOW())
+    </insert>
+
+    <!--
+      레거시 updateUser(session, user):
+        update user_tbl set name = ?, email = ?, postal_code = ?, address1 = ?,
+               address2 = ?, job_tbl_id = ?, dept_tbl_id = ?, extension_phone = ?,
+               mobile_phone = ? where id = ?
+
+      주민등록번호는 이 문장에 없다 — 수정으로 바뀌지 않는다. mobile_phone 은
+      레거시가 읽지 않아 수정할 때마다 지워졌다(D-057). 2단계에서 받아 저장한다(D-104).
+    -->
+    <update id="updateUser">
+        UPDATE user_tbl
+           SET name            = #{user.name},
+               email           = #{user.email},
+               postal_code     = #{user.postalCode},
+               address1        = #{user.address1},
+               address2        = #{user.address2},
+               job_tbl_id      = #{user.jobId},
+               dept_tbl_id     = #{user.deptId},
+               extension_phone = #{user.extensionPhone},
+               mobile_phone    = #{user.mobilePhone}
+         WHERE id = #{user.id}
+    </update>
+
+</mapper>

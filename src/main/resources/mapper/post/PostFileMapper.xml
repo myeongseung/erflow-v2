@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 출처: legacy/ERFlow/src/main/java/service/implementation/PostFileServiceImpl.java -->
+<mapper namespace="com.erflow.post.PostFileMapper">
+
+    <sql id="fileColumns">
+        id, post_tbl_id AS postId, original_name AS originalName,
+        name, extension, size
+    </sql>
+
+    <!-- 레거시 getFiles: select * from post_file_tbl where post_tbl_id = ? -->
+    <select id="findByPost" resultType="com.erflow.post.PostAttachment">
+        SELECT <include refid="fileColumns"/>
+          FROM post_file_tbl
+         WHERE post_tbl_id = #{postId}
+         ORDER BY id
+    </select>
+
+    <!--
+      내려받기용. 레거시는 요청에 실린 파일명을 그대로 받아 저장 폴더에서 찾았다.
+      여기서는 DB 에 등록된 것만 내려준다 — 이름만 알면 폴더의 아무 파일이나
+      가져갈 수 있는 구멍을 만들지 않기 위해서다. D-028 참조.
+    -->
+    <select id="findByStoredName" resultType="com.erflow.post.PostAttachment">
+        SELECT <include refid="fileColumns"/>
+          FROM post_file_tbl
+         WHERE name = #{name}
+    </select>
+
+    <!-- 레거시: insert into post_file_tbl values (null, ?, ?, ?, ?, ?) -->
+    <insert id="insert">
+        INSERT INTO post_file_tbl
+                    (post_tbl_id, original_name, name, extension, size)
+             VALUES (#{file.postId}, #{file.originalName}, #{file.name},
+                     #{file.extension}, #{file.size})
+    </insert>
+
+    <!-- 레거시: delete from post_file_tbl where post_tbl_id = ? -->
+    <delete id="deleteByPost">
+        DELETE FROM post_file_tbl
+         WHERE post_tbl_id = #{postId}
+    </delete>
+
+</mapper>

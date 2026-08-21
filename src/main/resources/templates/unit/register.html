@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--/*
+  생산 설비 관리 — 등록 (팝업).
+  출처: legacy/ERFlow/src/main/webapp/unit/unitRegister.jsp
+
+  목록에서 window.open 으로 여는 팝업이라 헤더·사이드메뉴를 넣지 않는다.
+  레거시도 이 화면에는 indexHeader/indexSide 를 include 하지 않았다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설비 리스트 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://code.jquery.com/jquery-1.12.4.js}"></script>
+    <script th:src="@{https://code.jquery.com/ui/1.12.1/jquery-ui.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/main/unitRegister.js}"></script>
+    <script th:src="@{/js/datepicker.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/jquery-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/main/unitRegister.css}">
+</head>
+<body>
+
+<div class="unit-register-form">
+    <!--/*
+      `th:action` 을 쓰지 않는다. 그러면 Thymeleaf 가 CSRF hidden 입력을 **form 의 맨
+      앞 자식으로** 끼워 넣는데, 이 화면의 CSS 가 위치로 요소를 고른다.
+
+          .form-group:nth-child(3)>[type="text"] { width: 80%; }
+
+      한 칸이 밀리면 «문서ID» 대신 «관리자ID» 가 좁아진다 — 버튼이 옆에 붙는 칸이
+      바뀐다(D-094). 토큰을 손으로 맨 뒤에 넣어 앞쪽 순번을 지킨다.
+    */-->
+    <form action="/unit/register" method="post" name="unitFrm">
+        <div class="form-group">
+            <label for="equipmentId">장비ID</label>
+            <input type="text" id="equipmentId" name="equipmentId">
+        </div>
+        <div class="form-group">
+            <label for="userId">관리자ID</label>
+            <input type="text" id="userId" name="userId">
+            <button type="button" class="btn btn-light find-user">관리자 선택</button>
+        </div>
+        <div class="form-group">
+            <label for="documentId">문서ID</label>
+            <input type="text" id="documentId" name="documentId" class="documentId" readonly>
+            <button type="button" class="btn btn-light find-document">문서 선택</button>
+        </div>
+        <div class="form-group">
+            <label for="equipmentName">장비명</label>
+            <input type="text" id="equipmentName" name="equipmentName">
+        </div>
+        <div class="form-group">
+            <input type="text" id="datepicker" name="manufactureDate">
+        </div>
+        <button type="submit">제출</button>
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}">
+    </form>
+</div>
+</body>
+</html>

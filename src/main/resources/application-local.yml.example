@@ -1,0 +1,29 @@
+# 로컬 접속 설정 템플릿.
+#
+# 이 파일을 같은 디렉터리에 `application-local.yml` 로 복사한 뒤 값을 채운다.
+# 복사본은 .gitignore(`**/application-local.yml`) 에 걸려 커밋되지 않는다.
+#
+#   cp application-local.yml.example application-local.yml
+#
+# 사용: ./gradlew bootRun --args='--spring.profiles.active=local'
+#
+# 값을 여기(.example)에 채워 넣지 않는다. 이 파일은 커밋된다.
+
+spring:
+  datasource:
+    # 이관 대상 스키마. 앱이 읽고 쓴다.
+    url: jdbc:mariadb://<호스트>:<포트>/erflow_mig
+    username: <계정>
+    password: <비밀번호>
+
+erflow:
+  legacy:
+    # 정합성 검증용 레거시 스키마.
+    #
+    # 이 계정은 반드시 SELECT 권한만 가져야 한다. 레거시는 정답이고,
+    # 정답은 읽기 전용이다 — 관례가 아니라 권한으로 막는다.
+    #
+    #   GRANT SELECT ON erflow.* TO '<계정>'@'%';
+    #
+    # 쓰기 권한을 주면 이관 도중 정답이 오염돼도 아무도 모른다.
+    url: jdbc:mariadb://<호스트>:<포트>/erflow

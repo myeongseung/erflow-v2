@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/BoardServiceImpl.java
+  레거시 SQL 을 그대로 옮긴다.
+
+  권한 마스크는 읽어만 오고 계산하지 않는다. MariaDB 의 비트 연산은 부호 없는
+  BIGINT 라 SQL 로 판정하면 뒤집힌다 — BoardPermissions 의 설명 참조.
+-->
+<mapper namespace="com.erflow.post.BoardMapper">
+
+    <sql id="boardColumns">
+        id,
+        subject,
+        permission_read_dept_level  AS readDeptLevel,
+        permission_read_job_level   AS readJobLevel,
+        permission_write_dept_level AS writeDeptLevel,
+        permission_write_job_level  AS writeJobLevel
+    </sql>
+
+    <!--
+      레거시: select * from board_tbl [where subject like ?]
+      ORDER BY 가 없다. 정렬을 넣으면 화면에 뜨는 순서가 달라져 대조가 깨진다.
+    -->
+    <select id="findAll" resultType="com.erflow.post.Board">
+        SELECT <include refid="boardColumns"/>
+          FROM board_tbl
+        <if test="keyword != null and keyword.trim() != ''">
+            WHERE subject LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <!-- 레거시: select count(*) from board_tbl [where subject like ?] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM board_tbl
+        <if test="keyword != null and keyword.trim() != ''">
+            WHERE subject LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+    </select>
+
+    <!-- 레거시: select * from board_tbl where id = ? -->
+    <select id="findById" resultType="com.erflow.post.Board">
+        SELECT <include refid="boardColumns"/>
+          FROM board_tbl
+         WHERE id = #{id}
+    </select>
+
+</mapper>

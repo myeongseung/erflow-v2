@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--/*
+  사원 주소 팝업.
+  출처: legacy/ERFlow/src/main/webapp/admin/user/userAddress.jsp
+
+  사원 리스트의 «보기» 가 새 창(350x300)으로 연다.
+
+  **정답이 비어 있는 화면이다.** 이 화면의 글자는 전부 «라벨 : <%=값%>» 모양이라
+  추출기가 동적으로 보고 하나도 잡지 않는다(요소 0건). 게이트는 여기서 아무것도
+  판정하지 못한다 — 무엇을 넣든 통과하고, 무엇을 빼도 통과한다. 그러므로 이 화면은
+  게이트가 아니라 눈으로 대조한 결과다. 레거시 마크업을 한 줄씩 옮겼다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" th:href="@{/css/admin/userAddress.css}">
+</head>
+<body>
+<div class="location-group">
+    <label for="input4" th:text="|${address.name} ${address.jobName}의 주소|">홍길동 사원의 주소</label><br>
+    <span class="location-span" th:text="|우편번호 : ${address.postalCode}|">우편번호 : 00000</span><br>
+    <span class="location-span" th:text="|도로명 주소 : ${address.address1}|">도로명 주소 : </span><br>
+    <span class="location-span" th:text="|상세 주소 : ${address.address2}|">상세 주소 : </span>
+</div>
+</body>
+</html>

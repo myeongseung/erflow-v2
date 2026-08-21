@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/MessageServiceImpl.java
+  레거시 SQL 을 그대로 옮긴다. 정렬은 id 내림차순이다.
+
+  레거시는 className 을 컬럼 접두어로 SQL 에 이어 붙였다(receiver_id / sender_id 등).
+  화면이 receiver·sender 두 값으로만 검증하므로 안전했지만, 여기서는 분기로 고정해
+  이어 붙일 자리를 아예 없앤다.
+
+  <class>_visible = 1 이 소프트 삭제 필터다. 지운 쪽지는 지워지지 않고 그 쪽에서만
+  안 보이게 된다.
+-->
+<mapper namespace="com.erflow.message.MessageMapper">
+
+    <sql id="scope">
+        <choose>
+            <when test="className == 'receiver'">
+                receiver_id = #{classId} AND receiver_visible = 1
+            </when>
+            <when test="className == 'sender'">
+                sender_id = #{classId} AND sender_visible = 1
+            </when>
+        </choose>
+    </sql>
+
+    <!--
+      레거시 검색 분기
+        receiver  and receiver_name like ?
+        sender    and sender_name like ?
+        content   and content like ?
+    -->
+    <sql id="searchCondition">
+        <if test="search != null and search.active">
+            AND
+            <choose>
+                <when test="search.column == 'receiver_name'">receiver_name</when>
+                <when test="search.column == 'sender_name'">sender_name</when>
+                <when test="search.column == 'content'">content</when>
+            </choose>
+            LIKE #{search.pattern}
+        </if>
+    </sql>
+
+    <!--
+      레거시: select * from message_view where <class>_id = ? and <class>_visible = 1
+              [조건] order by id desc limit ?, ?
+    -->
+    <select id="findPage" resultType="com.erflow.message.MessageRow">
+        SELECT id,
+               sender_id        AS senderId,
+               sender_name      AS senderName,
+               sender_dept_name AS senderDeptName,
+               sender_job_name  AS senderJobName,
+               receiver_name    AS receiverName,
+               receiver_dept_name AS receiverDeptName,
+               receiver_job_name  AS receiverJobName,
+               content,
+               created_at       AS createdAt
+          FROM message_view
+         WHERE <include refid="scope"/>
+        <include refid="searchCondition"/>
+         ORDER BY id DESC
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from message_view where <class>_id = ? and <class>_visible = 1 [조건] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM message_view
+         WHERE <include refid="scope"/>
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 레거시: select * from message_view where id = ? (getMessageView) -->
+    <select id="findView" resultType="com.erflow.message.MessageDetail">
+        SELECT id,
+               sender_id        AS senderId,
+               sender_name      AS senderName,
+               sender_dept_name AS senderDeptName,
+               sender_job_name  AS senderJobName,
+               content,
+               created_at       AS createdAt
+          FROM message_view
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 readMessage: update message_tbl set read_at = now(), read_status = 1 where id = ?
+      단, 컨트롤러가 read_status == 0 일 때만 불렀다. AND read_status = 0 으로 같게 만든다 —
+      이미 읽은 쪽지는 read_at 이 바뀌지 않는다.
+    -->
+    <update id="markRead">
+        UPDATE message_tbl
+           SET read_at = NOW(), read_status = 1
+         WHERE id = #{id} AND read_status = 0
+    </update>
+
+    <!--
+      레거시 createMessage:
+        insert into message_tbl (user_tbl_sender_id, user_tbl_receiver_id, content, created_at)
+        values (?, ?, ?, now())
+    -->
+    <insert id="insertMessage">
+        INSERT INTO message_tbl
+                    (user_tbl_sender_id, user_tbl_receiver_id, content, created_at)
+             VALUES (#{senderId}, #{receiverId}, #{content}, NOW())
+    </insert>
+
+    <!-- 레거시 getMessage 가 읽던 값 중 소프트 삭제에 필요한 둘. -->
+    <select id="findParties" resultType="com.erflow.message.MessageParties">
+        SELECT user_tbl_sender_id   AS senderId,
+               user_tbl_receiver_id AS receiverId
+          FROM message_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 deleteMessage: update message_tbl set [sender_visible = 0][, receiver_visible = 0]
+                            where id = ?
+      보낸/받는 쪽 여부에 따라 SET 절을 조립했다. 서비스가 최소 한 쪽은 참임을 보장하므로
+      <set> 이 비지 않는다(둘 다 거짓이면 서비스가 부르지 않는다).
+    -->
+    <update id="hide">
+        UPDATE message_tbl
+        <set>
+            <if test="hideSender">sender_visible = 0,</if>
+            <if test="hideReceiver">receiver_visible = 0,</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

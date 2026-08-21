@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!--/*
+  글수정.
+  출처: legacy/ERFlow/src/main/webapp/post/postUpdate.jsp
+
+  등록 화면과 달리 게시판 이름이 하드코딩이 아니다(D-032). 첨부가 있으면
+  목록 상자를 펼친 채로 그린다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('게시글 수정', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/postRegister.css', '/css/common/editor.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/post/postUpdate.js', '//cdn.ckeditor.com/4.22.1/full/ckeditor.js', '/js/common/editor.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div id="main-wrap">
+        <form method="post" th:action="@{/post/update}" id="board-write"
+              enctype="multipart/form-data">
+            <input type="hidden" name="boardId" th:value="${boardId}">
+            <input type="hidden" name="id" th:value="${post.id}">
+            <div class="board-bodyeditor">
+                <div class="empty-space">&nbsp;</div>
+                <div class="empty-space"></div>
+                <div class="empty-space">&nbsp;</div>
+                <div class="empty-space"></div>
+
+                <div class="write-type-wrap">
+                    <div class="write-type">
+                        <div class="right-align">
+                            <span class="menu-name">사용자 &gt; 게시판 &gt; 글수정</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="write-header-wrap">
+                    <div class="write-header">
+                        <input type="text" class="write-header-type"
+                               th:value="${board.subject}" readonly>
+                        <input type="text" name="subject" class="write-header-subject"
+                               placeholder="제목을 입력해주세요" th:value="${post.subject}" required>
+                    </div>
+                </div>
+            </div>
+            <div class="write-body">
+                <textarea name="content" id="editor1" class="ckeditor-textarea"
+                          rows="10" cols="80" th:text="${post.content}"></textarea>
+            </div>
+            <div class="write-header-wrap">
+                <div class="write-header">
+                    <div class="left-align">
+                        <div>
+                            <input type="file" name="filename" class="write-header-type" multiple>
+                        </div>
+                        <div id="listbox"
+                             th:style="${attachments.isEmpty()} ? 'display:none' : 'display:block'">
+                            <div id="listfile">
+                                첨부파일 :
+                                <div class="center-align" id="fileList">
+                                    <p th:each="file : ${attachments}"
+                                       th:text="${file.displayName()}">파일명</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-space"></div>
+            <div class="board-button">
+                <div>
+                    <button type="submit" class="btn btn-primary btn-lg">수정하기</button>
+                    <button type="button" class="btn btn-secondary btn-lg"
+                            th:data-id="${boardId}">돌아가기</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

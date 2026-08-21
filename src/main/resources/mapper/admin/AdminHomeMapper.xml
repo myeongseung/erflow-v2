@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/ProposalServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/TaskServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/WorkServiceImpl.java
+
+  관리자 대시보드가 네 곳에서 값을 모은다. 셋은 여기서 읽고, 공지사항은 게시글 목록을
+  그대로 쓴다(같은 조회다).
+-->
+<mapper namespace="com.erflow.admin.home.AdminHomeMapper">
+
+    <!-- 레거시 getRecentProposalViews(): select * from recent_proposal_view order by id desc -->
+    <select id="findRecentProposals" resultType="com.erflow.admin.home.RecentProposal">
+        SELECT id,
+               user_id     AS userId,
+               subject,
+               received_at AS receivedAt,
+               result
+          FROM recent_proposal_view
+         ORDER BY id DESC
+    </select>
+
+    <!--
+      레거시 getTasks("", null, 0, 15, -1):
+        select * from task_view order by task_id limit 0, 15
+
+      type 이 -1 이면 조건이 아예 붙지 않는다 — 수주와 발주가 함께 나온다.
+      건수는 세지 않는다. 화면이 페이징 없이 15건만 보여준다.
+    -->
+    <select id="findRecentTasks" resultType="com.erflow.admin.home.RecentTask">
+        SELECT user_name  AS userName,
+               type,
+               created_at AS createdAt,
+               status
+          FROM task_view
+         ORDER BY task_id
+         LIMIT 0, 15
+    </select>
+
+    <!--
+      레거시 getWorkViews(date):
+        select * from work_view where started_at like ? or ended_at like ? order by user_id
+
+      날짜를 `like '%2026-08-13%'` 로 맞춘다. 출근만 찍힌 사람과 퇴근만 찍힌 사람이
+      모두 걸리도록 OR 로 묶여 있다.
+    -->
+    <select id="findWorks" resultType="com.erflow.admin.home.WorkRow">
+        SELECT name       AS userName,
+               started_at AS startedAt,
+               ended_at   AS endedAt,
+               status
+          FROM work_view
+         WHERE started_at LIKE CONCAT('%', #{date}, '%')
+            OR ended_at LIKE CONCAT('%', #{date}, '%')
+         ORDER BY user_id
+    </select>
+
+</mapper>

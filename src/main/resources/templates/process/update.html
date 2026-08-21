@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--/*
+  공정명 변경 (팝업).
+  출처: legacy/ERFlow/src/main/webapp/process/processUpdate.jsp
+
+  목록에서 window.open 으로 여는 작은 창(600x400)이다. 헤더·사이드메뉴가 없다.
+
+  **DB 를 읽지 않는다.** 목록이 주소에 실어 보낸 이름을 그대로 입력칸에 채운다 —
+  레거시 그대로다. 이 화면에는 권한 검사도 없다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공정명 변경</title>
+
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/process/processUpdate.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/process/processUpdate.js}"></script>
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/process/update-proc}" method="post" name="processUpdateFrm">
+        <input type="hidden" name="id" th:value="${processId}">
+        <div class="form-group">
+            <h5 class="procoess-update-title">공정명 변경</h5>
+        </div>
+        <label for="processName">공정명:</label>
+        <div class="modal-body index-process-content">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control process-explanation process-subject"
+                       name="processName" th:value="${processName}">
+            </div>
+        </div>
+        <div class="modal-footer index-process-button-group">
+            <button type="submit" class="btn btn-primary process-set" id="update">설정</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

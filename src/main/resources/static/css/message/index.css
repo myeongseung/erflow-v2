@@ -1,0 +1,121 @@
+.message-nav .message-nav-all{
+	font-size: 15px;
+}
+.message-nav{
+	width: 200px;
+	min-width: 200px;
+	height: calc(100vh - 84px);
+	background-color: white;
+}
+.empty-space{
+	margin-bottom: 20px;
+}
+
+.message-nav-all .message-nav-button{ /*사이드바 상단 버튼들*/
+	display: flex;
+	justify-content: space-evenly;
+}
+
+.message-nav-button button{
+	width: 100px;
+}
+.message-nav-list div{
+	cursor: pointer;
+	padding: 5px;
+	
+}
+
+.message-nav-all .message-nav-list>div{ /*버튼 밑의 메뉴들*/
+	display: flex;
+	justify-content: space-around;
+}
+.message-nav-list>div:nth-child(n):hover{
+	background-color: rgba(242,242,242,1.0);
+}
+.message-nav-list div{
+	margin: 20px;
+}
+
+/*<!---------------------------------------------------------------------->위는 사이드바*/
+
+.messageindex-wrap{
+	width:100%;
+  min-height:100%;
+	display:flex;
+}
+
+.message-nav-wrap{
+	display: flex;
+}
+.message-main{
+	background-color: #e9ecef;
+	width: calc(100vw - 200px);
+	height: calc(100vh - 84px);
+	
+}
+.message-main-header{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.message-main-header-search .search-option{
+   display:flex;
+}
+
+.message-main-header-search .main-search-container{
+   width: 250px;
+   
+   margin-left: 5px;
+   margin-right:20px;
+}
+
+.message-main-header-search .main-search-border{
+   width: 200px;
+}
+
+.message-main-header-search .button-group{
+   margin-bottom: 5px;
+}
+.message-main-header-search .searchkeyfield{
+   margin-left: 5px;
+}
+
+.message-body .message-body-table{
+	width: 100%;
+}
+.message-body .message-body-table tr td, .message-body .message-body-table tr th{
+	font-size: 15px;
+	padding: 8px;
+}
+.message-body-table .message-body-check{
+	width: 5%;
+	min-width: 5%;
+}
+.message-body-sender{
+	width: 20%;
+	min-width: 10%;
+}
+.message-body-content{
+	width: 65%;
+	min-width: 65%;
+}
+.message-body-date{
+	width: 12%;
+	min-width: 12%;
+}
+.message-body-block{
+	width: 8%;
+	min-width: 8%;
+}
+.message-main{
+	padding: 20px;
+}
+
+.message-nav-list-subject {
+	background-color: rgb(242,242,242);
+}
+
+.message-nav-sent-message {
+	background-color: rgb(255,255,255);
+}

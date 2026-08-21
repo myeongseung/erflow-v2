@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--/*
+  업체(업종) 코드 찾기 팝업.
+  출처: legacy/ERFlow/src/main/webapp/findWork.jsp
+
+  은행 찾기와 거의 같지만 값을 돌려주는 방식이 다르다 — 여기는 onclick 이 아니라
+  data-key/data-value 를 두고 js/main/findWork.js 가 읽어 간다. 레거시 그대로다.
+
+  css 는 findBank.css 를 그대로 쓴다. 레거시도 그렇다(findWork.css 가 없다).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--/* 레거시 제목은 «업종 찾기» 다. 검색창과 바닥글은 «업체» 라고 쓴다 —
+         한 화면 안에서 말이 어긋나 있지만 그대로 옮긴다. */-->
+    <title>업종 찾기</title>
+    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/main/findWork.js}"></script>
+</head>
+<body>
+<form th:action="@{/find/work}">
+    <div class="container">
+        <div class="search-box">
+            <input type="text" placeholder="예) 업체 코드 or 업체 명 검색" name="search"
+                   id="findWork-input" th:value="${search == null ? '' : search}">
+            <button type="submit">검색</button>
+        </div>
+        <hr>
+
+        <div class="tips" th:if="${entries == null}">
+            <h3>tip</h3>
+            <p>아래와 같은 조합으로 검색하면 더욱 정확한 검색 결과가 제공됩니다.</p>
+
+            <div class="tip-item">
+                <strong>업체 코드</strong><br> 예) 010301 -&gt; 어로 어업
+            </div>
+            <div class="tip-item">
+                <strong>업체 명</strong><br> 예) 수산물 가공 및 저장 처리업 -&gt; 031002
+            </div>
+        </div>
+
+        <div th:if="${entries != null}">
+            <p th:each="entry : ${entries}">
+                <a href="javascript:void(0);" class="a-work-info"
+                   th:data-key="${entry.code}" th:data-value="${entry.name}"
+                   th:text="${entry.code} + ' ' + ${entry.name}">010301 어로 어업</a>
+            </p>
+        </div>
+
+        <hr>
+
+        <div class="footer">
+            Powered by 권명승<br> © 업체 코드 찾기 서비스 제공
+        </div>
+    </div>
+    <input type="hidden" id="workCode" name="workCode">
+    <input type="hidden" id="workName" name="workName">
+</form>
+</body>
+</html>

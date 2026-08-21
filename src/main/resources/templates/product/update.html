@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--/*
+  제품 수정.
+  출처: legacy/ERFlow/src/main/webapp/product/productUpdate.jsp
+
+  등록 화면과 달리 안내줄이 분류를 타지 않는다 — 언제나 «사용자 > 제품 > 제품 수정
+  페이지» 다. 레거시 그대로 둔다.
+
+  제품 ID 는 고칠 수 없다(기본키). 고치면 다른 제품이 되므로 readonly 다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('제품 수정 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/productRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="product-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 제품 &gt; 제품 수정 페이지</span>
+        </div>
+        <div class="product-insert">
+            <div class="product-form">
+                <form th:action="@{/product/update-proc}" method="post" name="productFrm">
+                    <div class="form-group d-grid gap-2">
+                        <label for="productId">제품 ID</label> <input type="text"
+                            id="productId" name="productId" placeholder="제품 ID"
+                            th:value="${product.id}" readonly>
+                    </div>
+                    <div class="form-group d-grid gap-2">
+                        <label for="input2">제품 명:</label>
+                        <input type="text" id="productName" name="productName" placeholder="제품명"
+                               th:value="${product.name}">
+                    </div>
+                    <div class="form-group d-grid gap-2">
+                        <label for="count">수량</label> <input type="text"
+                            id="count" name="count" placeholder="수량"
+                            th:value="${product.count}">
+                    </div>
+                    <div class="form-group d-grid gap-2">
+                        <label for="input7">타입</label>
+                        <input type="text" th:value="${type.label()}" readonly>
+                    </div>
+                    <div class="form-group text-center">
+                        <button type="submit" class="form-Register-btn">수정</button>
+                    </div>
+                    <input type="hidden" name="type" th:value="${type.code()}">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

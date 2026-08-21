@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/ProposalServiceImpl.java
+-->
+<mapper namespace="com.erflow.proposal.ProposalMapper">
+
+    <!--
+      레거시 결재 인박스 로직(getProposalViews):
+        select * from proposal_view
+         where (result = 3 and route like '%userId%')
+            or (original_user = userId and user_id = userId and result = ?)
+         order by id desc limit ?, ?
+
+      첫 절은 «내가 결재선에 든 진행중 결재»(상태 필터와 무관), 둘째 절은 «내가 기안한
+      결재 중 선택 상태». OR 로 묶여 함께 나온다 — 레거시 그대로다.
+
+      상태 필터가 0(내 차례가 끝난 결재)이면 `and approved_at is null` 이 덧붙는다.
+      레거시는 괄호 없이 이어 붙여 그 AND 가 뒤쪽 절에만 걸린다 — 결합 순서까지
+      그대로 옮겼다. 화면 콤보에는 0 이 없고 주소로만 들어올 수 있다.
+
+      **이 조건만으로는 목록이 좁혀지지 않는다.** 첫 절의 `route like '%나%'` 는
+      결재선 어딘가에 내가 있기만 하면 걸리므로, 아직 오지 않은 차례와 이미 지나간
+      차례까지 함께 나온다. 레거시는 조회한 뒤 Java 에서 «지금 내 차례인 것»만 걸러
+      냈다 — ProposalService.list 가 그 자리다(D-052).
+    -->
+    <sql id="inbox">
+        WHERE (result = 3 AND route LIKE CONCAT('%', #{userId}, '%'))
+           OR (original_user = #{userId} AND user_id = #{userId} AND result = #{result})
+        <if test="result == 0">
+            AND approved_at IS NULL
+        </if>
+    </sql>
+
+    <!--
+      step 과 route 는 화면에 찍히지 않는다. «지금 내 차례인가»를 가리는 데만 쓴다.
+      레거시는 그 판정을 위해 결재라인을 한 번 더 조회하고 사번마다 사용자를 또
+      조회했다. 뷰가 이미 들고 있는 컬럼을 읽는다(D-041 과 같은 판단).
+    -->
+    <select id="findPage" resultType="com.erflow.proposal.ProposalRow">
+        SELECT id,
+               document_id AS documentId,
+               subject,
+               received_at AS receivedAt,
+               step,
+               route
+          FROM proposal_view
+        <include refid="inbox"/>
+         ORDER BY id DESC
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!--
+      «내 차례» 거르기가 여기에는 없다. 레거시도 없다 — 그래서 페이지 수는 실제로
+      보이는 건수보다 크게 나온다. 세는 것과 보여주는 것이 다르다(D-052).
+    -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM proposal_view
+        <include refid="inbox"/>
+    </select>
+
+    <!--
+      레거시: insert into proposal_tbl values (null, ?, ?, ?, ?, 3, null, now(), null)
+      바인딩 순서는 documentId, userId, routeId, step 이다. result 3(진행중)·
+      comment/approved_at null·received_at now 는 등록 시 고정이다.
+
+      레거시는 이 한 문장을 두 곳에서 쓴다 — 결재 등록(step 0)과 승인 뒤 다음 차례
+      만들기(step + 1). 문장도 하나로 둔다.
+    -->
+    <insert id="insert">
+        INSERT INTO proposal_tbl
+                    (document_tbl_id, user_tbl_id, proposal_route_tbl_id,
+                     step, result, received_at)
+             VALUES (#{documentId}, #{userId}, #{routeId}, #{step}, 3, NOW())
+    </insert>
+
+    <!-- 등록 뒤 문서 상세로 보낼 결재 id 를 읽는다(레거시는 문서로 조회해 첫 건). -->
+    <select id="lastInsertId" resultType="long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!--
+      문서 상세가 읽는 칸. 레거시는 `select *` 로 받아 ViewProposalBean 에 담았다
+      (ResultSetExtractHelper.extractViewProposalBean). 화면이 쓰는 것만 적는다.
+
+      날짜는 문자열로 읽는다. 레거시도 `rs.getString("approved_at")` 이라 화면에
+      찍히는 글자가 DB 표기 그대로다(D-026).
+    -->
+    <sql id="viewColumns">
+        SELECT id,
+               document_id AS documentId,
+               subject,
+               content,
+               user_id     AS userId,
+               step,
+               result,
+               comment,
+               approved_at AS approvedAt,
+               route_id    AS routeId,
+               route
+          FROM proposal_view
+    </sql>
+
+    <!-- 레거시 getProposalView(proposalId): select * from proposal_view where id = ? -->
+    <select id="findView" resultType="com.erflow.proposal.ProposalView">
+        <include refid="viewColumns"/>
+         WHERE id = #{proposalId}
+    </select>
+
+    <!--
+      레거시 getProposalViews(documentId): select * from proposal_view where document_id = ?
+
+      ORDER BY 가 없다. 넣지 않는다 — 결재 스탬프 표가 이 순서의 i 번째를 결재선의
+      i 번째 칸에 그린다. 순서를 바꾸면 도장이 다른 칸에 찍힌다(D-050).
+    -->
+    <select id="findViewsByDocument" resultType="com.erflow.proposal.ProposalView">
+        <include refid="viewColumns"/>
+         WHERE document_id = #{documentId}
+    </select>
+
+    <!--
+      레거시 isFinalStep:
+        select * from proposal_view where document_id = ? order by step desc limit 1
+      마지막 step 과 결재선 길이를 견줘 «마지막 차례인가»를 판정한다. 판정 자체는
+      Java 에서 한다 — 레거시가 그렇게 했고, 문자열 쪼개기를 SQL 로 옮기면 규칙이
+      두 곳에 흩어진다.
+    -->
+    <select id="findLastStep" resultType="com.erflow.proposal.ProposalLastStep">
+        SELECT step, route
+          FROM proposal_view
+         WHERE document_id = #{documentId}
+         ORDER BY step DESC
+         LIMIT 1
+    </select>
+
+    <!--
+      레거시 getProposal(proposalId): select * from proposal_tbl where id = ?
+      승인/반려가 쓰는 칸만 읽는다. 뷰가 아니라 원본 표다 — 다음 차례를 만들 때
+      문서·결재라인·step 을 그대로 물려주기 때문이다.
+    -->
+    <select id="findTarget" resultType="com.erflow.proposal.ProposalTarget">
+        SELECT id,
+               document_tbl_id       AS documentId,
+               proposal_route_tbl_id AS routeId,
+               step
+          FROM proposal_tbl
+         WHERE id = #{proposalId}
+    </select>
+
+    <!--
+      레거시 confirmProposal:
+        update proposal_tbl set result = 0, approved_at = now(), comment = ? where id = ?
+
+      result 0 은 «내 차례는 끝났다»는 표시다. 3(진행중)/1(승인)/2(반려) 어디에도
+      해당하지 않아 목록 필터에 걸리지 않는다.
+    -->
+    <update id="confirm">
+        UPDATE proposal_tbl
+           SET result = 0,
+               approved_at = NOW(),
+               comment = #{comment}
+         WHERE id = #{proposalId}
+    </update>
+
+    <!--
+      레거시 confirmProposals: update proposal_tbl set result = 1 where document_tbl_id = ?
+      마지막 차례가 승인하면 그 문서의 결재 전부를 «승인» 으로 바꾼다.
+    -->
+    <update id="confirmAll">
+        UPDATE proposal_tbl
+           SET result = 1
+         WHERE document_tbl_id = #{documentId}
+    </update>
+
+    <!--
+      레거시 rejectProposal: update proposal_tbl set comment = ? where id = ?
+      반려는 승인과 달리 approved_at 을 채우지 않는다 — 도장이 찍히지 않는다.
+    -->
+    <update id="reject">
+        UPDATE proposal_tbl
+           SET comment = #{comment}
+         WHERE id = #{proposalId}
+    </update>
+
+    <!-- 레거시 rejectProposals: update proposal_tbl set result = 2 where document_tbl_id = ? -->
+    <update id="rejectAll">
+        UPDATE proposal_tbl
+           SET result = 2
+         WHERE document_tbl_id = #{documentId}
+    </update>
+
+</mapper>

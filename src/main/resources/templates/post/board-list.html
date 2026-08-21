@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--/*
+  게시판 목록.
+  출처: legacy/ERFlow/src/main/webapp/post/boardList.jsp
+
+  마크업 구조와 class 이름은 레거시 그대로다. css/post/boardList.css 와
+  js/post/boardList.js 가 이 이름들에 걸려 있다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('게시판 목록', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/boardList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/post/boardList.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="main-notice">
+        <div class="notice1">
+            <div class="box">
+                <div class="userBoardList-header">
+                    <div class="right-align">
+                        <span class="menu-name">사용자 &gt; 게시판 </span>
+                    </div>
+
+                    <div class="userBoardInfo">
+                        <div>&nbsp;</div>
+                        <div class="search-option">
+                            <!--/* 레거시에 name 도 값도 없는 셀렉트다. 검색은 언제나 이름으로 한다. */-->
+                            <select name="" id="">
+                                <option>게시판 이름</option>
+                            </select>
+                            <form name="boardFrm">
+                                <div class="main-search-container">
+                                    <div class="main-search-border">
+                                        <input class="main-search-text" type="search"
+                                               placeholder="검색" aria-label="Search"
+                                               name="keyword" th:value="${keyword}">
+                                    </div>
+                                    <div class="main-search-icon">
+                                        <i class="fa-solid fa-magnifying-glass fa-lg"
+                                           title="검색하기"></i>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th class="board-number">번호</th>
+                        <th class="board-list">이름</th>
+                        <th class="board-count">게시글 수</th>
+                        <th class="board-title">최신글 제목</th>
+                        <th class="">업로드 시간</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="board : ${boards}">
+                        <td th:text="${board.id}">1</td>
+                        <td th:text="${board.subject}">게시판</td>
+                        <td th:text="${board.postCount}">0</td>
+                        <td th:if="${board.hasRecent()}">
+                            <a th:href="@{/post/view(boardId=${board.id}, id=${board.recentPostId})}"
+                               style="text-decoration: none;"
+                               th:text="${board.recentSubject}">제목</a>
+                        </td>
+                        <td th:unless="${board.hasRecent()}">작성글 없음</td>
+                        <!--/*
+                          레거시는 rs.getString("created_at") 을 그대로 찍는다.
+                          WebHelper.getDate(yyyy년 MM월 dd일)를 게시판에서는 쓰지 않는다 —
+                          같은 앱 안에서도 화면마다 형식이 다르다. 게이트는 이 자리를
+                          «dyn» 으로 보므로 형식이 틀려도 통과한다(D-020).
+                        */-->
+                        <td th:text="${board.hasRecent()
+                                       ? #temporals.format(board.recentCreatedAt, 'yyyy-MM-dd HH:mm:ss')
+                                       : '작성글 없음'}">작성글 없음</td>
+                        <td>
+                            <button type="button" class="btn btn-light board-select"
+                                    th:data-id="${board.id}">선택</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tfoot>
+                    <tr>
+                        <td colspan="4"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="userBoardList-footer">
+                <div class="page-controller">
+                    <a th:if="${page.hasPreviousBlock()}" class="disabled"
+                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|">이전</a>
+                    <ul class="page-numbers">
+                        <a th:each="number : ${page.pageNumbers}"
+                           th:href="|javascript:paging('${number}')|"
+                           th:classappend="${number == page.nowPage} ? 'disabled'">
+                            <li th:text="${number}">1</li>
+                        </a>
+                    </ul>
+                    <a th:if="${page.hasNextBlock()}"
+                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+                </div>
+            </div>
+
+            <!--/* js/post/boardList.js 가 이 폼을 읽어 페이지 이동과 검색을 만든다. */-->
+            <form name="readFrm">
+                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+                <input type="hidden" name="keyword" th:value="${keyword}">
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

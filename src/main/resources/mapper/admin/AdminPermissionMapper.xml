@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/PermissionServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/DepartmentServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/JobServiceImpl.java
+
+  **비트 연산이 하나도 없다.** MariaDB 의 비트 연산은 부호가 없어서 관리자 비트가
+  걸리면 판정이 뒤집힌다. 값만 읽고 쓰며 계산은 Java(Levels)에서 한다 —
+  migration/design/02-permission-bitmask.md 2절.
+
+  `<>` 는 XML 에서 그대로 쓸 수 없어 `!=` 로 적었다. MariaDB 에서 같은 연산자다.
+-->
+<mapper namespace="com.erflow.admin.permission.AdminPermissionMapper">
+
+    <!--
+      레거시 getDeptPermissions/getJobPermissions:
+        select * from permission_dept_view where [name like ? and] dept_id <> -1
+
+      관리자 행(id = -1)은 목록에도 체크박스에도 나오지 않는다. 그래서 프로그램 권한
+      화면에서 관리자를 «해제» 할 방법이 아예 없다.
+    -->
+    <sql id="keywordCondition">
+        <!--
+          «비었다» 는 trim 으로 판정하고 찾는 값은 다듬지 않는다. 레거시가 그렇다 —
+          `!keyword.trim().equals("")` 로 보고 `'%' + keyword + '%'` 로 찾는다.
+        -->
+        <if test="keyword != null and !keyword.trim().equals('')">
+            name LIKE CONCAT('%', #{keyword}, '%') AND
+        </if>
+    </sql>
+
+    <select id="findDeptPermissions" resultType="com.erflow.admin.permission.PermissionRow">
+        SELECT id,
+               dept_id AS classId,
+               name,
+               level,
+               permission
+          FROM permission_dept_view
+         WHERE <include refid="keywordCondition"/> dept_id != -1
+    </select>
+
+    <select id="findJobPermissions" resultType="com.erflow.admin.permission.PermissionRow">
+        SELECT id,
+               job_id AS classId,
+               name,
+               level,
+               permission
+          FROM permission_job_view
+         WHERE <include refid="keywordCondition"/> job_id != -1
+    </select>
+
+    <!-- 새 비트를 고르려면 이미 쓰이는 자리를 전부 알아야 한다(관리자 비트 포함). -->
+    <select id="findDeptLevels" resultType="long">
+        SELECT level FROM permission_dept_tbl
+    </select>
+
+    <select id="findJobLevels" resultType="long">
+        SELECT level FROM permission_job_tbl
+    </select>
+
+    <!-- 레거시 getDept(id): select * from dept_tbl where id = ? -->
+    <select id="findDept" resultType="com.erflow.admin.permission.DeptRow">
+        SELECT id,
+               name,
+               user_tbl_manager_id AS managerId,
+               postal_code         AS postalCode,
+               address1,
+               address2
+          FROM dept_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!-- 레거시 getJob(id): select * from job_tbl where id = ? -->
+    <select id="findJobName" resultType="string">
+        SELECT name FROM job_tbl WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 hasDept/hasJob: select count(*) from dept_tbl where name = ?
+
+      «있는가» 를 count == 1 로 판정한다. 같은 이름이 둘이면 거짓이 되어 셋째를
+      만들 수 있다. 판정은 Service 에서 하고 여기서는 세기만 한다.
+    -->
+    <select id="countDeptByName" resultType="int">
+        SELECT COUNT(*) FROM dept_tbl WHERE name = #{name}
+    </select>
+
+    <select id="countJobByName" resultType="int">
+        SELECT COUNT(*) FROM job_tbl WHERE name = #{name}
+    </select>
+
+    <!-- 레거시: insert into dept_tbl (name, postal_code, address1, address2) values (?, ?, ?, ?) -->
+    <insert id="insertDept">
+        INSERT INTO dept_tbl (name, postal_code, address1, address2)
+             VALUES (#{dept.name}, #{dept.postalCode}, #{dept.address1}, #{dept.address2})
+    </insert>
+
+    <!-- 레거시: insert into job_tbl (name) values (?) -->
+    <insert id="insertJob">
+        INSERT INTO job_tbl (name) VALUES (#{name})
+    </insert>
+
+    <!-- 레거시는 getGeneratedKeys 로 읽었다. 결재 등록과 같은 방식으로 옮긴다. -->
+    <select id="lastInsertId" resultType="int">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!--
+      레거시: insert into permission_dept_tbl values (0, ?, ?, ?)
+      새 부서는 자기 비트 하나만 갖는다 — level 과 permission 이 같은 값으로 들어간다.
+    -->
+    <insert id="insertDeptPermission">
+        INSERT INTO permission_dept_tbl (dept_tbl_id, level, permission)
+             VALUES (#{deptId}, #{level}, #{level})
+    </insert>
+
+    <insert id="insertJobPermission">
+        INSERT INTO permission_job_tbl (job_tbl_id, level, permission)
+             VALUES (#{jobId}, #{level}, #{level})
+    </insert>
+
+    <!--
+      레거시: update dept_tbl set user_tbl_manager_id = ?, postal_code = ?,
+             address1 = ?, address2 = ?, name = ? where id = ?
+      부서장은 화면에 없다. 읽은 값을 그대로 되돌려 놓는다.
+    -->
+    <update id="updateDept">
+        UPDATE dept_tbl
+           SET user_tbl_manager_id = #{dept.managerId},
+               postal_code         = #{dept.postalCode},
+               address1            = #{dept.address1},
+               address2            = #{dept.address2},
+               name                = #{dept.name}
+         WHERE id = #{dept.id}
+    </update>
+
+    <!-- 레거시: update job_tbl set name = ? where id = ? -->
+    <update id="updateJob">
+        UPDATE job_tbl SET name = #{name} WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: update permission_dept_tbl set permission = ? where dept_tbl_id = ? -->
+    <update id="updateDeptPermission">
+        UPDATE permission_dept_tbl
+           SET permission = #{permission}
+         WHERE dept_tbl_id = #{deptId}
+    </update>
+
+    <update id="updateJobPermission">
+        UPDATE permission_job_tbl
+           SET permission = #{permission}
+         WHERE job_tbl_id = #{jobId}
+    </update>
+
+    <!--
+      레거시 deleteDept: 권한 행을 먼저 지우고 부서를 지운다.
+
+      다른 부서와 프로그램에 남은 그 부서의 비트는 <b>걷어내지 않는다.</b> 나중에 만든
+      부서가 같은 비트를 받아 사라진 부서의 권한을 물려받는다. 걷어내는 코드가 레거시에
+      있긴 하나 어느 화면도 부르지 않는다 — D-062.
+    -->
+    <delete id="deleteDeptPermission">
+        DELETE FROM permission_dept_tbl WHERE dept_tbl_id = #{deptId}
+    </delete>
+
+    <delete id="deleteDept">
+        DELETE FROM dept_tbl WHERE id = #{deptId}
+    </delete>
+
+    <delete id="deleteJobPermission">
+        DELETE FROM permission_job_tbl WHERE job_tbl_id = #{jobId}
+    </delete>
+
+    <delete id="deleteJob">
+        DELETE FROM job_tbl WHERE id = #{jobId}
+    </delete>
+
+    <!--
+      레거시 getPrograms(name, start, cnt):
+        select * from permission_program_tbl [where program_name like '%?%'] limit ?, ?
+
+      ORDER BY 가 없다. 넣지 않는다 — 화면에 찍히는 순서가 달라진다.
+    -->
+    <select id="findProgramPage" resultType="com.erflow.admin.permission.ProgramRow">
+        SELECT id,
+               program_id   AS programId,
+               program_name AS programName,
+               dept_level   AS deptLevel,
+               job_level    AS jobLevel
+          FROM permission_program_tbl
+        <if test="keyword != null and !keyword.trim().equals('')">
+            WHERE program_name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!--
+      레거시 getProgramCount(name):
+        select count(*) from permission_program_tbl [where program_name = ?]
+
+      **목록과 조건이 다르다.** 목록은 부분 일치(like)인데 건수는 완전 일치다. 그래서
+      검색하면 줄은 나오는데 페이지 수가 0으로 나온다. 그대로 옮긴다(D-064).
+    -->
+    <select id="countPrograms" resultType="int">
+        SELECT COUNT(*)
+          FROM permission_program_tbl
+        <if test="keyword != null and !keyword.trim().equals('')">
+            WHERE program_name = #{keyword}
+        </if>
+    </select>
+
+    <!-- 레거시 getProgram(id): select * from permission_program_tbl where id = ? -->
+    <select id="findProgram" resultType="com.erflow.admin.permission.ProgramRow">
+        SELECT id,
+               program_id   AS programId,
+               program_name AS programName,
+               dept_level   AS deptLevel,
+               job_level    AS jobLevel
+          FROM permission_program_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시 changeProgramDeptPermission/changeProgramJobPermission:
+        update permission_program_tbl set dept_level = ? where program_id = ?
+
+      번호(id)가 아니라 **프로그램 코드**로 찾는다. 레거시 그대로다.
+    -->
+    <!-- 지운 부서·직급의 비트를 걷어낼 때(D-109) 전 행을 읽는다. 비트 계산은 Java 에서. -->
+    <select id="findPrograms" resultType="com.erflow.admin.permission.ProgramRow">
+        SELECT id,
+               program_id   AS programId,
+               program_name AS programName,
+               dept_level   AS deptLevel,
+               job_level    AS jobLevel
+          FROM permission_program_tbl
+    </select>
+
+    <update id="updateProgramDeptLevel">
+        UPDATE permission_program_tbl
+           SET dept_level = #{level}
+         WHERE program_id = #{programId}
+    </update>
+
+    <update id="updateProgramJobLevel">
+        UPDATE permission_program_tbl
+           SET job_level = #{level}
+         WHERE program_id = #{programId}
+    </update>
+
+</mapper>

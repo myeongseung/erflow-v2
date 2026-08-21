@@ -1,0 +1,153 @@
+@font-face {
+  font-family: 'Stamp';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/res/font/stamp.ttf') format('truetype');
+}
+
+.proposal-insert-wrap {
+	width: 100%;
+	max-height: calc(100vh - 86.5px);
+	display: flex;
+	justify-content: space-around;
+	padding: 10px;
+}
+
+.proposal-left-wrap {
+	width: 65%;
+	border: 1px solid black;
+	padding: 10px;
+	overflow-y: auto;
+}
+
+.proposal-left-header {
+	width: 100%;
+	padding: 10px;
+}
+
+.proposal-left-content{
+	width: 100%;
+	max-height: calc(100vh - 150.5px);
+}
+
+.page {
+    margin: 0 auto;
+    width: calc(21cm + 46px);
+    min-height: 29.7cm;
+    background: #e4e6ea;
+}
+
+.subpage {
+	width: calc(21cm + 40px);
+	height: calc(29.7cm + 80px);
+	padding: 15px;
+	border: 2px red solid;
+	background: #fff;
+}
+
+.proposal-stamp {
+	font-family: 'Stamp';
+}
+
+@page {
+	size: A4;
+	margin: 0;
+}
+
+@media print {
+	html,
+	body {
+		width: 210mm;
+		height: 297mm;
+	}
+
+	.page {
+		margin: 0;
+		border: initial;
+		width: initial;
+		min-height: initial;
+		box-shadow: initial;
+		background: initial;
+		page-break-after: always;
+	}
+
+}
+
+.approval-header{
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+}
+
+.approval-title{
+	position: relative;
+	width: 100%;
+}
+
+.approval-title-span{
+ 	position:absolute;
+	padding: 15px;
+	top:20%;
+	font-size: 24px;
+	font-weight: 900;
+}
+
+.approval-wrap{
+	width: 100%;
+	height: 100px;
+	padding: 5px;
+}
+
+.approval-table{
+	height: 100%;
+	float: right;
+}
+.approval-table tr th{
+	border: 1px solid black;
+	text-align: center;
+	padding: 2px;
+	font-size: 10px;
+}
+
+.approval-table tr td{
+	border: 1px solid black;
+	text-align: center;
+	padding: 0 5px;
+	font-size: 10px;
+}
+
+.approval-content{
+	width: 100%;
+	min-height: 700px;
+}
+
+.proposal-right-wrap {
+	width: 33%;
+	padding: 10px;
+	border: 1px solid black;
+}
+
+.proposal-comment-list{
+	margin-bottom:20px;
+	width: 100%;
+	min-height: calc(100vh - 446.5px);
+	max-height: calc(100vh - 446.5px);
+	overflow-y: auto;
+}
+
+.input-group{
+	height: 200px;
+}
+
+.input-group-text{
+	padding:90px 15px 90px 15px;
+}
+
+.comment-name{
+	width: 15%;
+}
+
+.button-group{
+	margin-top: 10px;
+	text-align: center;
+}

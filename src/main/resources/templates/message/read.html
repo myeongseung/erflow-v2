@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--/*
+  쪽지 읽기 팝업.
+  출처: legacy/ERFlow/src/main/webapp/message/read.jsp
+
+  목록에서 내용을 누르면 window.open 으로 연다. 여는 순간 «읽음» 으로 표시된다 —
+  화면을 여는 것이 대상을 바꾼다(D-046). 답장·삭제는 message/index.js 가 처리한다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>쪽지 읽기</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/message/index.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/common/page.css}">
+    <link rel="stylesheet" th:href="@{/css/main/header.css}">
+    <link rel="stylesheet" th:href="@{/css/main/index.css}">
+    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/message/index.css}">
+    <link rel="stylesheet" th:href="@{/css/message/read.css}">
+</head>
+<body>
+<form method="" action="" name="readFrm">
+    <div class="message-wrap">
+        <div class="readmessage-body">
+            <input type="hidden" name="messageId" th:value="${message.id}">
+            <input type="hidden" name="senderId" th:value="${message.senderId}">
+            <table class="readmessage-info">
+                <tr>
+                    <th>보낸사람</th>
+                    <td class="readmessage-info-sender" th:text="${message.senderLabel()}">[부서] 이름 직급</td>
+                </tr>
+                <tr>
+                    <th>받은시각</th>
+                    <td class="readmessage-info-receivetime" th:text="${message.createdAt}">2026-01-01</td>
+                </tr>
+            </table>
+            <hr>
+            <div class="readmessage-content" th:text="${message.content}">내용</div>
+            <hr>
+            <div class="readmessage-footer">
+                <div class="readmessage-footer-button">
+                    <button class="btn btn-primary reply-inner-message" type="submit">답장</button>
+                    <button class="btn btn-danger delete-message" type="submit">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+</body>
+</html>

@@ -1,0 +1,66 @@
+body {
+	background-color: #E9ECEF;
+	overflow: hidden;
+}
+
+.main-notice {
+	width: 100%;
+	min-width: 500px;
+}
+
+.upside {
+	margin: 20px;
+}
+
+.plus-table {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+}
+
+.inner-plus-table {
+	background-color: rgb(245, 245, 245);
+	border-radius: 10px;
+
+}
+
+.inner-plus-table tr td,
+.inner-plus-table input,
+.inner-plus-table textarea {
+	font-size: 15px;
+}
+
+.inner-plus-table tr td {
+	padding: 10px;
+}
+
+.inner-plus-table .search-people{
+	display: flex;
+}
+.inner-plus-table .search-people button{
+	min-width: 75px;
+}
+
+.inner-plus-table .content-button {
+	border-radius: 10px;
+}
+
+.board-content-body .inner-plus-table {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+	box-shadow: 0 10px 8px rgba(0, 0, 0, 0.1);
+}
+.messageform-footer-button{
+	display: flex;
+	margin-left:75%;
+	width: 25%;
+}
+.messageform-footer-button button{
+	margin: 5px;
+	white-space: nowrap;
+}
+.plus-messageform-header, .plus-messageform-content{
+	min-width: 30px;
+	white-space: nowrap;
+}

@@ -1,0 +1,163 @@
+body{
+	max-height: calc(100% - 86.5px);
+}
+
+.wrap{
+	background-color: #f8f9fa;
+	width: 100%;
+	max-height: calc(100% - 86.5px);
+	overflow-y: auto;
+}
+.empty-space{
+	margin-bottom: 20px;	
+}
+.empty-space-right{
+	margin-right: 20px;
+}
+.context {
+	width: 90%;
+}
+.main-notice{
+	background-color: #f8f9fa;
+	width:100%;
+	min-width: 1024px;
+	max-height: calc(100% - 86.5px);
+ 	overflow-y: auto;
+}
+
+.subject-one{
+	background-color: #EEEEEE;
+}
+.subject-one .subject-center{
+	font-size: 20px;
+}
+.body-border{
+	margin-bottom:50px;
+}
+.comments hr{
+	margin: 0;
+}
+.iheader{
+	margin-left: 15%;
+    width: 80%;
+}
+.iheader hr{
+	margin:0;
+}
+
+.subject-middle-group{
+	display: flex;
+	justify-content: space-between;
+
+}
+.subject-middle-group .left-subject, .subject-middle-group .right-subject{
+	display: flex;
+	align-items: center;
+}
+.left-subject div, .right-subject div{
+	font-size: 15px;
+}
+
+.iheader .subject {
+	margin-bottom: 20px;
+	display: flex;
+	justify-content: space-around;
+	margin-left: 90%;
+	margin-top: 0;
+}
+
+.subject tbody tr{
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	
+}
+.subject tbody tr td{
+	font-size: 15px;
+	
+	text-align: center;
+}
+
+.wrap .ibody {
+	min-height: 300px;
+	margin-left: 17%;
+	width: 77%;
+}
+.ibody .content{
+	font-size: 15px;
+}
+.context .comment {
+	border: none;
+}
+
+.context .comment tr td {
+	margin: 5px;
+	border: none;
+}
+
+.wrap .middle-button {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+.middle-button-wrap{
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+}
+
+.all-comment-wrap{ /*댓글들 댓글쓰는 부분 포함 자리잡기*/
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+}
+.all-comment{      /*댓글들 댓글쓰는 부분 전체*/
+	padding: 10px;
+	width: 70%;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+}
+.all-comment table tr td{
+	padding: 5px;
+}
+.all-comment .comment{ /*댓글 쓰는 폼과 보이는 폼 크기 지정 */
+	width: 100%;
+}
+.left-header{          /* 댓글 보이는 폼 이름과 날짜 부분*/
+	display: flex;
+	justify-content: space-between;
+}
+.name{                 /* 댓글 이름 크기 지정*/
+	font-weight: bold;
+	font-size: 15px;
+}
+.comment{
+	padding: 10px;
+}
+.comment, .re-comment{ /*댓글 보이는 부분 마진*/
+	margin:10px
+}
+.comment .drop-menu{    /*써진 댓글 수정 삭제보이는 부분*/
+	width: 60px;
+ 	text-align: center;
+}
+.comment .post-body textarea{ /* 사용자 첫 댓글 쓰는 폼 */
+	width: 100%;
+}
+.comment .post-enter{         /*사용자 첫 댓글 쓰는 엔터*/
+	width: 60px;
+	text-align: center;
+}
+
+.re-comment{                  /*써진 댓글 부분*/
+	width: 95%;
+	margin-left: 4.7%;
+}
+.post-reply .post-reply-comments, .edit-reply .post-reply-comments { /*답글 쓰는 창 부분*/
+	display: flex;
+}
+.post-reply .post-reply-comments textarea, .edit-reply .post-reply-comments textarea { /*답글 쓰는 창 크기*/
+	border: 1px solid rgba(0,0,0,0.2);
+	width: 95%;
+}
+.post-reply .post-reply-comments button, .edit-reply .post-reply-comments button { /*답글 쓰는 버튼 크기*/
+	width: 5%;
+}

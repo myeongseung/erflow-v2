@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<!--/*
+  게시판 부서 권한 수정.
+  출처: legacy/ERFlow/src/main/webapp/admin/board/boardDeptUpdate.jsp
+
+  읽기와 쓰기를 같은 화면이 겸한다(flag). 저장값은 «관리자 비트 + 체크된 비트» 이고,
+  고치지 않는 쪽(부서 화면이면 반대편)은 읽어 온 값을 그대로 되돌려 놓는다 —
+  갱신 문장이 두 칸을 함께 쓰기 때문이다.
+
+  화면 제목이 읽기·쓰기 어느 쪽인지 알려주지 않는다. 레거시 그대로 둔다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부서 수정 페이지</title>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/location.js}"></script>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/deptRegister.css}">
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/admin/board/dept-update-proc}" method="post">
+        <input type="hidden" name="boardId" th:value="${form.boardId}">
+        <input type="hidden" name="flag" th:value="${flag}">
+        <h2>부서 수정</h2>
+
+        <div class="checkbox-container">
+            <label>부서 권한:</label><br>
+            <div class="input-group" th:each="choice, i : ${form.choices}">
+                <input type="checkbox" id="permission" th:id="|permission${i.count}|"
+                       name="permissions" th:value="${choice.classId}"
+                       th:checked="${choice.checked}">
+                <label for="permission" th:for="|permission${i.count}|">[[${choice.name}]]</label>
+            </div>
+            <button type="submit">수정하기</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

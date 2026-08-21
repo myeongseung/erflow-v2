@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<!--/*
+  완제품 관리.
+  출처: legacy/ERFlow/src/main/webapp/product/productedProduct.jsp
+
+  원재료·가공품·완제품이 한 표(product_tbl)에 type 으로 나뉘어 있다. 화면 셋이 거의
+  같은데 **권한이 셋 다르다** — screen 표에 세 경로가 각각 다른 프로그램으로 걸려 있어
+  화면도 따로 둔다.
+
+  숨은 type 은 삭제 처리가 돌아갈 목록을 고르는 데 쓴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('출고 제품 관리 페이지', ${ {'/css/bootcss/bootstrap.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/product.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/main/index.js', '/js/main/product.js', '/js/bootjs/bootstrap.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 제품 &gt; 완제품 </span>
+        </div>
+
+        <form th:action="@{/product/delete-proc}" method="post" name="productFrm">
+            <input type="hidden" name="type" value="producted">
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button"
+                            data-value="producted">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="productId" th:selected="${keyfield == 'productId'}">제품ID</option>
+                        <option value="productName" th:selected="${keyfield == 'productName'}">제품명</option>
+                    </select>
+
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" placeholder="검색"
+                                   aria-label="Search" name="keyword" th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">제품 ID</th>
+                    <th scope="col">이름</th>
+                    <th scope="col">수량</th>
+                    <th scope="col">제품 분류</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="product : ${products}">
+                    <th scope="col"><input type="checkbox" name="productId" th:value="${product.id}"></th>
+                    <td><a th:href="@{/product/update(flag='producted',id=${product.id})}"
+                           th:text="${product.id}">P-1</a></td>
+                    <td th:text="${product.name}">이름</td>
+                    <td th:text="${product.count}">0</td>
+                    <td>완제품</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="5"></td>
+                </tfoot>
+            </table>
+
+        </form>
+        <form name="readFrm" th:action="@{/product/producted-product}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" th:value="${keyfield}">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+        </form>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+               class="disabled">이전</a>
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}">
+                    <a th:href="|javascript:paging('${number}')|"
+                       th:classappend="${number == page.nowPage} ? 'disabled'"
+                       th:text="${number}">1</a>
+                </li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>

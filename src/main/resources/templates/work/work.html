@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<!--/*
+  근태 확인. 전 직원의 한 달 근태를 8명씩 끊어 보여준다.
+  출처: legacy/ERFlow/src/main/webapp/work/work.jsp
+
+  프로필의 근무 달력과 데이터는 같지만 그리는 법이 다르다 — 색이 아니라 **글자**다.
+  정상 근무는 일한 시간(HH:mm), 나머지는 상태 이름이 색 글자로 찍힌다. 통계는
+  줄마다 따로 세어지고(D-077), 조퇴의 주말 처리는 윗줄과 아랫줄이 다르다(D-099).
+
+  워크플로는 전부 readFrm 을 지나간다 — 달 검색·칸 검색·페이징이 그 폼에 값을 옮겨
+  담아 제출한다(js/work/work.js).
+
+  jQuery 를 두 번 싣는 것까지 레거시 그대로다. 나중 것이 이긴다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('근태 확인 페이지', ${ {'/css/bootcss/bootstrap.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', 'http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/index.css', '/css/main/work.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/work/work.js'} })}">
+</head>
+<body>
+<div class="wrap">
+
+    <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+    <div class="content-wrap">
+        <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+        <div class="main-content-wrap">
+            <div class="article">
+                <div class="content">
+
+                    <div class="right-align">
+                        <span class="menu-name">사용자 &gt; 근태 관리 &gt; 근태 확인</span>
+                    </div>
+                    <form name="workFrm">
+                        <div class="header">
+                            <div class="select-date">
+                                <input type="month" th:min="${minMonth}" th:value="${month}">
+                                <button type="button" class="btn btn-light date-search">검색</button>
+                            </div>
+                            <div class="search-option">
+                                <select name="keyfield">
+                                    <option value="">전체조회</option>
+                                    <option value="dept">부서</option>
+                                    <option value="name">이름</option>
+                                </select>
+
+                                <div class="main-search-container">
+                                    <div class="main-search-border">
+                                        <input class="main-search-text" type="search"
+                                               placeholder="검색" aria-label="Search" name="keyword">
+                                    </div>
+                                    <div class="main-search-icon">
+                                        <i class="fa-solid fa-magnifying-glass fa-lg" id="searchIcon"
+                                           title="검색하기"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="section">
+                        <table class="table table-striped">
+                            <tr style="background-color: beige;">
+                                <th colspan="3">구분</th>
+                                <th th:each="day : ${firstHeaders}"
+                                    th:style="${day.headerStyle}" th:text="${day.label}">01</th>
+                                <th colspan="4">통계</th>
+                            </tr>
+                            <tr style="background-color: beige;">
+                                <th style="width: 5%;">성명</th>
+                                <th style="width: 4%;">부서</th>
+                                <th>직책</th>
+                                <th:block th:each="day : ${secondHeaders}">
+                                    <th th:if="${day.inMonth}"
+                                        th:style="${day.headerStyle}" th:text="${day.label}">17</th>
+                                    <th th:unless="${day.inMonth}"></th>
+                                </th:block>
+                                <th>정상</th>
+                                <th>지각</th>
+                                <th>조퇴</th>
+                                <th>연차</th>
+                            </tr>
+                            <th:block th:each="row : ${rows}">
+                                <tr>
+                                    <td rowspan="2" th:text="${row.user.name}">성명</td>
+                                    <td rowspan="2" th:text="${row.user.deptName}">부서</td>
+                                    <td rowspan="2" th:text="${row.user.jobName}">직책</td>
+                                    <td th:each="cell : ${row.sheet.first.cells}"
+                                        th:style="${cell.style}" th:text="${cell.text}"></td>
+                                    <td th:text="${row.sheet.first.normal}">0</td>
+                                    <td th:text="${row.sheet.first.late}">0</td>
+                                    <td th:text="${row.sheet.first.leave}">0</td>
+                                    <td th:text="${row.sheet.first.vacationLabel}">0.0</td>
+                                </tr>
+                                <tr>
+                                    <td th:each="cell : ${row.sheet.second.cells}"
+                                        th:style="${cell.style}" th:text="${cell.text}"></td>
+                                    <td th:text="${row.sheet.second.normal}">0</td>
+                                    <td th:text="${row.sheet.second.late}">0</td>
+                                    <td th:text="${row.sheet.second.leave}">0</td>
+                                    <td th:text="${row.sheet.second.vacationLabel}">0.0</td>
+                                </tr>
+                            </th:block>
+                        </table>
+                    </div>
+                    <!--/* 페이징 */-->
+                    <div class="page-controller">
+                        <a th:if="${page.hasPreviousBlock()}" class="disabled"
+                           th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|">이전</a>
+                        <ul class="page-numbers">
+                            <li th:each="number : ${page.pageNumbers}">
+                                <a th:href="|javascript:paging('${number}')|"
+                                   th:classappend="${number == page.nowPage} ? 'disabled'"
+                                   th:text="${number}">1</a>
+                            </li>
+                        </ul>
+                        <a th:if="${page.hasNextBlock()}"
+                           th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+                    </div>
+                    <form name="readFrm">
+                        <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+                        <input type="hidden" name="date" th:value="${month}">
+                        <input type="hidden" name="keyfield">
+                        <input type="hidden" name="keyword">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

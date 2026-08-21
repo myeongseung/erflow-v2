@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!--/*
+  문서 리스트.
+  출처: legacy/ERFlow/src/main/webapp/document/documentList.jsp
+
+  **내 문서만 보인다** — 조회가 사번으로 좁혀져 있다.
+
+  양식 없이 쓴 문서는 «(빈 문서)», 아직 고치지 않은 문서는 «(수정하지 않음)» 이 뜬다.
+  문서·결재 상태는 코드 숫자를 그대로 찍는다 — 레거시가 라벨을 붙이지 않는다.
+
+  문서 제목을 누르면 작성 화면이 수정 모드로 열린다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('문서 관리', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/documentList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/admin/admin.js', '/js/main/documentList.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 문서 관리 &gt; 문서 리스트</span>
+        </div>
+
+        <form th:action="@{/document/delete-proc}" method="post" name="docFrm">
+
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button"
+                            name="flag" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="id" th:selected="${keyfield == 'id'}">문서ID</option>
+                        <option value="subject" th:selected="${keyfield == 'subject'}">문서명</option>
+                        <option value="template" th:selected="${keyfield == 'template'}">양식명</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search"
+                                   placeholder="문서 검색" aria-label="Search" name="keyword"
+                                   th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">문서번호</th>
+                    <th scope="col">제목</th>
+                    <th scope="col">양식명</th>
+                    <th scope="col">생성시각</th>
+                    <th scope="col">수정시각</th>
+                    <th scope="col">문서 상태</th>
+                    <th scope="col">결재 상태</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="document : ${documents}">
+                    <th scope="col"><input type="checkbox" name="docId"
+                                           th:value="${document.id}"></th>
+                    <td th:text="${document.id}">1</td>
+                    <td><a th:href="@{/document/register(flag='update',docId=${document.id})}"
+                           th:text="${document.subject}">제목</a></td>
+                    <td th:text="${document.templateLabel()}">양식명</td>
+                    <td th:text="${document.createdAt}">생성시각</td>
+                    <td th:text="${document.updatedLabel()}">수정시각</td>
+                    <td th:text="${document.docStatus}">0</td>
+                    <td th:text="${document.proposalStatus}">0</td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="7"></td>
+                <td></td>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/document/list}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" th:value="${keyfield}">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+        </form>
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+               class="disabled">이전</a>
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}">
+                    <a th:href="|javascript:paging('${number}')|"
+                       th:classappend="${number == page.nowPage} ? 'disabled'"
+                       th:text="${number}">1</a>
+                </li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

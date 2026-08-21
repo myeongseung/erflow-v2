@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--/*
+  기안 작성. 추가와 수정을 겸한다.
+  출처: legacy/ERFlow/src/main/webapp/document/documentRegister.jsp
+
+  양식을 고르면 화면이 다시 열리면서 **편집기 내용이 그 양식으로 덮인다** — 쓰던 글이
+  있어도 사라진다. 레거시 그대로다(js/main/documentRegister.js 가 readFrm 을 제출한다).
+
+  이미 결재에 올라간 문서를 고치면 고치지 않고 **새 문서로 등록된다.** 결재선이 본
+  내용이 달라지면 안 되기 때문이다 — 처리 결과에 그렇게 알려 준다.
+
+  본문은 CKEditor 4 가 만든다(CDN). 새 문서일 때 숨은 id 는 -1 이다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문서 작성</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{//cdn.ckeditor.com/4.22.1/full/ckeditor.js}"></script>
+    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/main/index.js}"></script>
+    <script th:src="@{/js/main/documentRegister.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/main/header.css}">
+    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
+    <link rel="stylesheet" th:href="@{/css/main/index.css}">
+    <link rel="stylesheet" th:href="@{/css/main/documentList.css}">
+    <link rel="stylesheet" th:href="@{/css/main/documentRegister.css}">
+</head>
+<body>
+<div class="wrap">
+    <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+    <div class="content-wrap">
+        <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+        <div class="body">
+            <div class="right-align">
+                <span class="menu-name">사용자 &gt; 문서 관리 &gt; 기안 작성</span>
+            </div>
+            <div class="section">
+                <form th:action="@{/document/register-proc}" name="writeFrm" method="post">
+                    <input type="hidden" name="flag" th:value="${flag}">
+                    <input type="hidden" name="id" th:value="${docId}">
+                    <ul class="column">
+                        <li class="title">양식분류</li>
+                        <li>
+                            <select class="select" name="templateId">
+                                <option value="0">빈 문서</option>
+                                <option th:each="template : ${templates}"
+                                        th:value="${template.id}"
+                                        th:selected="${selectedTemplate != null
+                                                and selectedTemplate == template.id}"
+                                        th:text="${template.subject}">양식명</option>
+                            </select>
+                        </li>
+                        <li class="title">제목</li>
+                        <li>
+                            <input type="text" name="subject" class="input-width"
+                                   th:value="${subject}"/>
+                        </li>
+                    </ul>
+                    <textarea id="editor1" name="content" class="ckeditor-textarea"
+                              rows="10" cols="80" th:text="${content}"></textarea>
+                    <h2>
+                        <input type="submit" value="확인"/>
+                        <input type="reset" value="다시입력"/>
+                    </h2>
+                </form>
+                <form name="readFrm" th:action="@{/document/register}" method="get">
+                    <input type="hidden" name="flag" th:value="${flag}">
+                    <input type="hidden" name="id" th:value="${docId}">
+                    <input type="hidden" name="template">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    CKEDITOR.replace("editor1", {
+        width: "80%",
+        height: "400px",
+    });
+</script>
+</body>
+</html>

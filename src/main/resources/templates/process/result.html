@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--/*
+  처리 결과.
+  출처: processUpdateProc.jsp / processDeleteProc.jsp
+
+  이름 변경은 작은 창에서 오므로 부모를 새로 고친 뒤 창을 닫고, 삭제는 목록으로
+  돌아간다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>처리 결과</title>
+</head>
+<body>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    alert(/*[[${message}]]*/ '');
+
+    if (/*[[${closePopup}]]*/ false) {
+        opener.location.reload();
+        window.close();
+    } else {
+        location.href = /*[[${nextPage}]]*/ '/process/list';
+    }
+    /*]]>*/
+</script>
+</body>
+</html>

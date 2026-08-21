@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<!--/*
+  공정 등록.
+  출처: legacy/ERFlow/src/main/webapp/process/processRegister.jsp
+
+  «공정 추가» 는 서버로 가지 않는다 — 화면의 표에 줄을 쌓는다. «공정 등록» 을 눌러야
+  그 표가 통째로 JSON 으로 올라간다(js/process/processRegister.js).
+
+  그래서 **공정을 하나만 쌓으면 등록되지 않는다.** 레거시는 첫 공정의 다음 고리를
+  무조건 찾다가 그 자리에서 죽었고, 여기서는 실패로 돌려준다(D-072).
+
+  숨은 입력 셋(receiver·processId·nickname)은 결재라인 등록 화면에서 복사해 온 흔적이다.
+  아무도 읽지 않지만 정답에 있으므로 지우지 않는다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('공정 생성', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/process/processRegister.css', '/css/main/header.css', '/css/main/aside.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/process/processRegister.js', '/js/main/index.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="proposal-insert-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 생산관리 &gt; 공정 등록</span>
+        </div>
+        <div class="proposal-insert">
+            <div class="proposal-form">
+                <form th:action="@{/process/processRegister}" method="post" name="processFrm">
+                    <div class="form-group d-grid gap-2">
+                        <label for="input1">공정ID:</label>
+                        <input type="text" class="processId" name="processId" value="" placeholder="공정ID">
+                    </div>
+                    <div class="form-group d-grid gap-2">
+                        <label for="input2">공정명</label>
+                        <input type="text" class="processName" name="processName" value="" placeholder="공정명">
+                    </div>
+                    <div class="form-group d-grid gap-2">
+                        <input type="button" class="btn btn-secondary btn-lg"
+                               id="process-register-button" value="공정 추가">
+                        <table id="myTable" class="table table-striped">
+                            <tr>
+                                <th>공정ID</th>
+                                <th>공정명</th>
+                                <th>우선순위</th>
+                                <th></th>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="btn-group">
+                        <button class="proposalRegister-btn" id="registerBtn" type="button">공정 등록</button>
+                    </div>
+                </form>
+                <form name="readFrm">
+                    <input type="hidden" name="receiver">
+                    <input type="hidden" name="processId">
+                    <input type="hidden" name="nickname">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--/*
+  글쓰기.
+  출처: legacy/ERFlow/src/main/webapp/post/postRegister.jsp
+
+  마크업 구조와 class 이름은 레거시 그대로다. css/post/postRegister.css 와
+  js/post/postRegister.js 가 이 이름들에 걸려 있다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('게시글 등록', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/postRegister.css', '/css/common/editor.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/post/postRegister.js', '//cdn.ckeditor.com/4.22.1/full/ckeditor.js', '/js/main/index.js', '/js/common/editor.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div id="main-wrap">
+        <form method="post" th:action="@{/post/register}" id="board-write"
+              enctype="multipart/form-data">
+            <input type="hidden" name="boardId" th:value="${boardId}">
+            <div class="board-bodyeditor">
+                <div class="empty-space">&nbsp;</div>
+                <div class="empty-space"></div>
+                <div class="empty-space">&nbsp;</div>
+                <div class="empty-space"></div>
+
+                <div class="write-header-wrap">
+                    <div class="write-header">
+                        <!--/*
+                          레거시는 boardName 을 계산해 두고도 value="자유게시판" 을
+                          박아 두었다. 어느 게시판에 글을 써도 "자유게시판"이 뜬다.
+                          그대로 옮긴다 — D-032 참조.
+                        */-->
+                        <input type="text" class="write-header-type" value="자유게시판" readonly>
+                        <input type="text" name="subject" class="write-header-subject"
+                               placeholder="제목을 입력해주세요" required>
+                    </div>
+                </div>
+            </div>
+            <div class="write-body">
+                <textarea name="content" id="editor1" class="ckeditor-textarea"
+                          rows="10" cols="80"></textarea>
+            </div>
+            <div class="write-header-wrap">
+                <div class="write-header">
+                    <div class="left-align">
+                        <div>
+                            <input type="file" name="filename" class="write-header-type" multiple>
+                        </div>
+                        <div id="listbox" style="display:none">
+                            <div id="listfile">
+                                첨부파일 :
+                                <div class="center-align" id="fileList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="empty-space"></div>
+            <div class="board-button">
+                <div>
+                    <button type="submit" class="btn btn-primary btn-lg">게시하기</button>
+                    <button type="button" class="btn btn-secondary btn-lg"
+                            th:data-id="${boardId}">돌아가기</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

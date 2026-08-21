@@ -1,0 +1,263 @@
+.admin-wrap {
+	width: 100%;
+	min-height: 100%;
+	display: flex;
+	background-color: #e4e6ea;
+}
+
+.admin-body-wrap {
+	display: flex;
+	justify-content: space-around;
+	padding: 10px;
+	min-width: 1024px;
+	min-height: 800px;
+	width: 100%;
+	height: calc(100% - 67px);
+}
+
+.admin-body-left {
+	width: 35%;
+	height: 100%;
+}
+
+.admin-body-left .workstatus {
+	width: 100%;
+	height: calc(50% - 10px);
+	/*- 10px 없으면 결재가 내려 앉음.*/
+	min-height: 400px;
+	max-height: calc(50% - 10px);
+	padding: 10px;
+	background-color: white;
+}
+
+.admin-body-left .approval {
+	width: 100%;
+	height: calc(50%);
+	min-height: 400px;
+	max-height: calc(50%);
+	margin-top: 10px;
+	/* 근무 현황과의 틈 */
+	padding: 10px;
+	background-color: white;
+}
+
+.approval-content-div {
+	height: 350px;
+	overflow-y: auto;
+}
+
+.admin-body-right {
+	width: 65%;
+	height: 100%;
+}
+
+.admin-body-right .admin-right-group {
+	width: 100%;
+	height: 80%;
+	display: flex;
+	justify-content: space-around;
+}
+
+.right-group-element {
+	width: 65%;
+	height: 100%;
+	padding-left: 10px;
+	padding-right: 10px;
+	padding-bottom: 10px;
+}
+
+.right-group-element .basic-info {
+	height: calc(50% - 5px);
+	min-height: 300px;
+	max-height: calc(50% - 5px);
+	padding: 10px;
+	background-color: white;
+}
+
+.basic-info .temporary-div {
+	height: 250px;
+	overflow-y: auto;
+}
+
+.right-group-element .notification {
+	height: calc(50% - 5px);
+	min-height: 300px;
+	max-height: 50%;
+	margin-top: 10px;
+	padding: 10px;
+	background-color: white;
+}
+
+.notification .notification-table-div {
+	height: 250px;
+	overflow-y: auto;
+}
+
+.attendance-management {
+	width: 35%;
+	height: calc(100% - 10px);
+	min-height: calc(100% - 10px);
+	max-height: 500px;
+	padding: 10px;
+	background-color: white;
+}
+
+.attendance-management-content-div {
+	height: calc(100% - 70px);
+	overflow-y: auto;
+}
+
+.admin-body-right .web-info {
+	width: calc(100% - 10px);
+	background-color: #333;
+	margin-left: 10px;
+	height: 20%;
+	padding: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.web-info .logo-font {
+	min-height: 100px;
+	max-width: 200px;
+	margin-bottom: 20px;
+}
+
+.web-info td {
+	color: white;
+}
+
+
+
+
+.body-header {
+	/*내용의 제목*/
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	padding: 10px;
+	margin-bottom: 15px;
+}
+
+.body-header-name,
+.graph-header-name {
+	/*내용의 제목*/
+	margin-left: 15px;
+	font-size: 15px;
+	font-weight: bold;
+}
+
+.graph-header {
+	/*내용의 제목*/
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	padding: 10px;
+}
+
+.middle-name {
+	/*내용의 제목*/
+	font-size: 15px;
+	font-weight: bold;
+	margin-left: 30px;
+}
+
+#graph {
+	/*출근현황 그래프*/
+	display: flex;
+	justify-content: space-around;
+}
+
+#graph text {
+	font-size: 15px;
+}
+
+.body-table-wrap {
+	background-color: white;
+}
+
+.approval .approval-content {
+	/*좌하단 결재 테이블*/
+	width: 100%;
+	min-height: 20%;
+}
+
+.category,
+.category-date,
+.time-cell {
+	text-align: center;
+}
+
+.input-group-text {
+	/*좌하단 결재 부분 테이블의 유형*/
+	width: 35%;
+	display: flex;
+	justify-content: space-around;
+}
+
+.approval-content th,
+.approval-content td {
+	text-align: center;
+	min-height: 30px;
+}
+
+.mb-3 {
+	/*좌하단 테이블 부트스트랩 뜨는거 방지*/
+	margin-top: 12px;
+}
+
+.basic-info .temporary {
+	width: 100%;
+	min-height: 20%;
+}
+
+.temporary tr th,
+.temporary tr td {
+	text-align: center;
+	min-height: 30px;
+}
+.notification-subject {
+	width: 70%;
+	min-width: 200px;
+}
+
+.notification-date {
+	width: 30%;
+	min-width: 100px;
+}
+
+.notification-subject, .notification-date {
+	text-align: center;
+}
+
+.attendance-management-content {
+	width: 100%;
+	min-height: 20%;
+}
+
+.attendance-management-content .coworker {
+	min-width: 100px;
+	text-align: center;
+	margin-top: 17px;
+}
+
+#graph {
+	margin-left: 20%;
+}
+
+.category-color0 {
+	background-color: #E4E4E4 !important;
+}
+
+.category-color1 {
+	background-color: #C2FF63 !important;
+}
+
+.category-color2 {
+	background-color: #EA7B86 !important;
+}
+
+.category-color3 {
+	background-color: #FFFF40 !important;
+}

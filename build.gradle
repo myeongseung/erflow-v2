@@ -1,0 +1,66 @@
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'org.springframework.boot' version '4.0.6'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.erflow'
+version = '0.1.0'
+description = 'ERFlow — JSP/Servlet 레거시의 Spring Boot 이관'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// 레거시가 MySQL 8 이었으므로 MariaDB 로 옮기면서 collation 이 바뀐다.
+// 자세한 내용은 migration/design/00-decisions.md 의 D-006 참조.
+ext {
+    mybatisStarterVersion = '4.0.1'
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation "org.mybatis.spring.boot:mybatis-spring-boot-starter:${mybatisStarterVersion}"
+
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Spring Boot 4 는 테스트 자동설정이 모듈별로 쪼개져 있다.
+    // MockMvc(@AutoConfigureMockMvc)는 starter-test 에 딸려오지 않아 따로 받는다.
+    testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation "org.mybatis.spring.boot:mybatis-spring-boot-starter-test:${mybatisStarterVersion}"
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+checkstyle {
+    toolVersion = '13.10.0'
+    configFile = file('config/checkstyle/checkstyle.xml')
+    // 위반은 실패다. 경고로 두면 아무도 안 고친다.
+    ignoreFailures = false
+    maxWarnings = 0
+}
+
+// 테스트 코드까지 Javadoc 을 강제할 이유는 없다.
+checkstyleTest {
+    enabled = false
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs << '-parameters'
+}

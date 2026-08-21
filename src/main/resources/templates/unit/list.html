@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!--/*
+  생산 설비 관리 — 목록.
+  출처: legacy/ERFlow/src/main/webapp/unit/unitList.jsp
+
+  마크업 구조와 class 이름은 레거시 그대로다. css/main/unitList.css 와
+  js/main/unitList.js 가 이 이름들에 걸려 있다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('생산 설비 관리 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/unitList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/main/unitList.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 생산관리 &gt; 생산 설비 관리</span>
+        </div>
+
+        <form th:action="@{/unit/delete}" method="post" name="unitFrm">
+
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button"
+                            name="flag" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="id" th:selected="${keyfield == 'id'}">장비ID</option>
+                        <option value="name" th:selected="${keyfield == 'name'}">장비명</option>
+                        <option value="charger" th:selected="${keyfield == 'charger'}">관리자명</option>
+                        <option value="document" th:selected="${keyfield == 'document'}">문서명</option>
+                        <option value="status" th:selected="${keyfield == 'status'}">장비 상태</option>
+                        <option value="date" th:selected="${keyfield == 'date'}">장비 제조일자</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search"
+                                   placeholder="장비 검색" aria-label="Search" name="keyword"
+                                   th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" id="searchIcon"
+                               title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">장비ID</th>
+                    <th scope="col">장비명</th>
+                    <th scope="col">관리자</th>
+                    <th scope="col">장비 상태</th>
+                    <th scope="col">장비 제조일자</th>
+                    <th scope="col"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="unit : ${units}">
+                    <th scope="col"><input type="checkbox" name="unitId" th:value="${unit.id}"></th>
+                    <td th:text="${unit.id}">A-1</td>
+                    <td th:text="${unit.unitName}">장비명</td>
+                    <td th:text="${unit.userName}">관리자</td>
+                    <td th:text="${unit.status}">0</td>
+                    <!--/* 레거시 WebHelper.getDate 는 "yyyy년 MM월 dd일" 로 찍었다.
+                           날짜는 동적 값이라 정합성 게이트가 «dyn» 으로 넘긴다 —
+                           실브라우저로 나란히 놓고서야 드러났다. */-->
+                    <td th:text="${#temporals.format(unit.createdAt, 'yyyy년 MM월 dd일')}">2023년 01월 01일</td>
+                    <td>
+                        <button type="button" id="update-button" th:data-id="${unit.id}">수정</button>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="7"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/unit/list}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" value="">
+            <input type="hidden" name="keyword" value="">
+        </form>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}" class="disabled"
+               th:href="|javascript:paging(${page.previousBlockPage()})|">이전</a>
+
+            <ul class="page-numbers">
+                <a th:each="number : ${page.pageNumbers}"
+                   th:href="|javascript:paging(${number})|"
+                   th:classappend="${number == page.nowPage} ? 'disabled'">
+                    <li th:text="${number}">1</li>
+                </a>
+            </ul>
+
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:paging(${page.nextBlockPage()})|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

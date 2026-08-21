@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/PostServiceImpl.java
+         legacy/ERFlow/src/main/java/service/implementation/PostFileServiceImpl.java
+-->
+<mapper namespace="com.erflow.post.PostMapper">
+
+    <sql id="postColumns">
+        id, board_id AS boardId, user_id AS userId, name, ref_id AS refId,
+        subject, content, depth, pos, count, created_at AS createdAt,
+        `delete` AS deleted
+    </sql>
+
+    <!--
+      레거시 getPostViews:
+        select * from post_view where [<col> like ? and] board_id = ?
+        order by depth desc, pos limit ?, ?
+
+      depth 는 스레드 그룹, pos 는 들여쓰기 깊이다(PostRow 설명 참조).
+      정렬을 "고쳐" 놓으면 목록 순서가 달라진다.
+    -->
+    <select id="findPage" resultType="com.erflow.post.PostRow">
+        SELECT <include refid="postColumns"/>
+          FROM post_view
+         WHERE
+        <if test="search != null and search.activeForList">
+            <choose>
+                <when test="search.column == 'subject'">subject</when>
+                <when test="search.column == 'name'">name</when>
+            </choose>
+            LIKE #{search.pattern} AND
+        </if>
+               board_id = #{boardId}
+         ORDER BY depth DESC, pos
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!--
+      레거시 getTotalCount 는 keyword 를 보고 분기한다. 목록(keyfield 기준)과
+      다르다 — 결함이지만 그대로 옮긴다. PostSearch 설명과 D-024 참조.
+    -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM post_view
+         WHERE
+        <if test="search != null and search.activeForCount">
+            <choose>
+                <when test="search.column == 'subject'">subject</when>
+                <when test="search.column == 'name'">name</when>
+            </choose>
+            LIKE #{search.pattern} AND
+        </if>
+               board_id = #{boardId}
+    </select>
+
+    <!-- 레거시: select * from post_view where id = ? -->
+    <select id="findById" resultType="com.erflow.post.PostRow">
+        SELECT <include refid="postColumns"/>
+          FROM post_view
+         WHERE id = #{id}
+    </select>
+
+    <!-- 레거시 getTotalCommentCount: select count(*) from comment_tbl where post_tbl_id = ? -->
+    <select id="countComments" resultType="int">
+        SELECT COUNT(*)
+          FROM comment_tbl
+         WHERE post_tbl_id = #{postId}
+    </select>
+
+    <!--
+      레거시 getFileByPostId 는 한 건만 읽어 첨부 아이콘 표시에 쓴다.
+      목록은 "첨부가 있는가"만 필요하므로 이름 하나만 가져온다.
+    -->
+    <select id="findFirstAttachmentName" resultType="string">
+        SELECT original_name
+          FROM post_file_tbl
+         WHERE post_tbl_id = #{postId}
+         ORDER BY id
+         LIMIT 1
+    </select>
+
+    <!-- 레거시 createPost: select max(depth) from post_tbl where board_tbl_id = ? -->
+    <select id="findMaxDepth" resultType="java.lang.Integer">
+        SELECT MAX(depth)
+          FROM post_tbl
+         WHERE board_tbl_id = #{boardId}
+    </select>
+
+    <!--
+      레거시: insert into post_tbl (user_tbl_id, board_tbl_id, subject, content,
+              depth, pos, count, created_at) values (?, ?, ?, ?, ?, 0, 0, now())
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="post.id">
+        INSERT INTO post_tbl
+                    (user_tbl_id, board_tbl_id, subject, content,
+                     depth, pos, count, created_at)
+             VALUES (#{post.userId}, #{post.boardId}, #{post.subject}, #{post.content},
+                     #{post.depth}, 0, 0, now())
+    </insert>
+
+    <!--
+      레거시 replyPost: insert into post_tbl (user_tbl_id, board_tbl_id,
+              post_tbl_ref_id, subject, content, depth, pos, count, `delete`, created_at)
+              values (?, ?, ?, ?, ?, ?, ?, 0, 0, now())
+
+      `delete` 는 예약어라 역따옴표가 필요하다. 빼면 문법 오류가 난다.
+    -->
+    <insert id="insertReply" useGeneratedKeys="true" keyProperty="post.id">
+        INSERT INTO post_tbl
+                    (user_tbl_id, board_tbl_id, post_tbl_ref_id, subject, content,
+                     depth, pos, count, `delete`, created_at)
+             VALUES (#{post.userId}, #{post.boardId}, #{post.refId}, #{post.subject},
+                     #{post.content}, #{post.depth}, #{post.pos}, 0, 0, now())
+    </insert>
+
+    <!-- 레거시: update post_tbl set post_tbl_ref_id = ? where id = ? (자기 자신) -->
+    <update id="pointToSelf">
+        UPDATE post_tbl
+           SET post_tbl_ref_id = #{id}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시 replyPosUp: update post_tbl set pos = pos + 1 where post_tbl_ref_id = ? and pos > ? -->
+    <update id="shiftPositions">
+        UPDATE post_tbl
+           SET pos = pos + 1
+         WHERE post_tbl_ref_id = #{refId}
+           AND pos &gt; #{pos}
+    </update>
+
+    <!-- 레거시: update post_tbl set subject = ?, content = ? where id = ? -->
+    <update id="update">
+        UPDATE post_tbl
+           SET subject = #{subject},
+               content = #{content}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: update post_tbl set count = count+1 where id = ? -->
+    <update id="incrementCount">
+        UPDATE post_tbl
+           SET count = count + 1
+         WHERE id = #{id}
+    </update>
+
+    <!--
+      레거시 deletePost: select count(*) from post_tbl where post_tbl_ref_id = ?
+      뿌리 글은 자기 자신을 가리키므로 결과에 자기가 포함된다. 그래서 레거시가
+      1 이하일 때 진짜 삭제로 본다.
+    -->
+    <select id="countInThread" resultType="int">
+        SELECT COUNT(*)
+          FROM post_tbl
+         WHERE post_tbl_ref_id = #{id}
+    </select>
+
+    <!-- 레거시: delete from post_tbl where id = ? -->
+    <delete id="delete">
+        DELETE FROM post_tbl
+         WHERE id = #{id}
+    </delete>
+
+    <!--
+      레거시: update post_tbl set subject = '삭제된 글입니다.',
+              content = '삭제된 글입니다.', `delete` = 1 where id = ?
+      답변글이 달린 글을 지우면 스레드가 끊긴다. 표시만 바꾼다.
+    -->
+    <update id="markDeleted">
+        UPDATE post_tbl
+           SET subject = '삭제된 글입니다.',
+               content = '삭제된 글입니다.',
+               `delete` = 1
+         WHERE id = #{id}
+    </update>
+
+</mapper>

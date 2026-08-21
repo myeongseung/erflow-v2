@@ -1,0 +1,32 @@
+<!--/*
+  화면 아래 회사 정보.
+  출처: legacy/ERFlow/src/main/webapp/footer.jsp
+
+  메인 화면 하나만 부른다. 다른 화면들은 footer.css 를 부르면서도 이 조각은 넣지
+  않았다 — 레거시가 그렇다.
+
+  주소·전화번호는 화면에 찍히는 글자다. 실제 회사가 아니라 훈련과정 안내이며,
+  마지막 줄이 그 사실을 밝힌다.
+*/-->
+<div th:fragment="footer" class="index-footer" xmlns:th="http://www.thymeleaf.org">
+    <div>
+        <img th:src="@{/images/common/logo.png}">
+    </div>
+    <div>
+        <table>
+            <tr>
+                <td>47340 부산광역시 부산진구 엄광로 176 (가야동)</td>
+            </tr>
+            <tr>
+                <td>Tel : 051-890-2414, 051-890-2419 Fax : 0502-600-9396</td>
+            </tr>
+            <tr>
+                <td>Copyrightⓒ 2021 Dong-eui University All Rights Reserved.</td>
+            </tr>
+            <tr>
+                <td>본 사이트는 '자바기반 IoT 융합서비스 개발자' 훈련과정을 이수하는 2기생들(B팀)이 만든 사이트입니다.</td>
+            </tr>
+        </table>
+    </div>
+
+</div>

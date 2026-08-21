@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!--/*
+  잘못된 접근.
+  출처: legacy/ERFlow/src/main/webapp/accessError.jsp
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Error</title>
+    <link rel="stylesheet" th:href="@{/css/permissionError.css}">
+</head>
+<body>
+<div class="error-container">
+    <div class="error-title">잘못된 접근입니다.</div>
+    <div class="error-subtitle">궁금하신 사항은 <a href="">고객센터</a>로 문의해 주시기 바랍니다.</div>
+    <button class="error-button"><a th:href="@{/login}">이전페이지</a></button>
+</div>
+</body>
+</html>

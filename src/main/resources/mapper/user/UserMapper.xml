@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/UserServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/DepartmentServiceImpl.java
+        legacy/ERFlow/src/main/java/service/implementation/JobServiceImpl.java
+
+  레거시 SQL 에 ORDER BY 가 없다. 넣지 않는다 — 넣으면 화면에 찍히는 순서가 달라진다.
+  `<>` 는 XML 에서 그대로 쓸 수 없어 `!=` 로 적었다. MariaDB 에서 같은 연산자다.
+-->
+<mapper namespace="com.erflow.user.UserMapper">
+
+    <!-- 레거시 getDepts(null): select * from dept_tbl where id <> -1 -->
+    <select id="findDepartmentNames" resultType="string">
+        SELECT name
+          FROM dept_tbl
+         WHERE id != -1
+    </select>
+
+    <!-- 레거시 getJobs(null): select * from job_tbl where id <> -1 -->
+    <select id="findJobNames" resultType="string">
+        SELECT name
+          FROM job_tbl
+         WHERE id != -1
+    </select>
+
+    <!--
+      레거시 getUserViews(keyfield1, keyfield2, keyword):
+        select dept_name, job_name, id, name from user_view where id <> 'admin'
+          [and dept_name like ?] [and job_name like ?] [and name like ?]
+
+      관리자를 빼는 것은 뷰가 아니라 이 조건이다. 사용자 화면 쪽 조회이며
+      레거시 주석도 «관리자 권한에서는 쓰지 말라»고 적어 두었다.
+    -->
+    <select id="findUserViews" resultType="com.erflow.user.UserRow">
+        SELECT dept_name AS deptName,
+               job_name  AS jobName,
+               id,
+               name
+          FROM user_view
+         WHERE id != 'admin'
+        <if test="search.hasDept">
+            AND dept_name LIKE #{search.deptPattern}
+        </if>
+        <if test="search.hasJob">
+            AND job_name LIKE #{search.jobPattern}
+        </if>
+        <if test="search.hasKeyword">
+            AND name LIKE #{search.keywordPattern}
+        </if>
+    </select>
+
+    <!-- 레거시 getUserView(id).getName(): select * from user_view where id = ? -->
+    <select id="findUserName" resultType="string">
+        SELECT name
+          FROM user_view
+         WHERE id = #{id}
+    </select>
+
+    <!-- 레거시 getUserView(id): select * from user_view where id = ? -->
+    <select id="findUserView" resultType="com.erflow.user.UserRow">
+        SELECT dept_name AS deptName,
+               job_name  AS jobName,
+               id,
+               name
+          FROM user_view
+         WHERE id = #{id}
+    </select>
+
+</mapper>

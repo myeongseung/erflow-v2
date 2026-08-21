@@ -1,0 +1,56 @@
+/* Sidebar Nav Styles */
+.content-wrap {
+  display: flex;
+}
+
+.sidebar-nav {
+  width: 250px;
+  height: calc(100vh - 87px);
+  background-color: #d9e8f5; /* 회색 */
+  font-family: Arial, sans-serif;
+  box-shadow: 3px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-mainmenu {
+  border-bottom: 1px solid #d9e8f5;
+}
+
+.menu-title {
+  display: block;
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: bold;
+  background-color: #d9e8f5;
+  color: black;
+}
+
+.menu-title:hover {
+  background-color: #d9e8f5;
+}
+
+.nav-flyout {
+  display: none; /* Initially hide the flyout menu */
+  background-color: #f8f9fa;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-flyout li {
+  border-bottom: 1px solid #d9e8f5;
+}
+
+.nav-flyout a {
+  text-decoration: none;
+  color: black;
+  display: block;
+  padding: 10px 20px;
+}
+
+.sidebar-mainmenu.active .nav-flyout {
+  display: block; /* active 클래스가 추가되면 메뉴를 보여줍니다. */
+}

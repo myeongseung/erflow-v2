@@ -1,0 +1,47 @@
+.container {
+    padding: 20px;
+    width: 500px;
+    margin: auto;
+    border: 1px solid #ccc;
+}
+
+.search-box {
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.search-box input {
+    width: 80%;
+    padding: 10px;
+    font-size: 24px; 
+    border: none;
+    outline: none;
+}
+
+.search-box button {
+    padding: 10px 20px; /* 위아래 10px, 좌우 20px 여백 */
+    background-color: #007bff; /* 버튼 배경색을 파란색으로 변경 */
+    color: white; /* 텍스트 색상을 흰색으로 변경 */
+    border: none;
+    outline: none;
+    cursor: pointer;
+    border-radius: 5px; /* 버튼을 둥글게 만듦 */
+}
+
+.search-box button:hover {
+    background-color: #0056b3; 
+}
+
+
+.tips h3 {
+    margin: 0;
+}
+
+.tip-item {
+    margin-top: 10px;
+}
+
+.footer {
+    text-align: center;
+    font-size: 12px;
+}

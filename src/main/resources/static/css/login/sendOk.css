@@ -1,0 +1,38 @@
+body {
+    font-family: 'Arial', sans-serif; /* 이 부분은 실제 폰트에 따라 조정이 필요할 수 있습니다. */
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+a, a:hover, a:visited, a:active{
+    text-decoration: none;
+    outline: none;
+}
+
+a:hover{
+    cursor:pointer;
+}
+
+.mail-send{
+    text-align: center;
+}
+
+.mail-title {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.mail-button {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    background-color: white;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

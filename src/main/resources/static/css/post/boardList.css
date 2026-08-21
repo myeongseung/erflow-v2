@@ -1,0 +1,108 @@
+.content-wrap {
+	background-color: #e9ecef;
+}
+
+.main-notice {
+	/*내용 전체*/
+	margin-bottom: 20px;
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 1024px;
+}
+.userBoardList-header{
+	margin-top: 50px;
+	margin-bottom: 5px;
+}
+
+.userBoardList-header .search-option{
+   display:flex;
+   margin-left: 5px;
+}
+
+.userBoardList-header .main-search-container{
+   width: 250px;
+   margin-left: 5px;
+}
+.userBoardList-header .main-search-border{
+   width: 200px;
+}
+
+.userBoardList-header .button-group{
+   margin-bottom: 5px;
+}
+
+
+
+.main-notice .empty-space {
+	/*헤더 부분과 메인게시판사이의 공백공간*/
+	margin-bottom: 30px;
+	box-sizing: border-box;
+}
+
+.main-notice .table-name {
+	vertical-align: middle;
+	font-size: 15px;
+}
+
+.main-notice .table-name, .main-notice .post-name{
+	min-width: 1400px;
+}
+
+.box{
+	margin:0 auto;
+	padding:0 25px;
+	width: 100%;
+}
+
+.board-number{
+	width: 5%;
+}
+.board-list{
+	width: 10%;
+}
+
+.board-count{
+	width: 10%;
+}
+.board-title{
+	width: 45%;
+}
+.box table tr {
+	padding: 0px;
+	width: 10%;
+}
+
+.table-striped .board-content {
+	cursor: pointer;
+}
+
+.userBoardInfo{
+	display: flex;
+	justify-content: space-between;
+}
+
+.userBoardList-search .empty-left {
+	margin-left: 20px;
+}
+
+.userBoardList-search .main-search-container {
+	width: 300px;
+	padding: 0;
+}
+
+.userBoardList-search .main-search-container .main-search-text {
+	width: 220px;
+}
+.right-align {
+    text-align: right;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.menu-name{
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+

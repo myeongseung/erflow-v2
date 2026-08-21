@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--/*
+  프로그램 직급 권한 수정.
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/programJobUpdate.jsp
+
+  부서 쪽과 같은 화면이고 대상만 직급이다. 저장값도 같은 규칙 —
+  «관리자 비트 + 체크된 비트».
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로그램 직급 권한 수정 페이지</title>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/jobRegister.css}">
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/permissions.js}"></script>
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/admin/permission/program-job-update-proc}" method="post">
+        <input type="hidden" id="programId" name="programId" th:value="${form.program.id}">
+        <h2>프로그램 직급 권한 수정</h2>
+
+        <label for="jobName">프로그램명:</label>
+        <input type="text" id="jobName" name="jobName"
+               th:value="${form.program.programName}" disabled>
+
+        <div class="checkbox-container">
+            <label>프로그램 직급 권한:</label><br>
+            <div class="input-group">
+                <input type="checkbox" id="chkAll">
+                <label for="chkAll">전체 선택</label>
+            </div>
+            <br>
+            <!--/* 프로그램 직급 권한 띄우기 */-->
+            <div class="input-group" th:each="choice, i : ${form.choices}">
+                <input type="checkbox" id="permission" th:id="|permission${i.count}|"
+                       name="permissions" th:value="${choice.classId}"
+                       th:checked="${choice.checked}">
+                <label for="permission" th:for="|permission${i.count}|">[[${choice.name}]]</label>
+            </div>
+        </div>
+        <button type="submit">수정하기</button>
+    </form>
+</div>
+</body>
+</html>

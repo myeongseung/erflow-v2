@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<!--/*
+  생산 설비 관리 — 수정 (팝업).
+  출처: legacy/ERFlow/src/main/webapp/unit/unitUpdate.jsp
+
+  aria-label 은 레거시 원문을 그대로 둔다. Bootstrap 문서의 예제 문구가 복사된
+  접근성 결함이지만(migration/README.md 참조), 고치는 것은 이관이 아니라 개선이다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설비 업데이트 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/main/unitRegister.js}"></script>
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/main/unitRegister.css}">
+</head>
+<body>
+<div class="unit-register-form">
+    <form th:action="@{/unit/update}" method="post">
+        <input type="hidden" name="id" th:value="${unit.id}">
+        <div class="form-group">
+            <label for="userID">관리자 사번</label>
+            <input type="text" id="userID" name="userID" th:value="${unit.chargerId}">
+            <button type="button" class="btn btn-light find-user">관리자 선택</button>
+        </div>
+        <div class="form-group">
+            <label for="documentID">문서번호</label>
+            <input type="text" id="documentID" name="documentID" class="documentId"
+                   th:value="${unit.documentId}" readonly>
+            <button type="button" class="btn btn-light find-document">문서 선택</button>
+        </div>
+        <div class="form-group">
+            <label for="equipmentName">장비명</label>
+            <input type="text" id="equipmentName" name="equipmentName" th:value="${unit.name}">
+        </div>
+        <div class="form-group">
+            <select class="form-select form-select-lg mb-3" aria-label=".form-select-sm example"
+                    name="status">
+                <option value="0" th:selected="${unit.status == 0}">멈춤</option>
+                <option value="1" th:selected="${unit.status == 1}">가동중</option>
+            </select>
+        </div>
+        <button type="submit">제출</button>
+    </form>
+</div>
+</body>
+</html>

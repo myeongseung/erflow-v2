@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--/*
+  발주 관리 — 목록.
+  출처: legacy/ERFlow/src/main/webapp/task/purchaseTask.jsp
+
+  수주(sell-task)와 거의 같지만 화면 글자(발주/의뢰 시각)와 권한·경로가 달라 파일을
+  둘로 둔다. type=1(발주)로 조회한다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('발주 관리 페이지', ${ {'/css/bootcss/bootstrap.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/task.css', 'https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js', '/js/main/index.js', '/js/main/task.js', '/js/bootjs/bootstrap.js', '/css/main/taskHistory.css'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
+
+    <div class="table-wrap">
+        <div class="right-align">
+            <span class="menu-name">사용자 &gt; 구매 &gt; 발주 관리</span>
+        </div>
+
+        <form th:action="@{/task/delete}" method="post" name="taskFrm">
+            <input type="hidden" name="flag" value="purchase">
+
+            <div class="table-header-container">
+                <div class="button-group">
+                    <button type="button" class="btn btn-danger" id="delete-button"
+                            name="purchase" value="delete">삭제</button>
+                    <button type="button" class="btn btn-primary" id="register-button"
+                            data-value="purchase">추가</button>
+                </div>
+                <div class="search-option">
+                    <select name="keyfield" id="">
+                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
+                        <option value="userName" th:selected="${keyfield == 'userName'}">직원명</option>
+                        <option value="deptName" th:selected="${keyfield == 'deptName'}">부서명</option>
+                        <option value="companyName" th:selected="${keyfield == 'companyName'}">회사명</option>
+                        <option value="date" th:selected="${keyfield == 'date'}">날짜</option>
+                        <option value="status" th:selected="${keyfield == 'status'}">상태</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" placeholder="검색"
+                                   aria-label="Search" name="keyword" th:value="${keyword}">
+                        </div>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col"><input type="checkbox" id="chkAll"></th>
+                    <th scope="col">번호</th>
+                    <th scope="col">담당직원</th>
+                    <th scope="col">부서</th>
+                    <th scope="col">회사명</th>
+                    <th scope="col">문서</th>
+                    <th scope="col">의뢰 시각</th>
+                    <th scope="col">상태</th>
+                    <th scope="col">보기</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="task : ${tasks}">
+                    <th scope="col">
+                        <input type="checkbox" name="taskId" th:value="${task.id}">
+                    </th>
+                    <td>
+                        <a th:href="@{/task/update(id=${task.id},flag='purchase',userName=${task.userName},companyName=${task.companyName})}"
+                           th:text="${task.id}">1</a>
+                    </td>
+                    <td th:text="${task.userName}">담당직원</td>
+                    <td th:text="${task.deptName}">부서</td>
+                    <td th:text="${task.companyName}">회사명</td>
+                    <td th:text="${task.subjectLabel}">문서</td>
+                    <td th:text="${task.taskAt}">의뢰 시각</td>
+                    <td th:text="${task.statusLabel()}">상태</td>
+                    <td>
+                        <button class="openModalBtn" type="button" th:value="${task.id}">내역 보기</button>
+                    </td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <td colspan="8"></td>
+                <td></td>
+                </tfoot>
+            </table>
+        </form>
+
+        <form name="readFrm" th:action="@{/task/purchase-task}" method="get">
+            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+            <input type="hidden" name="keyfield" th:value="${keyfield}">
+            <input type="hidden" name="keyword" th:value="${keyword}">
+        </form>
+
+        <!--/* 페이징 */-->
+        <div class="page-controller">
+            <a th:if="${page.hasPreviousBlock()}" class="disabled"
+               th:href="|javascript:block(5, ${page.nowBlock - 1})|">이전</a>
+
+            <ul class="page-numbers">
+                <li th:each="number : ${page.pageNumbers}">
+                    <a th:href="|javascript:paging(${number})|"
+                       th:classappend="${number == page.nowPage} ? 'disabled'"
+                       th:text="${number}">1</a>
+                </li>
+            </ul>
+
+            <a th:if="${page.hasNextBlock()}"
+               th:href="|javascript:block(5, ${page.nowBlock + 1})|">다음</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

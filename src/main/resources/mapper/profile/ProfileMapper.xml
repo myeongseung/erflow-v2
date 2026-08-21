@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처
+    UserServiceImpl.getUser        select * from user_tbl where id = ?
+    UserServiceImpl.updateUser     update user_tbl set ... where id = ?
+    WorkServiceImpl.getWorkViews   select * from work_view
+                                     where (started_at like ? or ended_at like ?) and user_id = ?
+-->
+<mapper namespace="com.erflow.profile.ProfileMapper">
+
+    <!--
+      레거시는 `select *` 로 한 행을 통째로 읽어 세션에 담았다. 화면이 쓰는 칸만
+      읽는다 — 주민번호와 비밀번호는 애초에 가져오지 않는다.
+    -->
+    <select id="findProfile" resultType="com.erflow.profile.ProfileUser">
+        SELECT id,
+               name,
+               email,
+               extension_phone AS extensionPhone,
+               mobile_phone    AS mobilePhone,
+               postal_code     AS postalCode,
+               address1,
+               address2
+          FROM user_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      날짜를 `like '%2026-08%'` 로 맞춘다. 출근만 찍힌 사람과 퇴근만 찍힌 사람이
+      모두 걸리도록 OR 로 묶여 있다. 정렬은 레거시에도 없다.
+    -->
+    <select id="findWorks" resultType="com.erflow.profile.ProfileWork">
+        SELECT started_at AS startedAt,
+               ended_at   AS endedAt,
+               status
+          FROM work_view
+         WHERE (started_at LIKE CONCAT('%', #{date}, '%')
+             OR ended_at LIKE CONCAT('%', #{date}, '%'))
+           AND user_id = #{id}
+    </select>
+
+    <!--
+      레거시는 직급·부서·내선 전화까지 함께 덮어썼다. 그 값들은 화면에 없고 세션에
+      담긴 사본에서 왔다 — 관리자가 그 사이에 부서를 옮겨 두었으면 사원이 프로필을
+      저장하는 순간 되돌아갔다. 화면이 보낸 칸만 고친다(D-078).
+    -->
+    <update id="updateProfile">
+        UPDATE user_tbl
+           SET name        = #{user.name},
+               email       = #{user.email},
+               postal_code = #{user.postalCode},
+               address1    = #{user.address1},
+               address2    = #{user.address2},
+               mobile_phone = #{user.mobilePhone}
+         WHERE id = #{user.id}
+    </update>
+
+</mapper>

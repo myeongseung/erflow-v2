@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<!--/*
+  직급·부서 리스트.
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/jobDeptList.jsp
+
+  한 화면에 표 둘이다. 검색어를 담는 readFrm 이 따로 있고, 검색 버튼과 엔터가
+  그 폼에 값을 옮겨 담아 제출한다(js/admin/jobDeptList.js).
+
+  «번호» 칸은 부서·직급 번호가 아니라 **권한 행 번호**다. 수정 링크에 싣는 값은
+  부서·직급 번호이고 둘이 다르다. 레거시 그대로 옮긴다.
+
+  직급 쪽 삭제 버튼에 name="deptFlag" 가 붙어 있다. 직급 폼인데 이름이 dept 다 —
+  아무 데서도 읽지 않는 값이라 화면과 동작이 달라지지 않는다. 그대로 둔다.
+
+  두 검색 버튼의 모양이 다르다. 직급은 <button>검색</button>, 부서는
+  <input type="button" value="search"> 라 화면 글자도 «검색» 과 «search» 로 다르다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>직급·부서 리스트</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
+    <script th:src="@{/js/admin/admin.js}"></script>
+    <script th:src="@{/js/admin/jobDeptList.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/jobDeptList.css}">
+</head>
+<body>
+<div class="admin-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
+
+        <div class="all-wrap">
+            <div class="right-align">
+                <span class="menu-name">관리자 &gt; 권한 관리 &gt; 직급·부서 리스트</span>
+            </div>
+            <div class="main-wrap">
+                <form name="readFrm" th:action="@{/admin/permission/job-dept-list}" method="get">
+                    <input type="hidden" name="deptKeyword" th:value="${deptKeyword}">
+                    <input type="hidden" name="jobKeyword" th:value="${jobKeyword}">
+                </form>
+                <div class="job-list scrollable-table">
+                    <span>직급 리스트</span>
+                    <form th:action="@{/admin/permission/job-delete-proc}" method="post" name="jobFrm">
+                        <div class="search-delete-container">
+                            <div class="search-delete-content">
+                                <div style="display: flex">
+                                    <button type="submit" name="deptFlag" class="btn btn-danger">삭제</button>
+                                    <button type="button" class="btn btn-primary open-job-btn">추가</button>
+                                </div>
+
+                                <div class="search-container">
+                                    <input type="text" name="jobKeyword" placeholder="직급 검색..." class="form-control">
+                                    <button type="button" name="jobms" value="search" class="btn btn-primary ml-2">검색</button>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th><input type="checkbox" id="chkAllJob"></th>
+                                <th scope="col">직급 번호</th>
+                                <th scope="col">직급 명칭</th>
+                                <th scope="col">직급 권한 및 정보</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="job : ${jobs}">
+                                <td><input type="checkbox" name="jobId" th:value="${job.classId}"></td>
+                                <td th:text="${job.id}">1</td>
+                                <td th:text="${job.name}">직급 명칭</td>
+                                <td><a th:href="@{/admin/permission/job-update(jobId=${job.classId})}">수정</a></td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <td colspan="3"></td>
+                            <td></td>
+                            </tfoot>
+                        </table>
+                    </form>
+                </div>
+
+                <div class="dept-list scrollable-table">
+                    <span>부서 리스트</span>
+                    <form th:action="@{/admin/permission/dept-delete-proc}" method="post" name="deptFrm">
+                        <div class="search-delete-container">
+                            <div class="search-delete-content">
+                                <div style="display: flex">
+                                    <button type="submit" class="btn btn-danger">삭제</button>
+                                    <button type="button" class="btn btn-primary open-dept-btn">추가</button>
+                                </div>
+                                <div class="search-container">
+                                    <input type="text" name="deptKeyword" placeholder="부서 검색..." class="form-control">
+                                    <!--/* 레거시는 onclick="searchDept()" 도 달아 두었다. 그 함수는
+                                           이 화면이 읽지 않는 파일에 있어 한 번도 걸린 적이 없다.
+                                           실제로 검색을 여는 것은 jobDeptList.js 의 [name=deptms] 핸들러다 */-->
+                                    <input type="button" name="deptms" value="search"
+                                           class="btn btn-primary ml-2">
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th><input type="checkbox" id="chkAllDept"></th>
+                                <th scope="col">부서 번호</th>
+                                <th scope="col">부서 명칭</th>
+                                <th scope="col">부서 권한 및 정보</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="dept : ${depts}">
+                                <td><input type="checkbox" name="deptId" th:value="${dept.classId}"></td>
+                                <td th:text="${dept.id}">1</td>
+                                <td th:text="${dept.name}">부서 명칭</td>
+                                <td><a th:href="@{/admin/permission/dept-update(deptId=${dept.classId})}">수정</a></td>
+                            </tr>
+                            </tbody>
+                            <tfoot>
+                            <td colspan="3"></td>
+                            <td></td>
+                            </tfoot>
+                        </table>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

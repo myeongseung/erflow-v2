@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--/*
+  부서 생성 (팝업).
+  출처: legacy/ERFlow/src/main/webapp/admin/permission/deptRegister.jsp
+
+  주소는 다음 우편번호 서비스가 채운다(js/admin/location.js 가 sample6_* id 를 찾는다).
+  만들면 비어 있는 비트 자리를 하나 받는다(Levels.next).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>부서 생성 페이지</title>
+    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
+    <script th:src="@{/js/admin/location.js}"></script>
+    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/common/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin/deptRegister.css}">
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/admin/permission/dept-register-proc}" method="post">
+        <h2>부서 생성</h2>
+        <div>
+            <label for="deptName">부서 명:</label>
+            <input type="text" id="deptName" name="deptName">
+        </div>
+        <label for="input4">부서 주소:</label>
+        <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode" readonly>
+        <input type="text" id="sample6_extraAddress" placeholder="동/읍/면" readonly>
+        <button type="button" class="btn btn-primary btn_execDaumPostcode">우편 번호 찾기</button>
+        <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1" readonly><br>
+        <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2">
+        <button type="submit">생성하기</button>
+    </form>
+</div>
+</body>
+</html>

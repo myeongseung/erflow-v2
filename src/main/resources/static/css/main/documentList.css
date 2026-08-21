@@ -1,0 +1,48 @@
+.table-wrap{
+    margin:0 auto;
+    margin-top:50px;
+    width: 90%;
+    min-width: 1024px;
+    width: 100%;
+    padding: 0 25px;
+}
+
+.right-align {
+    text-align: right;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.menu-name{
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.table-header-container{
+	display:flex;
+	justify-content: space-between;
+	margin-bottom: 5px;
+}
+
+.search-option{
+	display:flex;
+	margin-left: 5px;
+}
+
+.main-search-container{
+	width: 250px;
+	margin-left: 5px;
+}
+
+.main-search-text{
+	border: none;
+	background-color: transparent;
+}
+
+.main-search-border{
+	width: 200px;
+}
+
+.button-group{
+	margin-bottom: 5px;
+}

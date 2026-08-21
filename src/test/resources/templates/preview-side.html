@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!--/* 테스트 전용. 사이드 메뉴 fragment 만 떼어 렌더링해 검증한다. */-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>side-menu preview</title>
+</head>
+<body>
+<div th:replace="~{fragments/side-menu :: side(${sideMenu})}"></div>
+</body>
+</html>

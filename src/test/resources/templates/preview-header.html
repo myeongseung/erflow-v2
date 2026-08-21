@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!--/* 테스트 전용. 헤더 fragment 만 떼어 렌더링해 검증한다. */-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>header preview</title>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></div>
+</body>
+</html>

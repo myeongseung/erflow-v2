@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+  출처: legacy/ERFlow/src/main/java/service/implementation/ProductServiceImpl.java
+-->
+<mapper namespace="com.erflow.product.ProductMapper">
+
+    <!--
+      레거시 getAllProducts(): select * from product_tbl
+
+      정렬이 없다. 넣지 않는다 — 화면이 이름으로 다시 정렬하지만, 이름이 같은
+      제품끼리의 앞뒤는 여기서 오는 순서가 정한다.
+    -->
+    <select id="findAllNames" resultType="com.erflow.product.ProductRow">
+        SELECT id, name
+          FROM product_tbl
+    </select>
+
+    <!--
+      레거시 getProducts(keyfield, keyword, start, cnt, type):
+        select * from product_tbl where type = ? [and <칸> like ?] order by id limit ?, ?
+
+      검색할 칸은 화면이 주는 둘뿐이다(productId -> id, productName -> name).
+      사원 리스트처럼 칸 이름이 SQL 에 이어 붙지만(D-054) 여기서도 화이트리스트로
+      막는다 — ProductSearch 가 그 둘만 통과시킨다.
+    -->
+    <sql id="searchCondition">
+        WHERE type = #{type}
+        <if test="search.active">
+            AND ${search.column} LIKE #{search.keywordPattern}
+        </if>
+    </sql>
+
+    <select id="findPage" resultType="com.erflow.product.ProductListRow">
+        SELECT id, name, count, type
+          FROM product_tbl
+        <include refid="searchCondition"/>
+         ORDER BY id
+         LIMIT #{start}, #{count}
+    </select>
+
+    <!-- 레거시: select count(*) from product_tbl where type = ? [and <칸> like ?] -->
+    <select id="countBy" resultType="int">
+        SELECT COUNT(*)
+          FROM product_tbl
+        <include refid="searchCondition"/>
+    </select>
+
+    <!-- 레거시 getProduct(id): select * from product_tbl where id = ? -->
+    <select id="findById" resultType="com.erflow.product.ProductListRow">
+        SELECT id, name, count, type
+          FROM product_tbl
+         WHERE id = #{id}
+    </select>
+
+    <!--
+      레거시: insert into product_tbl values(?, ?, ?, ?)
+      바인딩 순서는 id, name, count, type 이다.
+    -->
+    <insert id="insertProduct">
+        INSERT INTO product_tbl (id, name, count, type)
+             VALUES (#{id}, #{name}, #{count}, #{type})
+    </insert>
+
+    <!-- 레거시: update product_tbl set name = ?, count = ?, type = ? where id = ? -->
+    <update id="updateProduct">
+        UPDATE product_tbl
+           SET name  = #{name},
+               count = #{count},
+               type  = #{type}
+         WHERE id = #{id}
+    </update>
+
+    <!-- 레거시: delete from product_tbl where id = ? -->
+    <delete id="deleteProduct">
+        DELETE FROM product_tbl WHERE id = #{id}
+    </delete>
+
+</mapper>
