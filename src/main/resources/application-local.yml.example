@@ -9,10 +9,27 @@
 #
 # 값을 여기(.example)에 채워 넣지 않는다. 이 파일은 커밋된다.
 
+# 스키마가 셋이다 (D-116).
+#
+#   erflow      레거시 정답. SELECT 만. 읽기 전용을 권한으로 막는다
+#   erflow_mig  전작(parity-harness)의 1단계 산출물. 동결 — 손대지 않는다
+#   erflow_v2   이 저장소의 앱 스키마. 읽고 쓴다
+#
+# 앱 코드는 스키마 이름을 모른다 — 매퍼의 테이블명이 전부 비수식이라
+# 어느 스키마를 쓰는지는 아래 URL 하나가 정한다.
+
 spring:
   datasource:
-    # 이관 대상 스키마. 앱이 읽고 쓴다.
-    url: jdbc:mariadb://<호스트>:<포트>/erflow_mig
+    # 이 저장소의 앱 스키마. 앱이 읽고 쓴다.
+    #
+    # 만들 때 collation 을 반드시 명시한다 — erflow·erflow_mig 가 둘 다
+    # utf8mb4_general_ci 이고(O-005 실측), 다르게 만들면 한글 정렬이
+    # 조용히 어긋난다.
+    #
+    #   CREATE DATABASE erflow_v2 CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+    #   GRANT ALL PRIVILEGES ON erflow_v2.* TO '<계정>'@'%';
+    #
+    url: jdbc:mariadb://<호스트>:<포트>/erflow_v2
     username: <계정>
     password: <비밀번호>
 

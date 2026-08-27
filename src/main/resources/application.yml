@@ -3,7 +3,9 @@ spring:
     name: erflow
 
   datasource:
-    url: ${ERFLOW_DB_URL:jdbc:mariadb://localhost:3306/erflow}
+    # 기본값이 `erflow` 를 가리키면 안 된다 — 그쪽은 레거시 정답이고 읽기
+    # 전용이다(D-116). 프로파일 없이 뜨더라도 앱 스키마를 향하게 둔다.
+    url: ${ERFLOW_DB_URL:jdbc:mariadb://localhost:3306/erflow_v2}
     username: ${ERFLOW_DB_USER:erflow}
     password: ${ERFLOW_DB_PASSWORD:}
     driver-class-name: org.mariadb.jdbc.Driver
