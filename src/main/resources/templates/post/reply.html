@@ -7,7 +7,7 @@
   (D-032), 제목 입력에 placeholder 가 없다. 없는 것을 붙이지 않는다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('답변 등록', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/postRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/post/postReply.js', '//cdn.ckeditor.com/4.22.1/full/ckeditor.js', '/js/common/editor.js'} })}">
+<head th:replace="~{fragments/head :: page('답변 등록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/postReply.js', '/js/vendor/jodit-4.13.23.min.js', '/js/common/editor.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>

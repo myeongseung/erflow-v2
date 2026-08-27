@@ -6,9 +6,9 @@
   그대로 적어 두었고, menu 테이블에도 screen 테이블에도 이 항목들이 없다. 하드코딩을
   하드코딩으로 옮긴다 — 데이터로 만들면 정답에 없던 것을 지어내는 셈이다.
 
-  레거시 조각은 <div class="admin-wrap"> 를 열고 닫지 않는다(뒤따르는 adminHeader 가
+  레거시 조각은 <div class="content-wrap"> 를 열고 닫지 않는다(뒤따르는 adminHeader 가
   또 하나를 열고, 화면 끝에서 둘을 한꺼번에 닫는다). Thymeleaf 는 그런 조각을 읽지
-  못하므로 브라우저가 만드는 DOM 을 기준으로 나눴다(D-037). 바깥 admin-wrap 은 화면이
+  못하므로 브라우저가 만드는 DOM 을 기준으로 나눴다(D-037). 바깥 상자(content-wrap, D-131 에서 사용자 화면과 이름을 합쳤다)는 화면이
   갖는다.
 */-->
 <div class="aside-bar" th:fragment="side" xmlns:th="http://www.thymeleaf.org">

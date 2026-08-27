@@ -1,0 +1,2917 @@
+/*
+  ERFlow 디자인 시스템 — «작업대» (D-119)
+
+  하루 종일 보는 사내 업무 도구다. 그래서 방향은 «눈에 띄는 화면» 이 아니라
+  «눈에 안 띄는 도구» 다 — 껍데기는 물러나고 데이터가 앞에 선다.
+
+    껍데기   물러나는 흑연. 사이드바는 어두워서 배경이 되고, 읽을 것이 없다
+    본문     따뜻한 오프화이트. 순백은 형광등처럼 눈을 찌른다
+    구분     상자가 아니라 실선 한 겹. 표에 세로줄을 넣지 않는다
+    강조     차가운 강철 파랑 하나. 상태색(초록·노랑·빨강)과 겹치지 않는 색이라야
+             «출근/지각/결근» 을 색으로 읽을 수 있다
+    숫자     tabular-nums. ERP 의 표는 자릿수가 맞아야 읽힌다
+
+  이 파일이 화면 전체의 유일한 스타일시트다. 레거시는 화면마다 CSS 목록이 달라
+  56가지 조합이 있었고(D-093), 재설계는 그 장치를 없앤다.
+
+  컴포넌트 레이어가 **기존 클래스 이름을 그대로 재구현**한다. 마크업을 건드리지
+  않고 107화면이 새 디자인이 되는 길이다 — 화면별 다듬기는 그다음이다.
+*/
+
+@import "tailwindcss";
+
+@source "../resources/templates/**/*.html";
+@source "../resources/static/js/**/*.js";
+
+/* ─── 글꼴 ────────────────────────────────────────────────────────────────
+   자체 호스팅한다. 레거시는 남의 CDN(code.jquery.com·kit.fontawesome.com·
+   raw.githubusercontent.com)에 매달려 있었고 그중 몇은 깨져 있었다.        */
+
+@font-face {
+    font-family: "Pretendard Variable";
+    src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
+    font-weight: 300 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    --font-sans: "Pretendard Variable", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --font-mono: "JetBrains Mono", "Consolas", ui-monospace, monospace;
+
+    /* 껍데기 — 물러나는 흑연 */
+    --color-shell-950: #0e1216;
+    --color-shell-900: #151a20;
+    --color-shell-850: #1a2027;
+    --color-shell-800: #1f272f;
+    --color-shell-700: #2c343e;
+    --color-shell-600: #3b4552;
+    --color-shell-dim: #8b95a3;
+    --color-shell-fg: #d6dbe2;
+    --color-shell-bright: #f4f6f9;
+
+    /* 본문 — 따뜻한 종이 */
+    --color-paper: #f6f5f2;
+    --color-paper-sunk: #efeee9;
+    --color-surface: #ffffff;
+    --color-line: #e4e1da;
+    --color-line-firm: #cfcac0;
+
+    /* 글자 */
+    --color-ink: #16191d;
+    --color-ink-soft: #565d69;
+    --color-ink-mute: #8b9098;
+
+    /* 강조 — 차가운 강철 */
+    --color-accent: #1b5a85;
+    --color-accent-deep: #144566;
+    --color-accent-hover: #17496b;
+    --color-accent-soft: #e8eff5;
+    --color-accent-line: #b6cde0;
+
+    /* 상태 */
+    --color-ok: #2e7248;
+    --color-ok-soft: #e7f1ea;
+    --color-warn: #8e5b06;
+    --color-warn-soft: #f8f0e0;
+    --color-bad: #a32f26;
+    --color-bad-soft: #f7e9e7;
+
+    /*
+      근무 상태 — 코드 0~6 이 순서대로다. 이 일곱이 유일한 출처이며 프로필 달력 칸,
+      관리자 원 그래프, 범례가 모두 여기서 읽는다(D-125).
+
+      레거시는 색을 Java 가 인라인 style 로 뱉었고 화면마다 달랐다 — 조퇴가 달력에선
+      skyblue, 근태표에선 보라(#8507F7). 계열을 지키되 한 벌로 합쳤다.
+
+      바탕색이므로 **그 위에 검은 글씨가 얹힌다**. 진하게 만들면 못 읽는다.
+    */
+    --color-status-absent: #e8b4ae;    /* 0 결근 — 붉은 계열 */
+    --color-status-working: #b7dcbf;   /* 1 근무 중 */
+    --color-status-done: #cfe0d3;      /* 2 퇴근 — 근무 중과 같은 계열의 옅은 쪽 */
+    --color-status-early: #b9d4e6;     /* 3 조퇴 — 보라를 파랑으로 합쳤다 */
+    --color-status-late: #f0d9a4;      /* 4 지각 */
+    --color-status-half: #dcdcd7;      /* 5 반차 */
+    --color-status-off: #c9c9c3;       /* 6 연차 — 반차보다 한 단 진하게 */
+
+    /* 글자에 쓰는 짝. 근태 확인 표는 바탕이 아니라 글자를 칠한다. */
+    --color-status-absent-ink: #a32f26;
+    --color-status-early-ink: #1b5a85;
+    --color-status-late-ink: #8e5b06;
+    --color-status-half-ink: #5b5f66;
+    --color-status-off-ink: #7a7f86;
+
+    /* 밀도 — ERP 는 한 화면에 많이 들어가야 한다 */
+    --spacing-row: 2.125rem;
+    --spacing-control: 2rem;
+    --spacing-rail: 15rem;
+
+    --radius-sharp: 3px;
+    --radius-soft: 6px;
+}
+
+/* ─── 바탕 ──────────────────────────────────────────────────────────────── */
+
+@layer base {
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        line-height: 1.55;
+        font-feature-settings: "tnum" 0;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* 표·입력의 숫자는 자릿수가 맞아야 한다. 본문 글은 비례숫자가 예쁘다. */
+    table, input, select, .tnum {
+        font-variant-numeric: tabular-nums;
+    }
+
+    h1, h2, h3, h4 {
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: -0.011em;
+        color: var(--color-ink);
+    }
+
+    a {
+        color: var(--color-accent);
+        text-decoration: none;
+    }
+
+    a:hover {
+        color: var(--color-accent-hover);
+    }
+
+    hr {
+        margin: 0;
+        border: 0;
+        border-top: 1px solid var(--color-line);
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 1px;
+    }
+}
+
+@layer components {
+
+    /* ═══ 껍데기 ═══════════════════════════════════════════════════════════
+       구조는 하나다 — 상단 바가 위를 가로지르고, 그 아래에 사이드바와 본문이
+       나란히 온다. 바깥 상자 이름도 이제 하나다 — content-wrap (D-131.
+       admin-wrap 이던 관리자 9화면을 합쳤다).                              */
+
+    /*
+      상단 바 아래는 어느 화면이나 [사이드바 | 본문] 이다.
+
+      전에는 관리자 화면만 달랐다 — 사이드바가 화면 왼쪽 전체를 잡고 헤더가 오른쪽
+      칸 «안에» 들어갔다. 헤더를 하나로 합치면서 자리도 맞췄다(D-119).
+    */
+    .content-wrap {
+        display: flex;
+        align-items: stretch;
+        min-height: calc(100vh - 3.25rem);
+    }
+
+    /* 관리자 화면의 본문 칸. 사이드바 옆에서 세로로 쌓인다 */
+    .admin-main-content {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-width: 0;
+        background: var(--color-paper);
+    }
+
+    .app {
+        display: flex;
+        flex: 0 0 var(--spacing-rail);
+    }
+
+    /* ═══ 사이드바 — 어두워서 배경이 된다 ═══════════════════════════════ */
+
+    .aside-bar,
+    .app > .sidebar,
+    .content-wrap > .sidebar {
+        flex: 0 0 var(--spacing-rail);
+    }
+
+    .aside-bar {
+        display: flex;
+        flex-direction: column;
+        background: var(--color-shell-900);
+    }
+
+    .aside-bar > hr {
+        border-top-color: var(--color-shell-700);
+    }
+
+    /*
+      관리자 사이드바 맨 위의 빈 칸. 레거시에도 글자가 없었다.
+
+      이제 상표는 상단 바가 갖는다 — 사이드바에 또 두면 한 화면에 상표가 둘이다.
+      자리를 접는다(D-119).
+    */
+    .logo-font,
+    .aside-bar > hr {
+        display: none;
+    }
+
+    .sidebar {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+        padding: 0.5rem 0 1.5rem;
+        background: var(--color-shell-900);
+        overflow-y: auto;
+    }
+
+    .sidebar-nav {
+        flex: 1 1 auto;
+    }
+
+    .sidebar-ul,
+    .nav-flyout {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .sidebar-mainmenu + .sidebar-mainmenu {
+        margin-top: 0.125rem;
+    }
+
+    /* 그룹 이름. 누를 수 없는 자리는 «읽는 것» 이 아니라 «가르는 것» 이므로
+       작고 흐리게 두고 자간을 벌린다. */
+    .sidebar-mainmenu > .menu-title {
+        display: block;
+        padding: 0.875rem 1rem 0.375rem;
+        color: var(--color-shell-dim);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+    }
+
+    /* 최상위인데 바로 이동하는 항목(게시판)은 링크로 감싸여 온다. */
+    .sidebar-mainmenu > a {
+        display: block;
+        padding: 0;
+    }
+
+    .sidebar-mainmenu > a > .menu-title {
+        display: block;
+        padding: 0.5rem 1rem;
+        border-left: 2px solid transparent;
+        color: var(--color-shell-fg);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        letter-spacing: 0;
+    }
+
+    .sidebar-mainmenu > a:hover > .menu-title {
+        border-left-color: var(--color-shell-600);
+        background: var(--color-shell-850);
+        color: var(--color-shell-bright);
+    }
+
+    .nav-flyout > li > a {
+        display: block;
+        padding: 0.4375rem 1rem 0.4375rem calc(1rem - 2px);
+        border-left: 2px solid transparent;
+        color: var(--color-shell-fg);
+        font-size: 0.8125rem;
+    }
+
+    .nav-flyout > li > a:hover {
+        border-left-color: var(--color-accent-line);
+        background: var(--color-shell-850);
+        color: var(--color-shell-bright);
+    }
+
+    /* ═══ 상단 바 ═══════════════════════════════════════════════════════ */
+
+    /*
+      상단 바. 사용자 화면과 관리자 화면이 이것 하나를 쓴다(D-119).
+
+      전에는 둘이었다 — 사용자 쪽은 Bootstrap navbar 마크업, 관리자 쪽은 자체
+      클래스. 같은 앱인데 위쪽이 화면마다 다르게 생겼다.
+    */
+    .app-header {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 1rem;
+        height: 3.25rem;
+        padding: 0 1.25rem;
+        border-bottom: 1px solid var(--color-line);
+        background: var(--color-surface);
+    }
+
+    .brand-name {
+        color: var(--color-ink);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    .header-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .header-item.dropdown {
+        position: relative;
+    }
+
+    /* 오른쪽 끝에 붙는 메뉴는 오른쪽 모서리를 기준으로 펼친다. */
+    .dropdown-menu-end {
+        right: 0;
+        left: auto;
+    }
+
+    /* 레거시가 헤더 아래 깔던 파란 띠. 재설계에서는 경계선 한 겹으로 충분하다. */
+    .section2 {
+        display: none;
+    }
+
+    .navbar {
+        display: flex;
+        align-items: center;
+        height: 3.25rem;
+        padding: 0 1rem;
+        border-bottom: 1px solid var(--color-line);
+        background: var(--color-surface);
+    }
+
+    .navbar > .container-fluid {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        gap: 1rem;
+        min-width: 0;
+        padding: 0;
+    }
+
+    .navbar-brand {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        color: var(--color-ink);
+        font-size: 0.9375rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+    }
+
+    /* 로고 PNG 는 원본이 크다. 묶어 두지 않으면 헤더를 뚫고 본문을 덮는다. */
+    .navbar-brand img,
+    .app-header img,
+    .navbar img {
+        display: block;
+        width: auto;
+        max-height: 1.625rem;
+    }
+
+    .navbar-toggler {
+        display: none;
+    }
+
+    /* .empty-place 가 남는 공간을 먹으므로 이쪽은 자기 크기만 갖는다. */
+    .navbar-collapse {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 0.25rem;
+        margin-left: auto;
+    }
+
+    .navbar-nav,
+    .nav {
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        height: var(--spacing-control);
+        padding: 0 0.625rem;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    .nav-link:hover {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+    }
+
+    .nav-item.dropdown {
+        position: relative;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        z-index: 40;
+        top: calc(100% + 0.25rem);
+        left: 0;
+        display: none;
+        min-width: 11rem;
+        margin: 0;
+        padding: 0.25rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        box-shadow: 0 8px 24px -8px rgb(22 25 29 / 0.18);
+        list-style: none;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: block;
+        padding: 0.375rem 0.5rem;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+    }
+
+    .dropdown-item:hover {
+        background: var(--color-accent-soft);
+        color: var(--color-accent-hover);
+    }
+
+    .empty-place {
+        flex: 1 1 auto;
+    }
+
+    /* ═══ 작업 영역 ═════════════════════════════════════════════════════ */
+
+    /*
+      본문 여백은 **화면 컨테이너**가 갖는다.
+
+      레거시는 화면마다 다른 이름의 래퍼에 여백을 붙였다 — user-insert-wrap,
+      proposal-insert-wrap, table-wrap, wrap, container, box-wrapper… 이름을 하나씩
+      쫓아다니면 반드시 빠뜨리고, 빠뜨린 화면만 글자가 벽에 붙는다.
+
+      그래서 «사이드바 옆에 오는 것» 과 «관리자 헤더 아래 오는 것» 에 한 번에 준다.
+      이름을 몰라도 걸린다.
+
+      제외 목록은 «본문이 아닌 껍데기 조각» 이다 — 사용자 사이드바(app·sidebar),
+      관리자 사이드바(aside-bar), 관리자 본문 상자(admin-main-content — 여백은 그
+      **안의** 화면이 갖는다. 위의 규칙이다), 메인 화면의 격자(main-column).
+      admin-wrap 을 content-wrap 으로 합치면서(D-131) 관리자 조각 둘이 이 목록에
+      들어왔다 — 빼먹으면 :not() 사슬의 특이도(0,4,0)가 사이드바 폭 규칙을 이겨
+      사이드바가 본문처럼 늘어난다.
+    */
+    .admin-main-content > *:not(.admin-header),
+    .content-wrap > *:not(.app):not(.sidebar):not(.main-column):not(.aside-bar):not(.admin-main-content) {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 1.25rem 1.5rem 2.5rem;
+    }
+
+    .table-wrap,
+    .wrap {
+        min-width: 0;
+    }
+
+    /*
+      화면 한 장을 담는 상자.
+
+      레거시 이름은 `container` 였는데 **Tailwind 에 같은 이름의 유틸리티가 있다** —
+      `width:100%` 에 중단점마다 `max-width` 까지 붙는다. 유틸리티는 컴포넌트
+      레이어를 이기므로, 그 이름을 쓰는 22화면의 폭을 우리가 정할 수 없었다.
+      `collapse` 와 같은 충돌이라 같은 방법으로 푼다 — 이름을 바꾼다(D-119).
+    */
+    .page-box {
+        width: 100%;
+        max-width: 72rem;
+    }
+
+    /*
+      껍데기가 없는 화면 — 찾기 팝업 9장, 로그인 3장, 오류 4장.
+
+      사이드바도 헤더도 거치지 않으므로 위의 여백 규칙이 닿지 않는다. 그대로 두면
+      글자가 창 벽에 붙는다.
+    */
+    body > .page-box,
+    body > form > .page-box {
+        padding: 1.25rem 1.5rem 2rem;
+    }
+
+    /*
+      화면 머리 — 제목 + 길 표시.
+
+      이 앱에는 화면 제목이 없었다. 39화면이 오른쪽 구석의 작은 길 표시 한 줄로
+      «여기가 어디인가» 를 말했다. 길 표시의 **마지막 조각이 곧 그 화면의 이름**
+      이므로 떼어 제목으로 올렸다(D-119). 글자를 지어내지 않고 자리만 바꿨다.
+    */
+    .page-head {
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.125rem;
+        align-items: flex-start;
+        margin-bottom: 1.125rem;
+    }
+
+    .page-title {
+        color: var(--color-ink);
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        line-height: 1.25;
+    }
+
+    .menu-name {
+        color: var(--color-ink-mute);
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+    }
+
+    .table-header-container {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .button-group {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    /* ═══ 메인 화면 — 위젯 판 ═══════════════════════════════════════════
+       레거시는 폭을 픽셀로 잡았다(위젯 500px·달력 610px). 창이 좁으면 잘리고
+       넓으면 오른쪽이 텅 빈다. 격자로 바꿔 폭을 나눠 갖게 한다.
+
+         [ 위젯 · 위젯 ][ 달력 ]
+
+       좁아지면 달력이 아래로 내려가고, 더 좁아지면 위젯도 한 줄이 된다.     */
+
+    .main-column {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .main-content-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+        gap: 1rem;
+        align-items: start;
+        padding: 1.25rem 1.5rem 2rem;
+    }
+
+    .main-wrap {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .widget-column {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    @media (max-width: 1400px) {
+        .main-content-wrap {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    @media (max-width: 900px) {
+        .main-wrap {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    /* ── 위젯 한 장 */
+
+    .main-table-container,
+    .main-calendar-container {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    /* 위젯 높이를 못 박는다. 내용에 맡기면 두 열의 아래가 어긋나 판이 흔들린다 —
+       레거시도 350px 로 고정했다. 넘치는 줄은 위젯 안에서 굴린다. */
+    .main-table-container {
+        height: 21rem;
+    }
+
+    .main-calendar-container {
+        min-height: 0;
+    }
+
+    /* 달력 몸통. FullCalendar 가 여기에 자기 DOM 을 심는다(height: 600). */
+    .main-calendar-container > #calendar {
+        padding: 0.75rem;
+    }
+
+    .main-calendar-container .fc {
+        font-size: 0.8125rem;
+    }
+
+    .main-calendar-container .fc a {
+        color: inherit;
+    }
+
+    .table-panel-header {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        height: 2.625rem;
+        padding: 0 0.375rem 0 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .main-table-head {
+        min-width: 0;
+    }
+
+    .widget-name {
+        display: block;
+        overflow: hidden;
+        color: var(--color-ink);
+        font-size: 0.875rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* 위젯 머리의 아이콘 셋. 셋 중 둘은 레거시에서도 장식이다(D-114). */
+    .table-panel-header .btn-group {
+        display: flex;
+        align-items: center;
+        gap: 0.125rem;
+    }
+
+    .table-panel-header .btn-group > a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink-mute);
+    }
+
+    .table-panel-header .btn-group > a:hover {
+        background: var(--color-paper-sunk);
+        color: var(--color-accent);
+    }
+
+    .table-panel-header .btn-group .fa-lg {
+        width: 0.875rem;
+        height: 0.875rem;
+    }
+
+    /* ── 위젯 속 표
+       카드가 이미 테두리와 둥근 모서리를 갖는다. 표가 또 가지면 겹쳐 보인다. */
+
+    .table-commend {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .table-commend > .table {
+        border: 0;
+        border-radius: 0;
+        font-size: 0.75rem;
+    }
+
+    /* 굴려도 머리글은 남는다. */
+    .table-commend > .table > thead > tr > th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        height: 2rem;
+        padding: 0 0.5rem;
+    }
+
+    /* 좁은 칸에서 날짜가 두 줄로 접히면 줄 높이가 들쭉날쭉해진다.
+       한 줄로 두고, 정 넘치면 위젯 안에서 가로로 굴린다. */
+    .table-commend > .table > tbody > tr > td {
+        height: 1.875rem;
+        padding: 0 0.5rem;
+        vertical-align: middle;
+        white-space: nowrap;
+    }
+
+    /* ── 화면 아래 회사 정보. 메인 화면 하나만 부른다. */
+
+    .index-footer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin: 0 1.5rem 1.5rem;
+        padding: 1.5rem;
+        border-top: 1px solid var(--color-line);
+        color: var(--color-ink-mute);
+        font-size: 0.75rem;
+    }
+
+    /* 로고 PNG 는 원본이 크다. 헤더와 같은 이유로 묶어 둔다. */
+    .index-footer img {
+        display: block;
+        width: auto;
+        max-height: 3.5rem;
+        opacity: 0.55;
+    }
+
+    .index-footer table td {
+        padding: 0.0625rem 0;
+    }
+
+    /* ═══ 표 — ERP 의 본체 ══════════════════════════════════════════════
+       세로줄을 넣지 않는다. 줄이 많아질수록 세로줄은 격자 소음이 되고,
+       가로 실선 한 겹이면 눈이 행을 따라간다.                            */
+
+    .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        font-size: 0.8125rem;
+        overflow: hidden;
+    }
+
+    /* 표 머리가 없는 화면도 있다(43개 중 14개). 세 형태를 모두 잡는다. */
+    .table > thead > tr > th,
+    .table > tbody > tr > th,
+    .table > tr > th {
+        height: 2.25rem;
+        padding: 0 0.75rem;
+        border-bottom: 1px solid var(--color-line-firm);
+        background: #eceae4;
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-align: left;
+        white-space: nowrap;
+    }
+
+    .table > tbody > tr > td,
+    .table > tr > td {
+        height: var(--spacing-row);
+        padding: 0 0.75rem;
+        border-bottom: 1px solid var(--color-line);
+        color: var(--color-ink);
+        vertical-align: middle;
+    }
+
+    .table > tbody > tr:last-child > td {
+        border-bottom: 0;
+    }
+
+    .table > tbody > tr:hover > td {
+        background: var(--color-accent-soft);
+    }
+
+    /* 줄무늬는 아주 옅게. 짙으면 hover 를 못 이긴다. */
+    .table-striped > tbody > tr:nth-child(even) > td {
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+    }
+
+    .table-striped > tbody > tr:hover > td {
+        background: var(--color-accent-soft);
+    }
+
+    /* ═══ 단추 ═════════════════════════════════════════════════════════
+       레거시는 화면마다 자기 이름의 단추를 갖는다 — userRegister-btn,
+       btn_execDaumPostcode, goto-index, admin-out-btn… 이름을 다 쫓지 않고
+       **요소 자체**에 기본 모습을 준다. 그러면 이름이 없어도 단추로 보인다.
+       .btn 계열은 클래스라 이 규칙을 이긴다.                              */
+
+    button,
+    input[type="button"],
+    input[type="submit"],
+    input[type="reset"] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        align-self: flex-start;
+        width: auto;
+        min-height: var(--spacing-control);
+        padding: 0 0.75rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+
+    button:hover,
+    input[type="button"]:hover,
+    input[type="submit"]:hover,
+    input[type="reset"]:hover {
+        border-color: var(--color-ink-mute);
+        background: var(--color-paper-sunk);
+    }
+
+    /*
+      폼을 보내는 단추는 그 화면의 주된 행동이다 — 강조색으로 칠한다.
+
+      `.btn` 을 단 단추는 제외한다. 그쪽은 클래스로 색을 고르는 자리이고, 여기서
+      덮으면 **«삭제»(.btn-danger)가 파랗게** 된다 — 요소+속성 선택자가
+      클래스 하나보다 특이도가 높기 때문이다.
+    */
+    button[type="submit"]:not(.btn),
+    input[type="submit"]:not(.btn) {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    button[type="submit"]:not(.btn):hover,
+    input[type="submit"]:not(.btn):hover {
+        border-color: var(--color-accent-hover);
+        background: var(--color-accent-hover);
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        height: var(--spacing-control);
+        padding: 0 0.75rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-family: inherit;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: background-color 120ms ease, border-color 120ms ease;
+    }
+
+    .btn:hover {
+        border-color: var(--color-ink-mute);
+        background: var(--color-paper-sunk);
+    }
+
+    .btn:disabled,
+    .btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .btn-primary {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        border-color: var(--color-accent-hover);
+        background: var(--color-accent-hover);
+        color: #fff;
+    }
+
+    .btn-secondary {
+        border-color: var(--color-line-firm);
+        background: var(--color-surface);
+        color: var(--color-ink-soft);
+    }
+
+    /* 지우기는 눈에 띄어야 하지만 화면을 지배해서는 안 된다 —
+       빨간 판이 아니라 빨간 글씨와 실선이다. */
+    .btn-danger {
+        border-color: color-mix(in srgb, var(--color-bad) 35%, white);
+        background: var(--color-surface);
+        color: var(--color-bad);
+    }
+
+    .btn-danger:hover {
+        border-color: var(--color-bad);
+        background: var(--color-bad-soft);
+        color: var(--color-bad);
+    }
+
+    /* ═══ 입력 ═════════════════════════════════════════════════════════ */
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3125rem;
+        margin-bottom: 0.875rem;
+    }
+
+    .form-group > label {
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+
+    .form-control,
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    input[type="search"],
+    input[type="tel"],
+    select,
+    textarea {
+        width: 100%;
+        min-height: var(--spacing-control);
+        padding: 0.3125rem 0.5rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-family: inherit;
+        font-size: 0.8125rem;
+    }
+
+    textarea {
+        min-height: 6rem;
+        line-height: 1.6;
+        resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--color-accent);
+        outline: 2px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
+        outline-offset: 0;
+    }
+
+    /*
+      **`:read-only` 를 쓰면 안 된다.** 그 의사클래스는 «편집할 수 없는 모든 것» 에
+      걸린다 — `input[type=submit]` 도, 단추도 포함이다. 실제로 그것 때문에 로그인
+      단추가 회색으로 칠해졌다(특이도 0,3,1 이라 `.login-content .btn` 을 이겼다).
+
+      화면이 «읽기 전용» 이라고 적어 둔 것만 잡는다.
+    */
+    input[readonly],
+    textarea[readonly] {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+    }
+
+    /*
+      `readonly` 가 두 가지 뜻으로 쓰인다.
+
+        폼 안(.form-group)   «이 칸은 못 고친다» — 사번·주민번호처럼 잠긴 입력.
+                             회색 상자로 보이는 것이 맞다.
+        짝 안(.input-group)  «값을 보여 준다» — 레거시가 글자를 입력칸에 담아
+                             찍은 자리다. 23화면이 이렇게 한다.
+
+      뒤엣것까지 회색 상자로 두면 화면이 «고칠 수 없는 폼» 처럼 보인다. 글자로
+      읽히게 한다 — 상자를 지우고 바탕을 비운다(D-119).
+    */
+    .input-group input[readonly] {
+        border-color: transparent;
+        background: transparent;
+        color: var(--color-ink);
+        font-weight: 500;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--color-ink-mute);
+    }
+
+    /*
+      폼 한 벌은 판 위에 올리고 **폭을 묶는다.**
+
+      묶지 않으면 입력칸이 화면 폭(1300px 넘게)까지 늘어난다. 라벨에서 입력으로
+      눈이 가는 거리가 멀어지고, 짧은 값을 넣는 칸이 문단처럼 보인다. 종이 서식이
+      A4 를 넘지 않는 것과 같은 이유다.
+
+      `:has()` 로 «form-group 을 담은 form» 만 고른다 — 목록 화면의 검색 폼은
+      form-group 을 쓰지 않으므로 걸리지 않는다.
+    */
+    form:has(.form-group) {
+        max-width: 36rem;
+        padding: 1.25rem 1.375rem 1.375rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    form:has(.form-group) .form-group:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .btn-group {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    form:has(.form-group) .btn-group {
+        margin-top: 1.125rem;
+        padding-top: 1.125rem;
+        border-top: 1px solid var(--color-line);
+    }
+
+    .input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    /* 입력 앞에 붙는 이름표(«코멘트» 같은 것). */
+    .input-group-text {
+        display: inline-flex;
+        align-items: center;
+        height: var(--spacing-control);
+        padding: 0 0.625rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .input-group-prepend {
+        display: flex;
+        flex: none;
+        align-items: center;
+    }
+
+    /* ═══ 검색 줄 ══════════════════════════════════════════════════════ */
+
+    .search-option {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    /* 입력은 기본이 width:100% 다(폼 화면이 그걸 원한다). 검색 줄에서는
+       한 줄에 나란히 서야 하므로 제 크기를 갖는다. */
+    .search-option select,
+    .search-option input,
+    .table-header-container select,
+    .table-header-container input {
+        width: auto;
+    }
+
+    .search-option select,
+    .table-header-container select {
+        min-width: 8rem;
+    }
+
+    .main-search-container,
+    .main-search-border {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        height: var(--spacing-control);
+        padding: 0 0.5rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-surface);
+    }
+
+    .main-search-border {
+        border: 0;
+        padding: 0;
+    }
+
+    .main-search-text {
+        min-height: auto;
+        width: 14rem;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        font-size: 0.8125rem;
+    }
+
+    .main-search-text:focus {
+        border: 0;
+        outline: 0;
+    }
+
+    .main-search-icon {
+        display: inline-flex;
+        align-items: center;
+        color: var(--color-ink-mute);
+        cursor: pointer;
+    }
+
+    .main-search-icon:hover {
+        color: var(--color-accent);
+    }
+
+    /* ═══ 쪽 넘기기 ════════════════════════════════════════════════════ */
+
+    /*
+      쪽 넘기기에 함정이 있다. 마크업이 이렇게 온다.
+
+        <div class="page-controller">
+          <a class="disabled">이전</a>
+          <ul class="page-numbers"><a class="disabled"><li>1</li></a> ...</ul>
+          <a>다음</a>
+        </div>
+
+      **현재 쪽에 `disabled` 가 붙는다** — 레거시가 «누를 수 없는 쪽» 이라는 뜻으로
+      쓴 이름이다. 그것을 흐리게 칠하면 «지금 여기» 가 가장 안 보이는 칸이 된다.
+      그래서 여기서는 현재 쪽을 **강조색으로** 칠한다.
+
+      «이전» 에 붙은 `disabled` 는 레거시의 실수로 보인다 — 이전 블록이 있을 때만
+      그려지므로 언제나 누를 수 있다. 그래서 흐리게 하지 않는다.
+
+      `<a>` 가 `<li>` 를 감싸는 것도 레거시 그대로다. 상자는 `<a>` 가 만든다.
+    */
+
+    .page-controller,
+    .pagination {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.375rem;
+        margin-top: 1.25rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    .page-numbers {
+        display: flex;
+        align-items: center;
+        gap: 0.1875rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .page-numbers li {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /* 두 형태가 섞여 있다 — 사용자 쪽은 <a><li>, 관리자 쪽은 <li><a> 다.
+       자식 선택자로는 한쪽만 걸린다. */
+    .page-controller > a,
+    .page-numbers a,
+    .pagination a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.75rem;
+        height: 1.75rem;
+        padding: 0 0.4375rem;
+        border: 1px solid transparent;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink-soft);
+        font-size: 0.8125rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .page-controller > a:hover,
+    .page-numbers a:hover,
+    .pagination a:hover {
+        border-color: var(--color-line-firm);
+        background: var(--color-surface);
+        color: var(--color-ink);
+    }
+
+    /* 현재 쪽 */
+    .page-numbers a.disabled,
+    .page-numbers a.active,
+    .pagination .active a {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: #fff;
+        font-weight: 600;
+        pointer-events: none;
+    }
+
+    /* 이전·다음은 숫자가 아니라 글자다 */
+    .page-controller > a {
+        padding: 0 0.625rem;
+    }
+
+    /* ═══ 판 ═══════════════════════════════════════════════════════════ */
+
+    .card {
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        padding: 1rem 1.125rem;
+    }
+
+    /*
+      접혀 있는 자리. 게시글의 답글·수정 입력 폼이 이걸로 숨는다.
+
+      전에는 Bootstrap 의 `.collapse` 였다. 그 이름을 계속 쓸 수 없다 —
+      **Tailwind 에도 `collapse` 유틸리티가 있고**(`visibility: collapse`)
+      유틸리티가 컴포넌트를 이기기 때문에, 폼이 «자리는 차지하는데 보이지 않는»
+      상태가 된다. jQuery `slideToggle()` 은 display 를 만지므로 visibility 로
+      숨은 것을 열지 못한다(D-119).
+    */
+    .fold {
+        display: none;
+    }
+
+    /* ═══ 겹쳐 뜨는 것 ═════════════════════════════════════════════════
+       Bootstrap JS 가 .show 를 붙여 여는 구조를 그대로 받는다. 모달을
+       native <dialog> 로 바꾸는 것은 라이브러리 교체(task 16)의 몫이다. */
+
+    .modal {
+        position: fixed;
+        z-index: 60;
+        inset: 0;
+        display: none;
+        overflow-y: auto;
+        background: rgb(14 18 22 / 0.45);
+    }
+
+    .modal.show {
+        display: block;
+    }
+
+    /*
+      결재 양식은 **A4 폭으로 못 박혀 있다** — 저장된 내용의 바깥 div 가
+      `width: calc(21cm + 14px)`(약 808px)다. 모달이 그보다 좁으면 표가 상자
+      밖으로 흘러나온다(D-120).
+
+      그래서 미리보기 상자를 그 폭이 들어갈 만큼 넓히고, 그래도 넘치면 상자
+      안에서 가로로 굴린다 — 화면 밖으로 흐르게 두지 않는다.
+    */
+    .modal-dialog {
+        max-width: min(58rem, calc(100vw - 2rem));
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .modal-content {
+        position: relative;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        box-shadow: 0 24px 60px -18px rgb(14 18 22 / 0.4);
+        padding: 1.25rem 1.5rem;
+    }
+
+    .close-button {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.75rem;
+        color: var(--color-ink-mute);
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .close-button:hover {
+        color: var(--color-ink);
+    }
+
+    .modal-backdrop {
+        display: none;
+    }
+
+    /* ═══ 글 본문 ══════════════════════════════════════════════════════
+       게시글·결재 문서는 저장된 HTML 이 들어오는 자리다(D-118). 서식이
+       인라인 style 에 있으므로 여기서 억지로 덮지 않는다 — 읽을 수 있는
+       바탕만 준다.                                                      */
+
+    .ibody,
+    .content,
+    .document-content,
+    .approval-content {
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        font-size: 0.875rem;
+        line-height: 1.75;
+    }
+
+    /*
+      저장된 본문은 폭을 스스로 정한다(결재 양식은 A4). 담는 자리보다 넓으면
+      **자기 상자 안에서** 굴려야 한다 — 그냥 두면 화면 밖으로 흘러 옆 내용을
+      덮는다.
+    */
+    .content,
+    .document-content,
+    .approval-content {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+
+    /*
+      저장된 본문에도 class 가 들어 있다 — 결재 양식의 바깥 div 가
+      `class="wrap"`, 그 안이 `class="container"` 다. 우리 화면 클래스와 **이름이
+      겹친다.** 지금은 둘 다 해가 없지만, 화면 쪽에서 같은 이름에 레이아웃을
+      주면 저장된 문서가 그 규칙에 끌려간다. 본문 안에서는 끊어 둔다.
+    */
+    .content .wrap,
+    .document-content .wrap,
+    .approval-content .wrap,
+    .content .container,
+    .document-content .container,
+    .approval-content .container {
+        display: block;
+        flex: none;
+        padding: 0;
+    }
+
+    .ibody {
+        border: 1px solid var(--color-line);
+        padding: 1.25rem 1.375rem;
+        min-height: 12rem;
+    }
+
+    .content img,
+    .document-content img,
+    .approval-content img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* ═══ 아이콘 ═══════════════════════════════════════════════════════
+       화면 전체가 쓰는 아이콘은 여덟 개뿐인데 그 여덟을 위해 FontAwesome
+       CDN 전체를 싣고 있었다. 게다가 그중 하나는 **남의 키트 ID**
+       (kit.fontawesome.com/a81368914c)를 가리켰다.
+
+       그래서 여덟 개를 여기 그려 넣는다. 기존 클래스 이름에 그대로 걸리므로
+       마크업(<i class="fa-solid fa-magnifying-glass fa-lg">)은 손대지 않는다.
+       currentColor 를 따르므로 글자색과 함께 움직인다.                    */
+
+    .fa-magnifying-glass,
+    .fa-plus,
+    .fa-arrows-rotate,
+    .fa-arrow-up-right-from-square,
+    .fa-ellipsis-vertical,
+    .fa-envelope,
+    .fa-clock,
+    .fa-bell,
+    .fa-lock,
+    .fa-user,
+    .fa-user-tie,
+    .fa-gear {
+        display: inline-block;
+        flex: none;
+        width: 1em;
+        height: 1em;
+        background-color: currentColor;
+        vertical-align: -0.125em;
+        -webkit-mask-position: center;
+        mask-position: center;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+    }
+
+    .fa-magnifying-glass {
+        -webkit-mask-image: var(--icon-search);
+        mask-image: var(--icon-search);
+        --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.2 16.2 21 21'/%3E%3C/svg%3E");
+    }
+
+    .fa-plus {
+        -webkit-mask-image: var(--icon-plus);
+        mask-image: var(--icon-plus);
+        --icon-plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+    }
+
+    .fa-arrows-rotate {
+        -webkit-mask-image: var(--icon-rotate);
+        mask-image: var(--icon-rotate);
+        --icon-rotate: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.3-5.6'/%3E%3Cpath d='M20.5 4v4h-4'/%3E%3C/svg%3E");
+    }
+
+    .fa-arrow-up-right-from-square {
+        -webkit-mask-image: var(--icon-external);
+        mask-image: var(--icon-external);
+        --icon-external: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M20 4l-8.5 8.5'/%3E%3Cpath d='M18 14.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.5'/%3E%3C/svg%3E");
+    }
+
+    .fa-ellipsis-vertical {
+        -webkit-mask-image: var(--icon-more);
+        mask-image: var(--icon-more);
+        --icon-more: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Ccircle cx='12' cy='5' r='1.7'/%3E%3Ccircle cx='12' cy='12' r='1.7'/%3E%3Ccircle cx='12' cy='19' r='1.7'/%3E%3C/svg%3E");
+    }
+
+    .fa-envelope {
+        -webkit-mask-image: var(--icon-mail);
+        mask-image: var(--icon-mail);
+        --icon-mail: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3.5 7 8.5 6 8.5-6'/%3E%3C/svg%3E");
+    }
+
+    .fa-clock {
+        -webkit-mask-image: var(--icon-clock);
+        mask-image: var(--icon-clock);
+        --icon-clock: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5.2l3.4 2'/%3E%3C/svg%3E");
+    }
+
+    .fa-bell {
+        -webkit-mask-image: var(--icon-bell);
+        mask-image: var(--icon-bell);
+        --icon-bell: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 9a6 6 0 1 0-12 0c0 5.5-2 7-2 7h16s-2-1.5-2-7'/%3E%3Cpath d='M10.2 20a2.2 2.2 0 0 0 3.6 0'/%3E%3C/svg%3E");
+    }
+
+    /*
+      아래 넷은 화면에 적힌 것이 아니라 **DB 에서 온다** — 헤더가
+      class="${item.icon}" 로 찍고, menu 테이블에 fa-gear·fa-user-tie·
+      fa-envelope 가 들어 있다. 화면만 훑어서는 안 보이는 자리다.
+    */
+
+    .fa-lock {
+        -webkit-mask-image: var(--icon-lock);
+        mask-image: var(--icon-lock);
+        --icon-lock: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='10.5' width='15' height='10' rx='2'/%3E%3Cpath d='M8 10.5V8a4 4 0 0 1 8 0v2.5'/%3E%3C/svg%3E");
+    }
+
+    .fa-user {
+        -webkit-mask-image: var(--icon-user);
+        mask-image: var(--icon-user);
+        --icon-user: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='3.6'/%3E%3Cpath d='M4.8 20a7.2 7.2 0 0 1 14.4 0'/%3E%3C/svg%3E");
+    }
+
+    .fa-user-tie {
+        -webkit-mask-image: var(--icon-user-tie);
+        mask-image: var(--icon-user-tie);
+        --icon-user-tie: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='6.6' r='3.2'/%3E%3Cpath d='M5.4 20a6.6 6.6 0 0 1 4.2-6.2M18.6 20a6.6 6.6 0 0 0-4.2-6.2'/%3E%3Cpath d='m12 12.6 1.4 2-1.4 5-1.4-5z' fill='%23000' stroke='none'/%3E%3C/svg%3E");
+    }
+
+    .fa-gear {
+        -webkit-mask-image: var(--icon-gear);
+        mask-image: var(--icon-gear);
+        --icon-gear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2.4'/%3E%3Cpath d='M18 12h2.6M12 18v2.6M6 12H3.4M12 6V3.4M16.2 16.2l1.8 1.8M7.8 16.2 6 18M7.8 7.8 6 6M16.2 7.8 18 6'/%3E%3C/svg%3E");
+    }
+
+    .fa-lg {
+        width: 1.1875em;
+        height: 1.1875em;
+    }
+
+    /* ═══ 날짜 고르기 ══════════════════════════════════════════════════
+       jQuery UI 위젯이다. 레거시는 저장소에 있는 `jquery-ui.css`(36KB, 남의 테마)
+       를 실었는데, 화면별 CSS 를 내리면서 그것도 내려갔다 — 지금 달력은 꾸며지지
+       않은 표다.
+
+       그 테마를 다시 싣지 않는다. 우리 색·밀도와 어긋나고, 쓰는 위젯은 달력과
+       정렬 둘뿐이라 여기서 그리는 편이 짧다(D-119).                        */
+
+    .ui-datepicker {
+        z-index: 70 !important;
+        width: 17rem;
+        padding: 0.5rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        box-shadow: 0 12px 32px -10px rgb(22 25 29 / 0.28);
+        font-size: 0.8125rem;
+    }
+
+    .ui-datepicker-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .ui-datepicker-prev,
+    .ui-datepicker-next {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.625rem;
+        height: 1.625rem;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink-soft);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .ui-datepicker-prev:hover,
+    .ui-datepicker-next:hover {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+    }
+
+    /* jQuery UI 는 화살표를 스프라이트 이미지로 그린다. 글자로 바꾼다. */
+    .ui-datepicker-prev .ui-icon,
+    .ui-datepicker-next .ui-icon {
+        overflow: hidden;
+        width: 1rem;
+        height: 1rem;
+        text-indent: -999em;
+    }
+
+    .ui-datepicker-prev .ui-icon::after,
+    .ui-datepicker-next .ui-icon::after {
+        display: block;
+        text-indent: 0;
+        font-size: 0.875rem;
+        line-height: 1rem;
+        text-align: center;
+    }
+
+    .ui-datepicker-prev .ui-icon::after {
+        content: "‹";
+    }
+
+    .ui-datepicker-next .ui-icon::after {
+        content: "›";
+    }
+
+    .ui-datepicker-title {
+        display: flex;
+        flex: 1 1 auto;
+        gap: 0.25rem;
+        justify-content: center;
+    }
+
+    /* changeYear·changeMonth 가 켜져 있어 제목이 콤보 둘이다. */
+    .ui-datepicker-title select {
+        width: auto;
+        min-height: 1.625rem;
+        padding: 0 0.25rem;
+        font-size: 0.75rem;
+    }
+
+    .ui-datepicker-calendar {
+        width: 100%;
+        border: 0;
+        border-collapse: collapse;
+        font-size: 0.75rem;
+    }
+
+    .ui-datepicker-calendar th {
+        height: 1.75rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .ui-datepicker-calendar td {
+        height: 2rem;
+        padding: 1px;
+        border: 0;
+        text-align: center;
+    }
+
+    .ui-datepicker-calendar td a,
+    .ui-datepicker-calendar td span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 1.875rem;
+        border-radius: var(--radius-sharp);
+        color: var(--color-ink);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .ui-datepicker-calendar td a:hover {
+        background: var(--color-accent-soft);
+        color: var(--color-accent-hover);
+    }
+
+    /* 오늘 — 테두리로만 알린다. 고른 날과 헷갈리면 안 된다. */
+    .ui-datepicker-today a {
+        box-shadow: inset 0 0 0 1px var(--color-accent-line);
+    }
+
+    /* 고른 날 */
+    .ui-datepicker-calendar td a.ui-state-active {
+        background: var(--color-accent);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* 앞뒤 달의 날짜(showOtherMonths) */
+    .ui-datepicker-other-month a,
+    .ui-datepicker-other-month span {
+        color: var(--color-ink-mute);
+        opacity: 0.65;
+    }
+
+    .ui-datepicker-unselectable span {
+        color: var(--color-ink-mute);
+        opacity: 0.4;
+    }
+
+    /* ═══ 줄 끌어 옮기기 ═══════════════════════════════════════════════
+       결재선을 만들 때 표의 줄 순서를 끌어서 바꾼다(.sortable). 끌리는 줄과
+       놓일 자리가 보여야 한다.                                            */
+
+    .ui-sortable-helper {
+        box-shadow: 0 10px 24px -8px rgb(22 25 29 / 0.35);
+    }
+
+    .ui-sortable-helper td {
+        background: var(--color-surface);
+    }
+
+    .ui-sortable-placeholder td {
+        background: var(--color-accent-soft);
+    }
+
+    /* ═══ 찾기 팝업 ════════════════════════════════════════════════════
+       작은 창 아홉 장(은행·업체·제품·문서·결재선·근무…)이 같은 골격을 쓴다.
+       [검색줄] — [도움말 또는 결과] — [만든이]                            */
+
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        margin-bottom: 0.875rem;
+    }
+
+    .search-box input[type="text"] {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .search-box + hr,
+    .product + hr,
+    .tips + hr {
+        display: none;
+    }
+
+    .tips {
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .tips h3 {
+        margin: 0 0 0.25rem;
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    .tips p {
+        margin: 0 0 0.75rem;
+        color: var(--color-ink-soft);
+        font-size: 0.8125rem;
+    }
+
+    .tip-item {
+        padding: 0.5rem 0.625rem;
+        border-left: 2px solid var(--color-accent-line);
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+        font-size: 0.8125rem;
+    }
+
+    .tip-item + .tip-item {
+        margin-top: 0.375rem;
+    }
+
+    .tip-item strong {
+        color: var(--color-ink);
+    }
+
+    /* 결과 목록. 한 줄이 곧 «고르기» 라서 통째로 누를 수 있어야 한다. */
+    .product {
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .product p {
+        margin: 0;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .product p:last-child {
+        border-bottom: 0;
+    }
+
+    .product a {
+        display: block;
+        padding: 0.4375rem 0.75rem;
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+    }
+
+    .product a:hover {
+        background: var(--color-accent-soft);
+        color: var(--color-accent-hover);
+    }
+
+    .footer {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-line);
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+    }
+
+    /* ═══ 로그인 ═══════════════════════════════════════════════════════
+       레거시는 남의 «Responsive Login Form» 견본을 그대로 가져다 썼다 — 배경
+       그림 한 장이 화면을 덮고, 아바타는 남의 GitHub 저장소를 직접 링크했으며,
+       아이콘은 **남의 FontAwesome 키트 ID** 를 불렀다. 셋 다 걷어냈다(D-119).
+
+       마크업 구조(.input-div > .i + .div > .h5-input + .input)는 지킨다 —
+       loginSub.js 가 focus 를 붙였다 떼며 라벨을 띄운다.                    */
+
+    body:has(> .wave) {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: var(--color-shell-900);
+    }
+
+    /* 배경 그림. 화면을 덮지 않고 판 뒤에 은은하게 깔린다. */
+    .wave {
+        position: fixed;
+        z-index: 0;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.22;
+    }
+
+    body > .wave + .page-box {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 1.5rem;
+        place-items: center;
+        width: min(24rem, calc(100vw - 2rem));
+        max-width: none;
+        padding: 2rem 2rem 2.25rem;
+        border: 1px solid var(--color-line);
+        border-radius: 10px;
+        background: var(--color-surface);
+        box-shadow: 0 24px 60px -20px rgb(8 11 14 / 0.55);
+    }
+
+    body > .wave + .page-box > .img img {
+        display: block;
+        width: auto;
+        max-height: 2.75rem;
+    }
+
+    .login-content {
+        width: 100%;
+    }
+
+    .login-content form {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .login-content .title {
+        margin: 0;
+        color: var(--color-ink);
+        font-size: 1.125rem;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        text-align: center;
+    }
+
+    /* 한 줄 = [아이콘][라벨 + 입력] */
+    .input-div {
+        display: grid;
+        grid-template-columns: 2rem 1fr;
+        align-items: center;
+        gap: 0.625rem;
+        padding-bottom: 0.375rem;
+        border-bottom: 1px solid var(--color-line-firm);
+        transition: border-color 140ms ease;
+    }
+
+    .input-div.focus {
+        border-bottom-color: var(--color-accent);
+    }
+
+    .input-div > .i {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--color-ink-mute);
+    }
+
+    .input-div.focus > .i {
+        color: var(--color-accent);
+    }
+
+    .input-div > .div {
+        min-width: 0;
+    }
+
+    /* 라벨. 칸이 비어 있을 때는 자리표시처럼 크게, 채우면 작게 올라간다. */
+    .h5-input {
+        margin: 0;
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        transition: font-size 140ms ease, color 140ms ease;
+    }
+
+    .input-div.focus .h5-input {
+        color: var(--color-accent);
+        font-size: 0.6875rem;
+    }
+
+    .login-content .input {
+        width: 100%;
+        min-height: 1.5rem;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        font-size: 0.875rem;
+    }
+
+    .login-content .input:focus {
+        border: 0;
+        outline: 0;
+    }
+
+    .login-content form > a {
+        justify-self: end;
+        font-size: 0.75rem;
+        color: var(--color-ink-mute);
+    }
+
+    .login-content form > a:hover {
+        color: var(--color-accent);
+    }
+
+    .login-content .btn {
+        width: 100%;
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    .login-content .btn:hover {
+        border-color: var(--color-accent-hover);
+        background: var(--color-accent-hover);
+    }
+
+    /* ═══ 오류 화면 ════════════════════════════════════════════════════
+       레거시는 «가짜 코드 창» 그림을 CSS 로 그렸다. 그 CSS 가 없으니 빈 div 만
+       남는다 — 글자가 새어 나오지는 않는다. 되살리지 않고 접는다.          */
+
+    .error {
+        display: grid;
+        gap: 0.25rem;
+        justify-items: center;
+        margin: 4rem auto 0;
+        max-width: 26rem;
+        padding: 2.5rem 2rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        text-align: center;
+    }
+
+    .error h1 {
+        color: var(--color-accent);
+        font-size: 3rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        line-height: 1;
+    }
+
+    .error h2 {
+        color: var(--color-ink-mute);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+    }
+
+    .error p {
+        margin: 0.5rem 0 1.25rem;
+        color: var(--color-ink-soft);
+        font-size: 0.875rem;
+    }
+
+    .error-button {
+        border-color: var(--color-accent);
+        background: var(--color-accent);
+    }
+
+    .error-button a {
+        color: #fff;
+    }
+
+    .stack-container {
+        display: none;
+    }
+
+    /* ═══ 게시글 보기 ══════════════════════════════════════════════════
+       레거시는 머리말을 <table class="subject"> 안에 div 로 쌓았다 — 브라우저가
+       표 밖으로 밀어내는 잘못된 마크업이다. 구조는 건드리지 않고 표 노릇을
+       그만두게 해서 블록으로 읽히게 한다(D-124).                          */
+
+    .main-notice > .wrap {
+        max-width: 60rem;
+    }
+
+    .body-border {
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .subject {
+        display: block;
+        width: 100%;
+        border: 0;
+    }
+
+    .iheader {
+        padding: 1rem 1.25rem 0.75rem;
+    }
+
+    .subject-center {
+        margin-bottom: 0.75rem;
+        color: var(--color-ink);
+        font-size: 1.125rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+    }
+
+    .subject-group,
+    .subject-middle-group {
+        display: block;
+    }
+
+    .subject-middle-group {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem 1rem;
+        padding: 0.625rem 0 0.125rem;
+    }
+
+    .left-subject,
+    .right-subject {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+    }
+
+    .right-subject {
+        flex-wrap: wrap;
+    }
+
+    .subject-content2 {
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .empty-space-right {
+        width: 0.625rem;
+    }
+
+    .iheader .btn-group.drop {
+        padding-top: 0.625rem;
+    }
+
+    .ibody {
+        border: 0;
+        border-top: 1px solid var(--color-line);
+        border-radius: 0;
+    }
+
+    /* ── 댓글 */
+
+    .all-comment-wrap {
+        margin-top: 1rem;
+    }
+
+    .all-comment {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    /* 댓글 쓰기 — 입력과 단추가 한 줄에 선다. */
+    .post-body {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .post-body textarea {
+        flex: 1 1 auto;
+        min-height: 3.25rem;
+    }
+
+    .post-enter {
+        flex: none;
+    }
+
+    .comment {
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-line);
+    }
+
+    .comment:first-of-type {
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .comment-header,
+    .left-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .comment-header {
+        justify-content: space-between;
+    }
+
+    .comment-header .name {
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .comment-header .time {
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .content-body {
+        padding: 0.25rem 0 0;
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        line-height: 1.7;
+    }
+
+    /* 답글·수정 폼이 접혀 있는 자리(.fold)는 열릴 때 판이 된다. */
+    .post-reply-comments {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.625rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-sharp);
+        background: var(--color-paper-sunk);
+    }
+
+    .post-reply-comments textarea {
+        flex: 1 1 auto;
+        min-height: 3rem;
+    }
+
+    /* ⋮ 단추는 글자가 없다. 작게 둔다. */
+    .dropstart > .dropdown-toggle,
+    .drop-menu .dropdown-toggle {
+        width: 1.75rem;
+        min-height: 1.75rem;
+        padding: 0;
+    }
+
+    /* ═══ 결재 문서 보기 ═══════════════════════════════════════════════
+       왼쪽이 문서(결재선 도장 + 본문), 오른쪽이 의견과 승인·반려.        */
+
+    .proposal-insert-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1200px) {
+        .proposal-insert-wrap {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .proposal-left-wrap,
+    .proposal-right-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    /* 문서는 종이처럼 보여야 한다 — 결재 문서니까. */
+    .proposal-left-content > .page {
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .subpage {
+        padding: 1.5rem 1.75rem 2rem;
+    }
+
+    .approval-header {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .approval-title {
+        text-align: center;
+    }
+
+    .approval-title-span {
+        color: var(--color-ink);
+        font-size: 1.125rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+    }
+
+    /* 결재선 도장 표. 오른쪽 위에 붙는 작은 표다. */
+    .approval-wrap {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .approval-table {
+        border-collapse: collapse;
+        font-size: 0.6875rem;
+        table-layout: fixed;
+    }
+
+    .approval-table th,
+    .approval-table td {
+        min-width: 3.25rem;
+        height: 1.5rem;
+        padding: 0.125rem 0.25rem;
+        border: 1px solid var(--color-line-firm);
+        color: var(--color-ink);
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .approval-table th {
+        width: 1.5rem;
+        min-width: 0;
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+        font-weight: 600;
+        line-height: 1.15;
+    }
+
+    .proposal-stamp {
+        color: var(--color-accent);
+        font-weight: 600;
+    }
+
+    .subpage > hr {
+        margin: 1.25rem 0;
+    }
+
+    /* 오른쪽 — 의견 목록과 승인·반려 */
+
+    .proposal-comment-list {
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .proposal-comment-list > .table {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .proposal-right-wrap form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+
+    .proposal-right-wrap .input-group {
+        align-items: stretch;
+    }
+
+    .proposal-right-wrap textarea {
+        min-height: 5rem;
+    }
+
+    /* ═══ 관리자 홈 ════════════════════════════════════════════════════
+       왼쪽에 근무 현황 그래프와 결재, 오른쪽에 수/발주·공지사항·출퇴근.
+       레거시는 폭을 픽셀로 잡았고 그 CSS 는 내려갔다 — 격자로 다시 짠다(D-123). */
+
+    .admin-body-wrap {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+        padding: 1.25rem 1.5rem 2rem;
+    }
+
+    @media (max-width: 1200px) {
+        .admin-body-wrap {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .admin-body-left,
+    .admin-body-right,
+    .admin-right-group,
+    .right-group-element {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    /* 판 하나 = 머리글 + 몸통. 위젯과 같은 규칙을 쓴다. */
+    .workstatus,
+    .approval,
+    .basic-info,
+    .notification,
+    .attendance-management {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .graph-header,
+    .admin-main-content .body-header {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: space-between;
+        height: 2.625rem;
+        padding: 0 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .graph-header-name,
+    .body-header-name {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        color: var(--color-ink);
+        font-size: 0.875rem;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+    }
+
+    /*
+      ═══ 근무 현황 도넛(D-069) ═══════════════════════════════
+
+      d3 가 심는 자리. 이름은 조각 안이 아니라 오른쪽 목록이 갖는다 —
+      조각 크기는 그날 자료가 정하므로 안에 넣으면 느재기 생긴다.
+    */
+    #graph {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        justify-content: center;
+        min-height: 20rem;
+        padding: 0.875rem;
+    }
+
+    .graph-body {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem 1.75rem;
+        width: 100%;
+    }
+
+    .graph-donut {
+        flex: 0 0 auto;
+        width: 15rem;
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* 조각 안의 비율. 조각이 작으면 스크립트가 아예 적지 않는다 */
+    .graph-share {
+        fill: var(--color-ink);
+        font-size: 0.75rem;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* 도넛 가운데 — 그날 인원 합계 */
+    .graph-total-value {
+        fill: var(--color-ink);
+        font-size: 1.5rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .graph-total-unit {
+        fill: var(--color-ink-mute);
+        font-size: 0.6875rem;
+    }
+
+    .graph-legend {
+        display: grid;
+        flex: 0 1 auto;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.3125rem 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    /*
+      li 가 칸을 직접 낳게 한다. subgrid 말고 이걸 쓰는 이유는 단순하다 —
+      세 묶음이 한 격자를 공유해야 «N명» 이 오른쪽으로 가진한다.
+    */
+    .graph-legend li {
+        display: contents;
+    }
+
+    .graph-swatch {
+        width: 0.6875rem;
+        height: 0.6875rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: 2px;
+    }
+
+    .graph-name {
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .graph-value {
+        color: var(--color-ink);
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+    }
+
+    /* 오늘 기록이 없거나 자료를 못 받은 때. 및지만 빈 칸보다는 낫다 */
+    .graph-empty {
+        margin: 0;
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
+    }
+
+    .approval-content-div,
+    .temporary-div,
+    .notification-table-div,
+    .attendance-management-content-div {
+        max-height: 17rem;
+        overflow: auto;
+    }
+
+    /* 판 안의 표는 카드가 이미 테두리를 가지므로 자기 테두리를 지운다. */
+    .approval-content-div > .table,
+    .temporary-div > .table,
+    .notification-table-div > .table,
+    .attendance-management-content-div > .table {
+        border: 0;
+        border-radius: 0;
+        font-size: 0.75rem;
+    }
+
+    .approval-content-div > .table > thead > tr > th,
+    .temporary-div > .table > tr > th,
+    .notification-table-div > .table > thead > tr > th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        height: 2rem;
+        padding: 0 0.5rem;
+    }
+
+    .approval-content-div > .table > tbody > tr > td,
+    .temporary-div > .table > tr > td,
+    .notification-table-div > .table > tbody > tr > td,
+    .attendance-management-content-div > .table > tbody > tr > td {
+        height: 1.875rem;
+        padding: 0 0.5rem;
+        white-space: nowrap;
+    }
+
+    .approval-subject,
+    .notification-subject {
+        width: 40%;
+    }
+
+    .coworker {
+        font-weight: 600;
+    }
+
+    .time-cell {
+        color: var(--color-ink-soft);
+        font-variant-numeric: tabular-nums;
+    }
+
+    /*
+      상태 알약. 레거시는 배경색을 Java 에서 인라인 style 로 뿜었다
+      (#C2FF63 · #EA7B86 · #FFFF40). 형광색이라 화면을 다시 그려도 그 세 개만
+      떠다니었고, 고치려면 서버를 건드려야 했다.
+
+      서버는 이제 클래스 이름만 준다(ProposalStatus.styleClass). 색은 여기서
+      정한다(D-125) — 근무 상태와 같은 방식이다.
+    */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.0625rem 0.4375rem;
+        border: 1px solid rgb(22 25 29 / 0.12);
+        border-radius: 999px;
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .status-badge.is-approved {
+        border-color: color-mix(in srgb, var(--color-ok) 30%, white);
+        background: var(--color-ok-soft);
+        color: var(--color-ok);
+    }
+
+    .status-badge.is-rejected {
+        border-color: color-mix(in srgb, var(--color-bad) 30%, white);
+        background: var(--color-bad-soft);
+        color: var(--color-bad);
+    }
+
+    .status-badge.is-running {
+        border-color: color-mix(in srgb, var(--color-warn) 30%, white);
+        background: var(--color-warn-soft);
+        color: var(--color-warn);
+    }
+
+    /* 상태 0 — 알약의 기본색 그대로 둔다 */
+    .status-badge.is-pending {
+        color: var(--color-ink-soft);
+    }
+
+    /* 관리자 꼬리말. 메인 화면 꼬리말과 같은 결로 둔다. */
+    .web-info {
+        padding: 0.875rem 0 0;
+        border-top: 1px solid var(--color-line);
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+    }
+
+    .web-info table td {
+        padding: 0.0625rem 0;
+    }
+
+    /* ═══ 프로필 ═══════════════════════════════════════════════════════
+       레거시는 부트스트랩 격자(row + col-md-4/8 + col-sm-3/9)로 짰다. 그
+       격자를 쓰는 화면이 **이 하나뿐**이라 12칸 격자를 되살리지 않고 이 화면의
+       구조를 우리 것으로 바꿨다(D-122).                                   */
+
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 17rem minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+    }
+
+    @media (max-width: 1100px) {
+        .profile-layout {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+
+    .profile-main {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .profile-identity {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1.5rem 1.25rem;
+        text-align: center;
+    }
+
+    .profile-name {
+        font-size: 1.0625rem;
+        font-weight: 650;
+    }
+
+    .profile-motto {
+        margin: 0 0 0.5rem;
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
+        line-height: 1.5;
+    }
+
+    /* ── 라벨과 값 목록. «이름 / 이메일 / 내선…» 다섯 줄. */
+
+    .info-list {
+        margin: 0 0 1.125rem;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: 7rem minmax(0, 1fr);
+        gap: 0.75rem;
+        align-items: baseline;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .info-row:last-child {
+        border-bottom: 0;
+    }
+
+    .info-row > dt {
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .info-row > dd {
+        margin: 0;
+        min-width: 0;
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        word-break: break-word;
+    }
+
+    /* 값이 비어 있으면 빈 줄이 된다. 비었다는 것도 정보다 — 자리를 지킨다. */
+    .info-row > dd:empty::after {
+        color: var(--color-ink-mute);
+        content: "—";
+    }
+
+    /* ── 이번 달 근무 현황 */
+
+    .work-title {
+        margin: 0;
+        color: var(--color-ink);
+        font-size: 1rem !important;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+    }
+
+    .main-body .header,
+    .main-body .date {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+    }
+
+    .main-body .header {
+        margin-bottom: 0.875rem;
+    }
+
+    /*
+      달력 표는 칸이 서른 하나라 좁다. 세로줄이 있어야 날짜가 갈린다.
+
+      **이 화면 안으로 가둔다.** `table-bordered` 는 관리자 홈의 공지사항 표도
+      쓰는 이름이라, 가운데 정렬과 작은 글자를 전역으로 주면 그쪽 제목까지
+      한가운데로 몰린다 — 실제로 그렇게 됐다(D-123).
+    */
+    .main-body .table-bordered {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.6875rem;
+        table-layout: fixed;
+    }
+
+    .main-body .table-bordered th,
+    .main-body .table-bordered td {
+        height: 1.625rem;
+        padding: 0 0.125rem;
+        border: 1px solid var(--color-line);
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .main-body .table-bordered th {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+        font-weight: 600;
+    }
+
+    /* ── 범례
+       색은 **서버가 칸에 칠하는 값 그대로**여야 한다(WorkCalendar). 범례가
+       그림과 다른 색을 말하면 없느니만 못하다. 이 색들은 레거시 팔레트라
+       디자인 시스템과 어긋나는데, 칸 색이 Java 에서 인라인 style 로 나오므로
+       함께 바꿔야 한다 — 라벨 통일(D-068)과 같이 볼 자리다. */
+
+    .work-title-color {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 1rem;
+        margin-top: 0.875rem;
+    }
+
+    .box-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .box-wrapper > p {
+        margin: 0;
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+    }
+
+    .work-swatch {
+        width: 0.875rem;
+        height: 0.875rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: 2px;
+    }
+
+    /*
+      ═══ 근무 상태의 색 ─ 한 곳에서만 정한다(D-125) ═══════════
+
+      상태 이름(is-*)은 Java 가 붙이고(WorkStatus.styleClass) 색은 여기서
+      고른다. 같은 이름이 세 자리에 다르게 쓰인다 — 달력 칸은 바탕을,
+      근태 표는 글자를, 범례는 작은 네모를 칠한다.
+
+      원 그래프(SVG)는 CSS 로 칠할 수 없어 adminGraph.js 가
+      --color-status-* 를 직접 읽는다. 그래도 값은 여기 하나다.
+    */
+
+    /*
+      달력 칸 — 바탕을 칠한다.
+
+      높이를 .work-cell 에만 적으면 안 된다. .main-body .table-bordered td 가
+      height: 1.625rem 을 갖고 있고 그쪽 특정도가 높다(0,2,1 대 0,1,0).
+      예전엔 인라인 style 이라 무조건 이겼고, 클래스로 바꾸니 족박해졌다.
+      같은 리그로 맞받는다.
+
+      다만 50px 로 되돌리진 않는다 — 그건 레거시 치수고, 머리글 두 줄이
+      1.625rem 인데 몸통만 3.125rem 이면 띄어보이기만 한다. 상태 띄로 읽힐
+      만큼만 놓인다(D-125).
+    */
+    .main-body .table-bordered td.work-cell {
+        height: 2.25rem;
+    }
+
+    .work-cell.is-absent  { background: var(--color-status-absent); }
+    .work-cell.is-working { background: var(--color-status-working); }
+    .work-cell.is-done    { background: var(--color-status-done); }
+    .work-cell.is-early   { background: var(--color-status-early); }
+    .work-cell.is-late    { background: var(--color-status-late); }
+    .work-cell.is-half    { background: var(--color-status-half); }
+    .work-cell.is-off     { background: var(--color-status-off); }
+
+    /*
+      달력 머리글의 주말 — 예전 style="color: red" · "color: blue".
+
+      높이와 같은 함정이다. .main-body .table-bordered th 가 color 를 갖고 있어
+      클래스 하나로는 못 이긴다. 두 표 모두에 닿게 적는다(D-125).
+    */
+    .is-sunday,
+    .main-body .table-bordered th.is-sunday { color: var(--color-bad); }
+
+    .is-saturday,
+    .main-body .table-bordered th.is-saturday { color: var(--color-accent); }
+
+    /* 근태 확인 표 — 바탕이 아니라 글자를 칠한다 */
+    .att-cell.is-absent  { color: var(--color-status-absent-ink); font-weight: 700; }
+    .att-cell.is-early   { color: var(--color-status-early-ink); font-weight: 700; }
+    .att-cell.is-late    { color: var(--color-status-late-ink); font-weight: 700; }
+    .att-cell.is-half    { color: var(--color-status-half-ink); font-weight: 700; }
+    .att-cell.is-off     { color: var(--color-status-off-ink); font-weight: 700; }
+
+    /* 근태 확인 표의 머리줄 — 예전 style="background-color: beige" */
+    .sheet-head > th {
+        background: var(--color-paper-sunk);
+        font-weight: 600;
+    }
+
+    /*
+      ═══ 근태 확인 표(D-127) ═════════════════════════════════
+
+      칸이 23개다 — 이름셋에 날짜 16에 통계 넷. 판에 억지로 집어넣으면
+      브라우저가 이름 칸부터 줘어짜다. «이 용 원» 처럼 한 글자씩 세로
+      흘러내리던 것이 그것이다.
+
+      최소 너비를 주고 모자라면 가로로 굴린다. 표를 줄이는 것보다 밀어
+      보는 편이 낫다 — 날짜 칸은 줄일 수가 없고(HH:mm 은 다섯 글자다)
+      이름은 줄이면 읽힐 수 없다.
+    */
+    .sheet-scroll {
+        overflow-x: auto;
+    }
+
+    /*
+      너비를 colgroup 이 정한다.
+
+      두 번 돌아갔다. 처음엔 table-layout: fixed 에 min-width 를 줌 — 남은 폭을
+      20칸이 규등하게 나누면서 안쪽 여백을 빼면 글자 자리가 20px 밖에 안 남아
+      «09…» 으로 잘렸다. 다음에는 auto + nowrap 에 칸마다 width 를 적었는데,
+      **auto 배치는 width 를 희망으로만 읽어** 5rem 을 63px 로 깎았다. 그러자
+      고정된 칸의 left 와 실제 너비가 어긋나 칸 사이가 벌어졌다.
+
+      colgroup + table-layout: fixed 는 적은 대로 준다. 고정 칸의 left 를 손으로
+      더해야 하므로 반드시 그래야 한다 — 5 + 6.5 = 11.5rem.
+    */
+    .attendance-sheet {
+        width: 80.5rem;   /* 16.5(이름셋) + 52(날짜 16) + 12(통계 4) */
+        table-layout: fixed;
+    }
+
+    .col-name  { width: 5rem; }
+    .col-dept  { width: 6.5rem; }
+    .col-job   { width: 5rem; }
+    .col-day   { width: 3.25rem; }
+    .col-tally { width: 3rem; }
+
+    .attendance-sheet th,
+    .attendance-sheet td {
+        padding: 0 0.375rem;
+        white-space: nowrap;
+    }
+
+    /*
+      이름·부서·직책은 왼쪽에 붙여 둔다. 23칸짜리 표를 오른쪽으로
+      밀면 «지금 보는 줄이 누구인지»를 잊게 된다. 왼쪽 막은 따라온다.
+
+      밀리는 칸이 비치지 않도록 바탕을 꼭 줘야 한다. 줄무달과 맞물려
+      있으므로 아래쪽 줄무달 규칙이 이 칸들을 다시 한번 칠한다.
+    */
+    .attendance-sheet .sheet-name,
+    .attendance-sheet .sheet-dept,
+    .attendance-sheet .sheet-job {
+        position: sticky;
+        z-index: 1;
+        background: var(--color-surface);
+        text-align: left;
+    }
+
+    .attendance-sheet .sheet-name { left: 0; }
+    .attendance-sheet .sheet-dept { left: 5rem; }
+    .attendance-sheet .sheet-job  { left: 11.5rem; }
+
+    /* 고정된 칸의 오른쪽 경계 — 굴러간 자리임을 보이게 한다 */
+    .attendance-sheet .sheet-job {
+        border-right: 1px solid var(--color-line-firm);
+    }
+
+    .attendance-sheet .sheet-head > .sheet-name,
+    .attendance-sheet .sheet-head > .sheet-dept,
+    .attendance-sheet .sheet-head > .sheet-job {
+        z-index: 2;
+        background: var(--color-paper-sunk);
+    }
+
+    /* 머리글의 «(한 달)» — 이제 줄별 합계가 아니라는 표시다 */
+    .sheet-note {
+        color: var(--color-ink-mute);
+        font-weight: 400;
+    }
+
+    /*
+      한 달 합계. 두 줄을 가로지르므로 가운데 정렬이고, 날짜 칸보다
+      무겁게 둔다 — 이 표에서 유일하게 «한 달» 을 말하는 숫자다.
+    */
+    .sheet-tally {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    /*
+      줄무달은 줄이 아니라 **사람**을 가른다. 한 사람이 두 줄이므로
+      tr:nth-child 로 칠하면 윗줄과 아랫줄 색이 달라진다 — 전에 그러였다.
+      사람마다 <tbody> 를 둔 이유가 이것이다.
+    */
+    .attendance-sheet > tbody:nth-of-type(even) > tr > td {
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+    }
+
+    .attendance-sheet > tbody:nth-of-type(even) > tr > td.sheet-tally {
+        background: var(--color-paper-sunk);
+    }
+
+    /* 고정된 칸은 바탕을 직접 갖고 있어 줄무달을 따로 다시 적어야 한다 */
+    .attendance-sheet > tbody:nth-of-type(even) > tr > .sheet-name,
+    .attendance-sheet > tbody:nth-of-type(even) > tr > .sheet-dept,
+    .attendance-sheet > tbody:nth-of-type(even) > tr > .sheet-job {
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+    }
+
+    .attendance-sheet > tbody:hover > tr > .sheet-name,
+    .attendance-sheet > tbody:hover > tr > .sheet-dept,
+    .attendance-sheet > tbody:hover > tr > .sheet-job {
+        background: var(--color-accent-soft);
+    }
+
+    .attendance-sheet > tbody:hover > tr > td {
+        background: var(--color-accent-soft);
+    }
+
+    /* 범례의 네모 */
+    .work-swatch.is-absent  { background: var(--color-status-absent); }
+    .work-swatch.is-working { background: var(--color-status-working); }
+    .work-swatch.is-done    { background: var(--color-status-done); }
+    .work-swatch.is-early   { background: var(--color-status-early); }
+    .work-swatch.is-late    { background: var(--color-status-late); }
+    .work-swatch.is-half    { background: var(--color-status-half); }
+    .work-swatch.is-off     { background: var(--color-status-off); }
+
+    /* ═══ 사람 자리 ════════════════════════════════════════════════════ */
+
+    .avatar-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 6.5rem;
+        height: 6.5rem;
+        border: 1px solid var(--color-line);
+        border-radius: 50%;
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-mute);
+        font-size: 2.5rem;
+    }
+
+    /* ═══ 얼기설기 남은 격자 ═══════════════════════════════════════════ */
+
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .col-sm,
+    .col-md {
+        flex: 1 1 12rem;
+        min-width: 0;
+    }
+}

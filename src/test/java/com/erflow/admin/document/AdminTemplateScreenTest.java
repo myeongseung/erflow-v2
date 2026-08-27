@@ -8,7 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.erflow.auth.TestUsers;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,10 +63,43 @@ class AdminTemplateScreenTest {
     }
 
     @Test
-    @DisplayName("양식 내용은 HTML 그대로 나간다")
+    @DisplayName("줄마다 자기 양식이 열린다 — id 가 겹치지 않는다(D-121)")
+    void everyRowOpensItsOwnPreview() throws Exception {
+        String html = mockMvc.perform(
+                        get("/admin/document/form-list").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        List<String> ids = matches(html, "id=\"(template-preview-\\d+)\"");
+        List<String> targets = matches(html, "data-bs-target=\"#(template-preview-\\d+)\"");
+
+        assumeTrue(!ids.isEmpty(), "양식이 없어 건너뛴다");
+
+        // 레거시는 셋 다 같은 id(calendar-plus)라 어느 줄을 눌러도 첫 줄이 떴다(D-066).
+        // 중복이 하나라도 있으면 그 화면이 다시 그렇게 된다.
+        assertThat(ids).as("모달 id 는 겹치지 않는다").doesNotHaveDuplicates();
+
+        // 버튼과 모달이 짝이 맞아야 «내가 누른 줄» 이 열린다.
+        assertThat(targets).as("버튼이 가리키는 곳").containsExactlyElementsOf(ids);
+
+        assertThat(html).as("옛 이름이 남아 있지 않다").doesNotContain("calendar-plus");
+    }
+
+    private static List<String> matches(String text, String regex) {
+        Matcher matcher = Pattern.compile(regex).matcher(text);
+        List<String> found = new ArrayList<>();
+        while (matcher.find()) {
+            found.add(matcher.group(1));
+        }
+        return found;
+    }
+
+    @Test
+    @DisplayName("양식 내용은 HTML 로 나가지만 걸러서 나간다(D-118)")
     @Transactional
-    void contentIsRenderedAsHtml() throws Exception {
-        templateService.create("시험양식", "<table><tr><td>기 안 서</td></tr></table>");
+    void contentIsRenderedAsSanitisedHtml() throws Exception {
+        templateService.create("시험양식",
+                "<table><tr><td>기 안 서</td></tr></table><script>alert('probe')</script>");
 
         String html = mockMvc.perform(
                         get("/admin/document/form-list").with(user(TestUsers.admin())))
@@ -71,7 +107,11 @@ class AdminTemplateScreenTest {
                 .andReturn().getResponse().getContentAsString();
 
         // escape 되면 &lt;table&gt; 로 나온다. 그러면 서식이 아니라 태그가 보인다.
-        assertThat(html).contains("<table><tr><td>기 안 서</td></tr></table>");
+        // 정화기가 표를 정규화해 tbody 를 채워 넣는다 — 브라우저가 하는 일과 같아서
+        // 화면은 달라지지 않는다.
+        assertThat(html).contains("<table><tbody><tr><td>기 안 서</td></tr></tbody></table>");
+        // 1단계는 이 script 를 그대로 내보냈다(O-010). 이제 사라진다.
+        assertThat(html).doesNotContain("alert('probe')").doesNotContain("<script>alert");
     }
 
     @Test

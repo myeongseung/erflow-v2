@@ -14,7 +14,7 @@
   type 은 언제나 0 이라 발주 수정은 실패한다(D-044). 화면은 그대로 옮긴다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isSell=${flag == 'sell'}">
-<head th:replace="~{fragments/head :: head(${isSell ? '수주 관리 수정 페이지' : '발주 관리 수정 페이지'}, ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/jquery-ui.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/taskRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/task.js', '/js/datepicker.js', '/js/main/task.js'} })}">
+<head th:replace="~{fragments/head :: page(${isSell ? '수주 관리 수정 페이지' : '발주 관리 수정 페이지'}, ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/task.js', '/js/datepicker.js', '/js/main/task.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -23,10 +23,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="task-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name"
-                  th:text="|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 수정|">사용자 &gt; 구매 &gt; 발주 수정</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 수정|)}"></div>
         <div class="task-insert">
             <div class="task-form">
                 <form th:action="@{/task/update}" method="post" name="taskFrm">

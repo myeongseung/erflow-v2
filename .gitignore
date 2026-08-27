@@ -5,6 +5,9 @@ out/
 bin/
 !gradle/wrapper/gradle-wrapper.jar
 
+### 빌드 도구 (내려받는 실행 파일 — 커밋하지 않는다, D-119) ###
+tools/
+
 ### 접속 정보 — 절대 커밋하지 않는다 ###
 src/main/resources/application-local.yml
 **/application-*-local.yml
@@ -36,3 +39,4 @@ Thumbs.db
 
 ### 세션 상태 ###
 .bkit/
+_workspace/

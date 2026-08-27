@@ -3,42 +3,22 @@
   문서 양식 리스트.
   출처: legacy/ERFlow/src/main/webapp/admin/document/documentFormList.jsp
 
-  «보기» 는 부트스트랩 모달을 연다. 그런데 **모달이 줄마다 하나씩 생기는데 id 가 전부
-  같다**(calendar-plus). 버튼도 그 id 를 가리키므로 어느 줄의 보기를 눌러도 첫 줄의
-  양식이 뜬다(D-066). 레거시 그대로 옮긴다.
-
-  이 화면만 bootstrap2.css 를 읽는다. bootstrap.css 와 `border-width: 0` 한 줄만
-  다른 같은 5.3.1 이라 공통 목록과 같은 파일을 쓴다(결재 문서 보기와 같은 판단).
+  «보기» 는 모달을 연다. 모달은 줄마다 하나씩 그려지므로 **id 가 줄마다 달라야
+  한다** — 레거시는 셋 다 `calendar-plus` 였고 그래서 어느 줄을 눌러도 첫 줄이
+  떴다(D-066). 양식 번호를 붙여 갈랐다(D-121).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문서 양식 리스트</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/documentFormList.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap2.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/documentFormList.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/documentModal.css}">
+<head th:replace="~{fragments/head :: page('문서 양식 리스트', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/documentFormList.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="table-wrap">
-            <div class="right-align">
-                <span class="menu-name">관리자 &gt; 문서 관리 &gt; 문서 양식 리스트</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 문서 관리 &gt; 문서 양식 리스트|)}"></div>
             <!--/* 삭제만 submit 추가는 새 페이지 */-->
             <form th:action="@{/admin/document/form-delete-proc}" method="post" name="docFrm">
                 <div class="table-header-container">
@@ -64,15 +44,29 @@
                                th:text="${template.id}">1</a></td>
                         <td th:text="${template.subject}">문서 제목</td>
                         <td>
-                            <button type="button" class="btn btn-primary"
-                                    data-bs-toggle="modal" data-bs-target="#calendar-plus">보기</button>
-                            <div class="modal fade" id="calendar-plus"
+                            <!--/*
+                              id 는 줄마다 달라야 한다.
+
+                              레거시는 이 자리를 메인 화면의 일정 등록 모달에서
+                              복사해 왔고 이름까지 그대로 `calendar-plus` 였다.
+                              그런데 이 모달은 th:each 안에 있어 **양식 수만큼
+                              그려진다** — 셋이 같은 id 를 갖고 버튼도 전부 그
+                              id 를 가리켰다. 브라우저는 중복 id 에서 첫 번째를
+                              집으므로 **어느 줄의 «보기»를 눌러도 첫 줄 양식이
+                              떴다**(D-066). 양식 번호를 붙여 가른다(D-121).
+                            */-->
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    th:data-bs-target="'#template-preview-' + ${template.id}">보기</button>
+                            <div class="modal fade" th:id="'template-preview-' + ${template.id}"
                                  data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                                 aria-labelledby="calendar-plus-label" aria-hidden="true">
+                                 th:aria-label="${template.subject}" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <span class="close-button">×</span>
-                                        <div class="document-content" th:utext="${template.content}"></div>
+                                        <!--/* 양식 미리보기. 거른 HTML 이다(D-118, O-010).
+                                               편집 화면은 원본을 받는다 — 거른 값을 편집기에
+                                               넣으면 저장할 때마다 서식이 깎인다. */-->
+                                        <div class="document-content" th:utext="${template.contentSafe}"></div>
                                     </div>
                                 </div>
                             </div>

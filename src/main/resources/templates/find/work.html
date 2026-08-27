@@ -9,19 +9,11 @@
   css 는 findBank.css 를 그대로 쓴다. 레거시도 그렇다(findWork.css 가 없다).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--/* 레거시 제목은 «업종 찾기» 다. 검색창과 바닥글은 «업체» 라고 쓴다 —
-         한 화면 안에서 말이 어긋나 있지만 그대로 옮긴다. */-->
-    <title>업종 찾기</title>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/main/findWork.js}"></script>
+<head th:replace="~{fragments/head :: page('업종 찾기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/findWork.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/work}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <input type="text" placeholder="예) 업체 코드 or 업체 명 검색" name="search"
                    id="findWork-input" th:value="${search == null ? '' : search}">

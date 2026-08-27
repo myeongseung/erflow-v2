@@ -19,32 +19,17 @@
   입력한 주소와 휴대 전화는 저장되지 않는다(D-057). 화면은 레거시 그대로 둔다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 페이지</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/location.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/userRegister.css}">
+<head th:replace="~{fragments/head :: page('관리자 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="user-insert-wrap">
-            <div class="right-align">
-                <span class="menu-name">관리자 &gt; 사원 &gt; 사원추가</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 &gt; 사원추가|)}"></div>
             <div class="user-insert">
                 <div class="user-form">
                     <form th:action="@{/admin/user/register-proc}" method="post">

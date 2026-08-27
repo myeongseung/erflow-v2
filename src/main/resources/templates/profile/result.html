@@ -7,9 +7,7 @@
   그래서 message 가 없을 수 있고, 그때는 alert 자체를 내지 않는다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>처리 결과</title>
+<head th:replace="~{fragments/head :: page('처리 결과', ${ {} })}">
 </head>
 <body>
 <script th:inline="javascript">

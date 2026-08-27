@@ -9,16 +9,11 @@
   고른 값은 js/main/findBank.js 의 selectBank 가 부모 창에 돌려준다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>은행 찾기</title>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <script th:src="@{/js/main/findBank.js}"></script>
+<head th:replace="~{fragments/head :: page('은행 찾기', ${ {'/js/main/findBank.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/bank}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <input type="text" placeholder="예) 은행 코드 or 은행 명 검색" name="search"
                    id="findBack-input" th:value="${search == null ? '' : search}">

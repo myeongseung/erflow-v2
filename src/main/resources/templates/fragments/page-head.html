@@ -1,0 +1,37 @@
+<!--/*
+  화면 머리 — 제목과 길 표시.
+
+  ## 이 앱에는 화면 제목이 없었다
+
+  레거시가 화면마다 둔 것은 길 표시 하나뿐이다.
+
+      &lt;div class="right-align"&gt;
+        &lt;span class="menu-name"&gt;사용자 &gt; 생산관리 &gt; 생산 설비 관리&lt;/span&gt;
+      &lt;/div&gt;
+
+  오른쪽에 작게 붙은 이 한 줄이 «여기가 어디인가» 를 말하는 유일한 글자였다.
+  39화면이 전부 그랬다. 제목이 없으니 화면을 열었을 때 눈이 먼저 닿는 곳이 없다.
+
+  ## 마지막 조각이 곧 제목이다
+
+  길 표시의 마지막 조각(「생산 설비 관리」)이 그 화면의 이름이다. 그것을 떼어
+  제목으로 올리고, 길 표시는 그 위에 작게 남긴다. **글자를 새로 지어내지 않는다** —
+  이미 화면에 있던 글자를 다시 배치할 뿐이다(D-119).
+
+  ## 왜 화면마다 문자열을 받는가
+
+  길 표시는 화면마다 다르고, 그중 아홉은 조건에 따라 달라진다(수주/발주, 매입/매출
+  같은 것들). 그래서 계산은 화면이 하고 이 조각은 «받은 글자를 어떻게 보여줄지» 만
+  정한다.
+*/-->
+<!--/*
+  마지막 조각을 떼는 데 `#strings.substringAfterLast` 를 쓸 수 없다 — Thymeleaf 의
+  `#strings` 에는 그 메서드가 없다. `arraySplit` 으로 자르고 마지막 칸을 쓴다.
+  구분자가 없는 길 표시는 조각이 하나뿐이라 그대로 제목이 된다 — 갈래가 필요 없다.
+*/-->
+<div th:fragment="head(trail)" class="page-head"
+     th:with="parts=${#strings.arraySplit(trail, '>')}"
+     xmlns:th="http://www.thymeleaf.org">
+    <h1 class="page-title" th:text="${#strings.trim(parts[parts.length - 1])}">화면 이름</h1>
+    <nav class="menu-name" th:text="${trail}">사용자 &gt; 어디 &gt; 화면 이름</nav>
+</div>

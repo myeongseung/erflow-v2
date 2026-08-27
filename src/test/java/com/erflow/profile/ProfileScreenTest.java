@@ -68,8 +68,13 @@ class ProfileScreenTest {
 
         assertThat(html).contains("이번 달 근무 현황")
                 .contains("내선 전화").contains("개인 전화")
-                // 부트스트랩 견본에서 온 글자들. 사용자 정보와 무관하지만 화면에 있다
-                .contains("https://bootdey.com").contains("꺾이지 않는 마음!");
+                .contains("꺾이지 않는 마음!");
+
+        // 부트스트랩 견본에서 온 다섯 줄(Website·Github·Twitter·Instagram·Facebook,
+        // 값은 전부 bootdey)을 지웠다(D-122). 1단계는 «화면에 보이니 옮긴다» 로
+        // 두었지만 이제 화면은 우리가 정한다 — 남의 견본 글자가 사용자 프로필에
+        // 있을 이유가 없다.
+        assertThat(html).as("견본 잔재").doesNotContain("bootdey");
     }
 
     @Test
@@ -288,7 +293,7 @@ class ProfileScreenTest {
         return (int) java.util.stream.Stream.concat(
                         calendar.firstHalf().days().stream(),
                         calendar.secondHalf().days().stream())
-                .filter(day -> day.cellStyle() != null && day.cellStyle().contains("background"))
+                .filter(day -> day.cellClass() != null && day.cellClass().contains(" is-"))
                 .count();
     }
 }

@@ -16,17 +16,7 @@
   기준으로 적었다 — D-037 참조.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EachUser</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/main/findEachUser.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/main/findUser.css}">
+<head th:replace="~{fragments/head :: page('EachUser', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/findEachUser.js'} })}">
 </head>
 <body>
 

@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.erflow.auth.TestUsers;
+import com.erflow.common.SafeHtml;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
@@ -155,6 +156,24 @@ class ProposalScreenTest {
 
         assertThat(html).contains("결재 문서 보기").contains("담당").contains("승인")
                 .contains("코멘트");
+    }
+
+    @Test
+    @DisplayName("실제 문서를 걸러도 표와 서식이 남는다 — 정책이 조여도 여기서 깨진다(D-118)")
+    void sanitisingRealDocumentsKeepsStyling() {
+        List<String> contents = jdbc.queryForList(
+                "SELECT content FROM document_tbl WHERE content LIKE '%<table%' LIMIT 5",
+                String.class);
+        assumeTrue(!contents.isEmpty(), "표가 든 문서가 없어 건너뛴다");
+
+        for (String raw : contents) {
+            String safe = SafeHtml.clean(raw);
+
+            // 결재 문서의 서식은 전부 인라인 style 이다. 이 셋 중 하나라도 사라지면
+            // 문서가 테두리 없는 맨 표가 된다.
+            assertThat(safe).contains("<table").contains("<td").contains("style=");
+            assertThat(safe).doesNotContain("<script").doesNotContain("javascript:");
+        }
     }
 
     @Test

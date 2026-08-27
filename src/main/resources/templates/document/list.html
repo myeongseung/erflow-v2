@@ -11,7 +11,7 @@
   문서 제목을 누르면 작성 화면이 수정 모드로 열린다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('문서 관리', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/documentList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/admin/admin.js', '/js/main/documentList.js'} })}">
+<head th:replace="~{fragments/head :: page('문서 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/main/documentList.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -20,9 +20,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="table-wrap">
-        <div class="right-align">
-            <span class="menu-name">사용자 &gt; 문서 관리 &gt; 문서 리스트</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 문서 관리 &gt; 문서 리스트|)}"></div>
 
         <form th:action="@{/document/delete-proc}" method="post" name="docFrm">
 

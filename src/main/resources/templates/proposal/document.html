@@ -19,7 +19,7 @@
   (게시글 본문과 같은 O-010).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('결재 문서 보기', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap2.css', '/css/common/common.css', '/css/common/page.css', '/css/proposal/proposalDocument.css', '/css/main/header.css', '/css/main/aside.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/proposal/proposalDocument.js', '/js/main/index.js'} })}">
+<head th:replace="~{fragments/head :: page('결재 문서 보기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/proposal/proposalDocument.js', '/js/main/index.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -64,7 +64,12 @@
                             </div>
                         </div>
                         <hr>
-                        <div class="approval-content" th:utext="${document.content}">
+                        <!--/*
+                          문서 본문은 표 HTML 이고 테두리·배경색이 인라인 style 에
+                          있다. 그래서 이스케이프도, style 제거도 할 수 없다 —
+                          허용목록으로 거른다(D-118, O-010).
+                        */-->
+                        <div class="approval-content" th:utext="${document.contentSafe}">
                             <!--/* 문서 가져오기 */-->
                         </div>
                     </div>

@@ -6,52 +6,26 @@
   숨은 flag 가 insert/update 를 가른다. 화면 글자는 둘 다 «문서 양식 추가» 이고,
   추가일 때 숨은 id 는 -1 이다. 레거시 그대로다.
 
-  본문은 CKEditor 4 가 만든다(CDN). 파일 선택은 .html 을 읽어 편집기에 부어 넣는
-  것이라 서버로 올라가지 않는다 — js/admin/documentFormRegister.js.
+  본문은 편집기가 만든다. 파일 선택은 .html 을 읽어 편집기에 부어 넣는 것이라
+  서버로 올라가지 않는다 — js/admin/documentFormRegister.js.
 
-  레거시가 화면 안에 <style> 과 CKEDITOR.replace 를 적어 두었다. 그대로 옮긴다 —
-  편집기 크기가 거기서 정해진다.
+  레거시는 화면 안에 CKEDITOR.replace 를 적어 편집기 크기를 여기서 정했다.
+  편집기를 Jodit 으로 바꾸면서 그 설정을 js/common/editor.js 한 곳으로 모았다
+  (D-120) — 다섯 화면이 같은 편집기를 쓰는데 설정이 화면마다 흩어져 있을 이유가
+  없다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문서 양식 작성</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{//cdn.ckeditor.com/4.22.1/full/ckeditor.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/documentFormRegister.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/userList.css}">
-    <link rel="stylesheet" th:href="@{/css/main/documentRegister.css}">
-    <style>
-        .form-control{
-            width:300px;
-        }
-        .body{
-            min-width: 1200px;
-        }
-    </style>
+<head th:replace="~{fragments/head :: page('문서 양식 작성', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jodit-4.13.23.min.js', '/js/admin/admin.js', '/js/admin/documentFormRegister.js', '/js/bootjs/bootstrap.bundle.js', '/js/common/editor.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="body">
-            <div class="right-align">
-                <span class="menu-name">관리자 &gt; 문서 관리 &gt; 문서 양식 추가</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 문서 관리 &gt; 문서 양식 추가|)}"></div>
             <div class="section">
                 <form th:action="@{/admin/document/form-register-proc}" method="post">
                     <input type="hidden" name="id" th:value="${templateId}">
@@ -73,11 +47,5 @@
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    CKEDITOR.replace("editor1", {
-        width : "80%",
-        height : "400px",
-    });
-</script>
 </body>
 </html>

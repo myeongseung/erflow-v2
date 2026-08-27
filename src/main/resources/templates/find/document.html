@@ -7,17 +7,11 @@
   빈 문자열로 채워 놓고 null 인지 검사하기 때문이다(D-036). 그대로 옮긴다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문서 찾기</title>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/main/findDocument.js}"></script>
+<head th:replace="~{fragments/head :: page('문서 찾기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/findDocument.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/document}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <input type="text" placeholder="예) 문서 ID or 문서명 검색" name="search"
                    id="findDocument-input" th:value="${search == null ? '' : search}">

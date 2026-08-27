@@ -16,29 +16,15 @@
   꼬리말(adminFooter)은 관리자 화면 중 여기에만 있다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERFlow Administrator Configuration</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/adminGraph.js}"></script>
-    <script th:src="@{/js/admin/adminCategory.js}"></script>
-    <script th:src="@{https://d3js.org/d3.v7.min.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
+<head th:replace="~{fragments/head :: page('ERFlow Administrator Configuration', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/adminGraph.js', '/js/admin/adminCategory.js', '/js/vendor/d3-7.min.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="admin-body-wrap">
             <div class="admin-body-left">
                 <div class="workstatus">
@@ -46,7 +32,11 @@
                         <div class="graph-header-name">근무 현황</div>
                         <div>&nbsp;</div>
                     </div>
-                    <svg id="graph" width="100%" height="100%"></svg>
+                    <!--/*
+                      레거시는 여기가 <svg> 였고 스크립트가 그 안에 <svg> 를 또
+                      넣었다. 심는 자리일 뿐이니 <div> 로 둔다(D-069).
+                    */-->
+                    <div id="graph"></div>
 
                 </div> <!--/* 근무현황 */-->
                 <div class="approval">
@@ -55,32 +45,40 @@
                         <div class="body-header-name">결재</div>
                         <div>&nbsp;</div>
                     </div>
+                    <!--/*
+                      레거시는 머리글을 넷으로 두고 몸통은 «사번 + colspan=3» 둘로
+                      두었다. 그 한 칸 안에 input-group 을 넣어 제목·시각·상태 세
+                      값을 담았고, 값들이 **읽기 전용 입력칸**으로 나왔다 —
+                      머리글과 값이 어긋나 표가 표로 읽히지 않았다.
+
+                      표로 편다(D-123). 머리글 넷에 셀 넷이다.
+                    */-->
                     <div class="approval-content-div">
-                        <table class="approval-content">
+                        <table class="table approval-content">
+                            <thead>
                             <tr>
                                 <th>사번</th>
                                 <th class="approval-subject">문서제목</th>
                                 <th class="approval-date">결재요청시각</th>
                                 <th class="approval-status">진행상황</th>
                             </tr>
+                            </thead>
+                            <tbody>
                             <tr th:each="proposal : ${proposals}">
                                 <td th:text="${proposal.userId}">사번</td>
-                                <td colspan="3">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text">
-                                            <a th:href="@{/proposal/document(proposalId=${proposal.id})}"
-                                               style="text-decoration: none;"
-                                               th:text="${proposal.shortSubject()}">문서제목</a>
-                                        </span>
-                                        <input type="text" readonly class="category-date form-control"
-                                               th:value="${proposal.receivedAt}">
-                                        <span class="input-group-text"
-                                              th:style="|background-color: ${proposal.statusColor()};|">
-                                            <div class="category" th:text="${proposal.statusLabel()}">진행상황</div>
-                                        </span>
-                                    </div>
+                                <td>
+                                    <a th:href="@{/proposal/document(proposalId=${proposal.id})}"
+                                       th:text="${proposal.shortSubject()}">문서제목</a>
+                                </td>
+                                <td th:text="${proposal.receivedAt}">결재요청시각</td>
+                                <td>
+                                    <!--/* 서버는 «무슨 상태» 만 말하고 색은 app.css 가 정한다(D-125). */-->
+                                    <span class="status-badge"
+                                          th:classappend="${proposal.statusClass()}"
+                                          th:text="${proposal.statusLabel()}">진행상황</span>
                                 </td>
                             </tr>
+                            </tbody>
                         </table>
                     </div> <!--/* 결재 */-->
                 </div>
@@ -143,19 +141,18 @@
                             <div>&nbsp;</div>
                         </div>
                         <div class="attendance-management-content-div">
-                            <table class="attendance-management-content">
+                            <!--/* 결재 표와 같은 이유로 폈다(D-123). */-->
+                            <table class="table attendance-management-content">
+                                <tbody>
                                 <tr th:each="work : ${works}">
                                     <td class="coworker" th:text="${work.shortName()}">이름</td>
-                                    <td colspan="2">
-                                        <div class="input-group mb-3">
-                                            <span class="input-group-text">
-                                                <div class="category" th:text="${work.statusLabel()}">근무 중</div>
-                                            </span>
-                                            <input type="text" class="form-control time-cell" readonly
-                                                   th:value="${work.workedTime()}">
-                                        </div>
+                                    <td>
+                                        <span class="status-badge"
+                                              th:text="${work.statusLabel()}">근무 중</span>
                                     </td>
+                                    <td class="time-cell" th:text="${work.workedTime()}">근무 시간</td>
                                 </tr>
+                                </tbody>
                             </table>
                         </div>
                     </div> <!--/* 출퇴근 관리 */-->

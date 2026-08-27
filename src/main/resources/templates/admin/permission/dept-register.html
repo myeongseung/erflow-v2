@@ -7,18 +7,10 @@
   만들면 비어 있는 비트 자리를 하나 받는다(Levels.next).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부서 생성 페이지</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/location.js}"></script>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/deptRegister.css}">
+<head th:replace="~{fragments/head :: page('부서 생성 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/location.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
 </head>
 <body>
-<div class="container">
+<div class="page-box">
     <form th:action="@{/admin/permission/dept-register-proc}" method="post">
         <h2>부서 생성</h2>
         <div>

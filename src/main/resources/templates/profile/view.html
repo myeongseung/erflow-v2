@@ -3,182 +3,86 @@
   프로필 보기.
   출처: legacy/ERFlow/src/main/webapp/profile.jsp
 
-  왼쪽 카드의 Website·Github·Twitter·Instagram·Facebook 다섯 줄은 **부트스트랩 견본의
-  글자 그대로**다. bootdey 라는 이름도, 아바타 그림도 견본에서 왔고 사용자 정보와
-  아무 상관이 없다. 화면에 보이는 것이므로 옮긴다 — 지우는 것은 이관이 아니다.
+  왼쪽 카드에 Website·Github·Twitter·Instagram·Facebook 다섯 줄이 있었다. 값이 전부
+  `bootdey` 였다 — 부트스트랩 견본의 글자 그대로이며 사용자 정보와 아무 상관이 없다.
+  1단계는 «화면에 보이는 것이므로 옮긴다» 로 두었지만, 이제 화면은 우리가 정한다.
+  지웠다(D-122).
 
-  아래 근무 현황 표는 한 달을 두 줄로 나눠 그린다. 오른쪽 «정상·지각·조퇴·연차» 는
-  그 줄만의 합계다(D-077). 머리글의 «통계» 는 다섯 칸을 차지한다고 적혀 있는데
-  실제 통계 칸은 넷이라 두 줄의 칸 수가 하나 어긋난다 — 그대로 옮긴다.
-
-  head 는 공통 조각을 쓰지 않는다. 이 화면만 jQuery UI 를 부르고 page.css 를 부르지
-  않는다. 순서를 맞추려면 그대로 적는 편이 낫다.
+  아래 근무 현황 표는 한 달을 두 줄로 나눠 그린다(1~16일 / 17~말일). 오른쪽
+  «정상·지각·조퇴·연차» 는 그 줄만의 합계다(D-077).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>[[${owner.name}]]님의 프로필</title>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/main/header.css}">
-    <link rel="stylesheet" th:href="@{/css/main/index.css}">
-    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
-    <link rel="stylesheet" th:href="@{/css/profile.css}">
-    <script th:src="@{https://code.jquery.com/jquery-1.12.4.js}"></script>
-    <script th:src="@{https://code.jquery.com/ui/1.12.1/jquery-ui.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/main/index.js}"></script>
-    <script th:src="@{/js/main/profile.js}"></script>
+<head th:replace="~{fragments/head :: page('[[${owner.name}]]님의 프로필', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/main/profile.js'} })}">
 </head>
-<body style="background-color: #d0d0d0;">
+<!--/* 레거시는 이 화면만 본문 바탕을 회색으로 박아 두었다. 바탕색은 이제
+       디자인 시스템이 정한다 — 화면마다 다르면 그것이 결함으로 보인다(D-119). */-->
+<body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
 
 <div class="content-wrap">
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
-    <div class="container">
+    <div class="page-box">
         <div class="main-body">
 
-            <div class="right-align">
-                <span class="menu-name">사용자 &gt; [[${owner.name}]]님의 프로필</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|사용자 &gt; ${owner.name}님의 프로필|)}"></div>
 
-            <div class="row gutters-sm">
-                <div class="col-md-4 mb-3">
+            <div class="profile-layout">
+                <aside class="profile-side">
+                    <div class="card profile-identity">
+                        <!--/*
+                          전에는 bootdey.com 의 견본 아바타를 직접 링크했다 — 남의
+                          사이트 그림이고 그쪽이 내리면 깨진다(D-119). 사람 사진이
+                          없는 자리이므로 자리표시로 둔다.
+                        */-->
+                        <div class="avatar-placeholder">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <h4 class="profile-name">[[${owner.name}]]</h4>
+                        <p class="profile-motto">중요한 것은<br>꺾이지 않는 마음!</p>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="search-button">주소록</button>
+                            <button class="btn message-btn"
+                                    th:attr="data-id=${owner.id}">쪽지 </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="profile-main">
                     <div class="card">
-                        <div class="card-body">
-                            <div class="d-flex flex-column align-items-center text-center">
-                                <img src="https://bootdey.com/img/Content/avatar/avatar7.png"
-                                     alt="Admin" class="rounded-circle" width="150">
-                                <div class="mt-4">
-                                    <h4>[[${owner.name}]]</h4>
-                                    <p class="text-secondary mb-1">중요한 것은</p>
-                                    <p class="text-muted font-size-sm">꺾이지 않는 마음!</p>
-                                    <button class="btn btn-primary" id="search-button">주소록</button>
-                                    <button class="btn btn-outline-primary message-btn"
-                                            th:attr="data-id=${owner.id}">쪽지 </button>
-                                </div>
+                        <!--/*
+                          레거시는 이 다섯 줄을 부트스트랩 격자(row + col-sm-3/9)로
+                          짰다. 그 격자를 쓰는 화면이 이 하나뿐이라 12칸 격자를
+                          되살리는 대신 «라벨과 값» 목록으로 바꿨다(D-122).
+                        */-->
+                        <dl class="info-list">
+                            <div class="info-row">
+                                <dt>이름</dt>
+                                <dd>[[${owner.name}]]</dd>
                             </div>
-                        </div>
-                    </div>
-                    <div class="card mt-3">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                <h6 class="mb-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                         stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round"
-                                         class="feather feather-globe mr-2 icon-inline">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="2" y1="12" x2="22" y2="12"></line>
-                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                                    Website
-                                </h6> <span class="text-secondary">https://bootdey.com</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                <h6 class="mb-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                         stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round"
-                                         class="feather feather-github mr-2 icon-inline">
-                                        <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
-                                    Github
-                                </h6> <span class="text-secondary">bootdey</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                <h6 class="mb-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                         stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round"
-                                         class="feather feather-twitter mr-2 icon-inline text-info">
-                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
-                                    Twitter
-                                </h6> <span class="text-secondary">@bootdey</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                <h6 class="mb-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                         stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round"
-                                         class="feather feather-instagram mr-2 icon-inline text-danger">
-                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                                    Instagram
-                                </h6> <span class="text-secondary">bootdey</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
-                                <h6 class="mb-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                         stroke-width="2" stroke-linecap="round"
-                                         stroke-linejoin="round"
-                                         class="feather feather-facebook mr-2 icon-inline text-primary">
-                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                                    Facebook
-                                </h6> <span class="text-secondary">bootdey</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="col-md-8">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h6 class="mb-0">이름</h6>
-                                </div>
-                                <div class="col-sm-9 text-secondary">[[${owner.name}]]</div>
+                            <div class="info-row">
+                                <dt>이메일</dt>
+                                <dd>[[${owner.emailText}]]</dd>
                             </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h6 class="mb-0">이메일</h6>
-                                </div>
-                                <div class="col-sm-9 text-secondary">[[${owner.emailText}]]</div>
+                            <div class="info-row">
+                                <dt>내선 전화</dt>
+                                <dd>[[${owner.extensionPhoneText}]]</dd>
                             </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h6 class="mb-0">내선 전화</h6>
-                                </div>
-                                <div class="col-sm-9 text-secondary">[[${owner.extensionPhoneText}]]</div>
+                            <div class="info-row">
+                                <dt>개인 전화</dt>
+                                <dd>[[${owner.mobilePhoneText}]]</dd>
                             </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h6 class="mb-0">개인 전화</h6>
-                                </div>
-                                <div class="col-sm-9 text-secondary">[[${owner.mobilePhoneText}]]</div>
+                            <div class="info-row">
+                                <dt>주소</dt>
+                                <dd>[[${owner.addressText}]]</dd>
                             </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-3">
-                                    <h6 class="mb-0">주소</h6>
-                                </div>
-                                <div class="col-sm-9 text-secondary">[[${owner.addressText}]]</div>
-                            </div>
-                            <hr>
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <!--/* 자기 프로필에서만 보인다. 남의 프로필에는 이 자리가 빈다. */-->
-                                    <a th:if="${editable}" class="btn btn-info"
-                                       th:href="@{/profile/password-check}">Edit</a>
-                                </div>
-                            </div>
-                        </div>
+                        </dl>
+                        <!--/* 자기 프로필에서만 보인다. 남의 프로필에는 이 자리가 빈다. */-->
+                        <a th:if="${editable}" class="btn btn-primary"
+                           th:href="@{/profile/password-check}">Edit</a>
                     </div>
 
-                    <div class="col-sm-12">
+                    <div>
                         <div class="card">
                             <div class="card-body">
                                 <form>
@@ -195,13 +99,20 @@
                                 <table class="table table-bordered">
                                     <tr>
                                         <th th:each="day : ${calendar.firstHalf.days}"
-                                            th:style="${day.headerStyle}">[[${day.label}]]</th>
-                                        <th colspan="5">통계</th>
+                                            th:class="${day.headerClass}">[[${day.label}]]</th>
+                                        <!--/*
+                                          레거시는 colspan="5" 였다. 그런데 통계
+                                          칸은 «정상·지각·조퇴·연차» 넷이다 —
+                                          머리글이 없는 칸 하나를 더 선언한 셈이고,
+                                          그만큼 표가 제 몸보다 넓어져 맨 오른쪽
+                                          «연차» 가 잘렸다. 넷으로 맞춘다(D-122).
+                                        */-->
+                                        <th colspan="4">통계 <span class="sheet-note">(한 달)</span></th>
                                     </tr>
                                     <tr>
                                         <th:block th:each="day : ${calendar.secondHalf.days}">
                                             <th th:if="${day.inMonth}"
-                                                th:style="${day.headerStyle}">[[${day.label}]]</th>
+                                                th:class="${day.headerClass}">[[${day.label}]]</th>
                                             <th th:unless="${day.inMonth}"></th>
                                         </th:block>
                                         <th>정상</th>
@@ -209,43 +120,40 @@
                                         <th>조퇴</th>
                                         <th>연차</th>
                                     </tr>
-                                    <tr>
+                                    <!--/*
+                                      레거시는 통계를 두 줄에 따로 붙였고, 각각은
+                                      «그 줄만의» 합계였다. 위아래로 나란히 놓여
+                                      합계처럼 보였지만 아니고, 한 달 합계는 화면 어디에도
+                                      없었다(D-077). 두 줄을 가로질러 한 번만 적는다(D-127).
+                                    */-->
+                                    <tr th:with="tally=${calendar.total()}">
                                         <td th:each="day : ${calendar.firstHalf.days}"
-                                            th:style="${day.cellStyle}"></td>
-                                        <td>[[${calendar.firstHalf.normal}]]</td>
-                                        <td>[[${calendar.firstHalf.late}]]</td>
-                                        <td>[[${calendar.firstHalf.leave}]]</td>
-                                        <td>[[${calendar.firstHalf.vacationLabel}]]</td>
+                                            th:class="${day.cellClass}"></td>
+                                        <td rowspan="2" class="sheet-tally"
+                                            th:text="${tally.normal}">0</td>
+                                        <td rowspan="2" class="sheet-tally"
+                                            th:text="${tally.late}">0</td>
+                                        <td rowspan="2" class="sheet-tally"
+                                            th:text="${tally.leave}">0</td>
+                                        <td rowspan="2" class="sheet-tally"
+                                            th:text="${tally.vacationLabel()}">0.0</td>
                                     </tr>
                                     <tr>
                                         <td th:each="day : ${calendar.secondHalf.days}"
-                                            th:style="${day.cellStyle}"></td>
-                                        <td>[[${calendar.secondHalf.normal}]]</td>
-                                        <td>[[${calendar.secondHalf.late}]]</td>
-                                        <td>[[${calendar.secondHalf.leave}]]</td>
-                                        <td>[[${calendar.secondHalf.vacationLabel}]]</td>
+                                            th:class="${day.cellClass}"></td>
                                     </tr>
                                 </table>
+                                <!--/*
+                                  레거시는 범례 다섯 칸을 손으로 적었다. 그래서 반차가
+                                  빠져 있었고(달력에는 칠해지는데 범례에 없었다), 게다가
+                                  연차와 같은 #dbdbdb 라 구분도 안 됐다. 상태 목록에서
+                                  그려 어긋나갈 자리를 없쥜다(D-125).
+                                */-->
                                 <div class="work-title-color">
-                                    <div class="box-wrapper">
-                                        <div class="box1" id="box"></div>
-                                        <p>정상 근무</p>
-                                    </div>
-                                    <div class="box-wrapper">
-                                        <div class="box2" id="box"></div>
-                                        <p>지각</p>
-                                    </div>
-                                    <div class="box-wrapper">
-                                        <div class="box3" id="box"></div>
-                                        <p>조퇴</p>
-                                    </div>
-                                    <div class="box-wrapper">
-                                        <div class="box4" id="box"></div>
-                                        <p>결근</p>
-                                    </div>
-                                    <div class="box-wrapper">
-                                        <div class="box5" id="box"></div>
-                                        <p>연차</p>
+                                    <div class="box-wrapper" th:each="status : ${statuses}">
+                                        <div class="work-swatch"
+                                             th:classappend="${status.styleClass}"></div>
+                                        <p th:text="${status.label}">상태</p>
                                     </div>
                                 </div>
                                 <!--/*

@@ -10,19 +10,10 @@
   화면 제목이 읽기·쓰기 어느 쪽인지 알려주지 않는다. 레거시 그대로 둔다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>부서 수정 페이지</title>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/location.js}"></script>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/deptRegister.css}">
+<head th:replace="~{fragments/head :: page('부서 수정 페이지', ${ {'//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/vendor/jquery-3.7.1.min.js', '/js/admin/location.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
 </head>
 <body>
-<div class="container">
+<div class="page-box">
     <form th:action="@{/admin/board/dept-update-proc}" method="post">
         <input type="hidden" name="boardId" th:value="${form.boardId}">
         <input type="hidden" name="flag" th:value="${flag}">

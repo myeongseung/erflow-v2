@@ -6,7 +6,7 @@
   입고(inbound)의 거울. type=1(출고)로 조회하고 화면 글자만 다르다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('출고 페이지', ${ {'/css/bootcss/bootstrap.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/bound.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/main/index.js', '/js/main/bound.js', '/js/bootjs/bootstrap.js'} })}">
+<head th:replace="~{fragments/head :: page('출고 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/index.js', '/js/main/bound.js', '/js/bootjs/bootstrap.bundle.js'} })}">
 </head>
 <body>
 <div class="wrap">
@@ -16,9 +16,7 @@
         <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
         <div class="table-wrap">
-            <div class="right-align">
-                <span class="menu-name">사용자 &gt; 영업 &gt; 출고 제품 관리</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 영업 &gt; 출고 제품 관리|)}"></div>
 
             <form th:action="@{/bound/delete-proc}" method="post" name="boundFrm">
                 <input type="hidden" name="flag" value="outbound">

@@ -13,31 +13,15 @@
   nowPage 가 아니라 nowBoard 로 계산한다(D-067). 그대로 옮긴다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게시판 관리 페이지</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/adminBoardList.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/common/page.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminBoardList.css}">
+<head th:replace="~{fragments/head :: page('게시판 관리 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/adminBoardList.js', '/js/bootjs/bootstrap.bundle.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="empty-space"></div>
         <div class="main-notice">
 

@@ -12,32 +12,17 @@
   고쳐서 저장하면 휴대 전화가 지워진다(D-057). 화면은 레거시 그대로 둔다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사원 수정 페이지</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/location.js}"></script>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/userRegister.css}">
+<head th:replace="~{fragments/head :: page('사원 수정 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/location.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="user-insert-wrap">
-            <div class="right-align">
-                <span class="menu-name">관리자 &gt; 사원 &gt; 사원수정</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 &gt; 사원수정|)}"></div>
             <div class="user-insert">
                 <div class="user-form">
                     <form th:action="@{/admin/user/update-proc}" method="post">
@@ -50,9 +35,13 @@
                                 name="name" placeholder="사원 이름" th:value="${user.name}">
                         </div>
                         <div class="form-group">
+                            <!--/* 리스트와 같은 이유로 가린다 — 뒷자리 한 자리만
+                                   남는다(D-117). readonly 라도 폼과 함께 전송되지만
+                                   updateUser 문장에 social_number 가 없어 저장되는
+                                   곳이 없다. */-->
                             <label for="input8">주민 번호:</label> <input type="text" id="input8"
                                 name="socialNumber" placeholder="ex)990115-1234567"
-                                th:value="${user.socialNumber} ?: ''" readonly>
+                                th:value="${user.socialNumberMasked} ?: ''" readonly>
                         </div>
                         <div class="form-group">
                             <label for="input3">Email</label> <input type="email" id="input3"

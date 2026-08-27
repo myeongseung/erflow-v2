@@ -10,18 +10,11 @@
   레거시 폼에는 method 가 없어 GET 이었다. POST 로 바꿨다(D-065).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>프로그램 부서 권한 수정 페이지</title>
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/jobRegister.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/permissions.js}"></script>
+<head th:replace="~{fragments/head :: page('프로그램 부서 권한 수정 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/permissions.js'} })}">
 </head>
 <body>
 
-<div class="container">
+<div class="page-box">
     <form th:action="@{/admin/permission/program-dept-update-proc}" method="post">
         <input type="hidden" id="programId" name="programId" th:value="${form.program.id}">
         <h2>프로그램 부서 권한 수정</h2>

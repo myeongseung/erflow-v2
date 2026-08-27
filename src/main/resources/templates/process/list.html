@@ -12,7 +12,7 @@
   채워 주지 않아 **검색한 뒤 페이지를 넘기면 검색이 풀린다.** 그대로 옮긴다(D-074).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('공정 관리 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/process/processList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/process/processList.js'} })}">
+<head th:replace="~{fragments/head :: page('공정 관리 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/process/processList.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -21,9 +21,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="table-wrap">
-        <div class="right-align">
-            <span class="menu-name">사용자 &gt; 생산관리 &gt; 공정 관리</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 생산관리 &gt; 공정 관리|)}"></div>
 
         <form th:action="@{/process/delete-proc}" method="post" name="processFrm">
 

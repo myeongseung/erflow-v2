@@ -11,11 +11,7 @@
   게이트가 아니라 눈으로 대조한 결과다. 레거시 마크업을 한 줄씩 옮겼다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" th:href="@{/css/admin/userAddress.css}">
+<head th:replace="~{fragments/head :: page('Document', ${ {} })}">
 </head>
 <body>
 <div class="location-group">

@@ -82,17 +82,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	});
 
+	// 달력을 **먼저** 그린다.
+	//
+	// 전에는 render() 가 ajax 성공 콜백 안에만 있었다. 일정을 못 받아오면
+	// 오류를 로그에 찍고 끝이라 **달력 자체가 그려지지 않았고**, 화면에는 빈
+	// 상자만 남았다 — 무엇이 잘못됐는지 알 길이 없다. 일정이 없는 것과 서버가
+	// 대답하지 않는 것은 다르고, 어느 쪽이든 달력은 보여야 한다(D-119).
+	calendar.render();
+
 	$.ajax({
 		type: "get",
 		url: "/calendar/view",
 		dataType: "json",
 		success: function(data) {
-			console.log(data);
 			var events = data.map(mapEvent);
 
 			calendar.addEventSource(events);
-
-			calendar.render();
 		},
 		error: function(xhr) {
 			console.log(xhr);

@@ -13,7 +13,7 @@
   아무도 읽지 않지만 정답에 있으므로 지우지 않는다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('공정 생성', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/common/page.css', '/css/process/processRegister.css', '/css/main/header.css', '/css/main/aside.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/process/processRegister.js', '/js/main/index.js'} })}">
+<head th:replace="~{fragments/head :: page('공정 생성', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/process/processRegister.js', '/js/main/index.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -22,9 +22,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="proposal-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name">사용자 &gt; 생산관리 &gt; 공정 등록</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 생산관리 &gt; 공정 등록|)}"></div>
         <div class="proposal-insert">
             <div class="proposal-form">
                 <form th:action="@{/process/processRegister}" method="post" name="processFrm">

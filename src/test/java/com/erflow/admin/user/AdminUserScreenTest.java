@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.erflow.admin.AdminOption;
 import com.erflow.auth.TestUsers;
+import com.erflow.common.SocialNumbers;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
@@ -293,6 +294,41 @@ class AdminUserScreenTest {
         assertThat(row.get("mobile_phone")).isEqualTo("010-0000-0000");
         // 주민등록번호는 갱신 문장에 없어 그대로 남는다.
         assertThat(row.get("social_number")).isEqualTo("990115-1234567");
+    }
+
+    @Test
+    @DisplayName("리스트가 주민등록번호를 가린다 — 뒷자리 한 자리만(D-117)")
+    void listMasksSocialNumber() throws Exception {
+        String html = mockMvc.perform(get("/admin/user/list").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 이 화면에는 13자리 예시조차 없다. 그 모양이 나오면 실제 값이 실린 것이다.
+        assertThat(html).doesNotContainPattern("\\d{6}-\\d{7}");
+        assertThat(html).as("가린 모양은 남는다").containsPattern("\\d{6}-\\d\\*{6}");
+    }
+
+    @Test
+    @DisplayName("수정 화면도 가린다 — 저장된 값이 화면에 오르지 않는다")
+    void updateFormMasksSocialNumber() throws Exception {
+        String id = anyUserWithSocialNumber();
+        assumeTrue(id != null, "주민등록번호가 있는 사원이 없어 건너뛴다");
+        String stored = jdbc.queryForObject(
+                "SELECT social_number FROM user_tbl WHERE id = ?", String.class, id);
+
+        String html = mockMvc.perform(
+                        get("/admin/user/update").param("id", id).with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).doesNotContain(stored).contains(SocialNumbers.masked(stored));
+    }
+
+    private String anyUserWithSocialNumber() {
+        List<String> ids = jdbc.queryForList(
+                "SELECT id FROM user_tbl WHERE social_number REGEXP '^[0-9]{6}-[0-9]{7}$' LIMIT 1",
+                String.class);
+        return ids.isEmpty() ? null : ids.get(0);
     }
 
     private AdminUserEdit newUser(String id) {

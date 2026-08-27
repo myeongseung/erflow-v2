@@ -11,19 +11,11 @@
   그 자리에서 표를 닫으므로 DOM 은 여기 적은 것과 같다 — D-037 과 같은 판단이다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제품 찾기</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/main/findMultiProduct.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
+<head th:replace="~{fragments/head :: page('제품 찾기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/findMultiProduct.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/multi-product}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <input type="text" placeholder="예) 제품 코드 or 제품 명 검색" name="search"
                    id="findWork-input" th:value="${search == null ? '' : search}">

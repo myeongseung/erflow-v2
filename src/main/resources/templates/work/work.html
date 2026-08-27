@@ -5,15 +5,16 @@
 
   프로필의 근무 달력과 데이터는 같지만 그리는 법이 다르다 — 색이 아니라 **글자**다.
   정상 근무는 일한 시간(HH:mm), 나머지는 상태 이름이 색 글자로 찍힌다. 통계는
-  줄마다 따로 세어지고(D-077), 조퇴의 주말 처리는 윗줄과 아랫줄이 다르다(D-099).
+  한 달 합계로 한 번만 찍고(D-127), 조퇴의 주말 처리는 윗줄과 아랫줄이 다르다(D-099).
 
   워크플로는 전부 readFrm 을 지나간다 — 달 검색·칸 검색·페이징이 그 폼에 값을 옮겨
   담아 제출한다(js/work/work.js).
 
-  jQuery 를 두 번 싣는 것까지 레거시 그대로다. 나중 것이 이긴다.
+  레거시는 jQuery 를 세 번 실었다(나중 것이 이긴다). 라이브러리를 올리며 한 번으로
+  줄였다 — 같은 파일을 거듭 싣는 것은 전송 낭비 말고는 아무 뜻이 없다(D-130).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('근태 확인 페이지', ${ {'/css/bootcss/bootstrap.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', 'http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/index.css', '/css/main/work.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-latest.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/work/work.js'} })}">
+<head th:replace="~{fragments/head :: page('근태 확인 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/work/work.js'} })}">
 </head>
 <body>
 <div class="wrap">
@@ -27,9 +28,7 @@
             <div class="article">
                 <div class="content">
 
-                    <div class="right-align">
-                        <span class="menu-name">사용자 &gt; 근태 관리 &gt; 근태 확인</span>
-                    </div>
+                    <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 근태 관리 &gt; 근태 확인|)}"></div>
                     <form name="workFrm">
                         <div class="header">
                             <div class="select-date">
@@ -57,21 +56,48 @@
                         </div>
                     </form>
 
-                    <div class="section">
-                        <table class="table table-striped">
-                            <tr style="background-color: beige;">
+                    <!--/*
+                      한 사람이 두 줄이다 — 1~16일, 17일~말일.
+
+                      레거시는 통계를 그 두 줄에 따로 붙였고, 각각은 «그 줄만의»
+                      합계였다. 나란히 놓여 있어 합계처럼 보이지만 아니고, 한 달 합계는
+                      어디에도 없었다(D-077). 두 줄을 가로질러 한 번만 적는다(D-127).
+
+                      사람마다 <tbody> 를 따로 둔다 — 줄무달이 줄이 아니라
+                      사람을 가른다. 전에는 한 사람의 윗줄과 아랫줄 색이 달랐다.
+                    */-->
+                    <div class="section sheet-scroll">
+                        <table class="table attendance-sheet">
+                            <!--/*
+                              너비를 여기서 정한다. 칸에 width 를 적어도 auto 배치는 그걸
+                              «희망» 으로만 읽어 5rem 을 63px 로 깎았다. 그러면 고정된 칸의
+                              left 값과 실제 너비가 어긋나 툴어진다. colgroup + fixed 는
+                              적은 대로 준다(D-127).
+                            */-->
+                            <colgroup>
+                                <col class="col-name">
+                                <col class="col-dept">
+                                <col class="col-job">
+                                <col class="col-day" th:each="day : ${firstHeaders}">
+                                <col class="col-tally">
+                                <col class="col-tally">
+                                <col class="col-tally">
+                                <col class="col-tally">
+                            </colgroup>
+                            <thead>
+                            <tr class="sheet-head">
                                 <th colspan="3">구분</th>
                                 <th th:each="day : ${firstHeaders}"
-                                    th:style="${day.headerStyle}" th:text="${day.label}">01</th>
-                                <th colspan="4">통계</th>
+                                    th:class="${day.headerClass}" th:text="${day.label}">01</th>
+                                <th colspan="4">통계 <span class="sheet-note">(한 달)</span></th>
                             </tr>
-                            <tr style="background-color: beige;">
-                                <th style="width: 5%;">성명</th>
-                                <th style="width: 4%;">부서</th>
-                                <th>직책</th>
+                            <tr class="sheet-head">
+                                <th class="sheet-name">성명</th>
+                                <th class="sheet-dept">부서</th>
+                                <th class="sheet-job">직책</th>
                                 <th:block th:each="day : ${secondHeaders}">
                                     <th th:if="${day.inMonth}"
-                                        th:style="${day.headerStyle}" th:text="${day.label}">17</th>
+                                        th:class="${day.headerClass}" th:text="${day.label}">17</th>
                                     <th th:unless="${day.inMonth}"></th>
                                 </th:block>
                                 <th>정상</th>
@@ -79,27 +105,25 @@
                                 <th>조퇴</th>
                                 <th>연차</th>
                             </tr>
-                            <th:block th:each="row : ${rows}">
-                                <tr>
-                                    <td rowspan="2" th:text="${row.user.name}">성명</td>
-                                    <td rowspan="2" th:text="${row.user.deptName}">부서</td>
-                                    <td rowspan="2" th:text="${row.user.jobName}">직책</td>
-                                    <td th:each="cell : ${row.sheet.first.cells}"
-                                        th:style="${cell.style}" th:text="${cell.text}"></td>
-                                    <td th:text="${row.sheet.first.normal}">0</td>
-                                    <td th:text="${row.sheet.first.late}">0</td>
-                                    <td th:text="${row.sheet.first.leave}">0</td>
-                                    <td th:text="${row.sheet.first.vacationLabel}">0.0</td>
-                                </tr>
-                                <tr>
-                                    <td th:each="cell : ${row.sheet.second.cells}"
-                                        th:style="${cell.style}" th:text="${cell.text}"></td>
-                                    <td th:text="${row.sheet.second.normal}">0</td>
-                                    <td th:text="${row.sheet.second.late}">0</td>
-                                    <td th:text="${row.sheet.second.leave}">0</td>
-                                    <td th:text="${row.sheet.second.vacationLabel}">0.0</td>
-                                </tr>
-                            </th:block>
+                            </thead>
+                            <tbody th:each="row : ${rows}">
+                            <tr th:with="tally=${row.sheet.total()}">
+                                <td rowspan="2" class="sheet-name" th:text="${row.user.name}">성명</td>
+                                <td rowspan="2" class="sheet-dept" th:text="${row.user.deptName}">부서</td>
+                                <td rowspan="2" class="sheet-job" th:text="${row.user.jobName}">직책</td>
+                                <td th:each="cell : ${row.sheet.first.cells}"
+                                    th:class="${cell.cellClass()}" th:text="${cell.text}"></td>
+                                <td rowspan="2" class="sheet-tally" th:text="${tally.normal}">0</td>
+                                <td rowspan="2" class="sheet-tally" th:text="${tally.late}">0</td>
+                                <td rowspan="2" class="sheet-tally" th:text="${tally.leave}">0</td>
+                                <td rowspan="2" class="sheet-tally"
+                                    th:text="${tally.vacationLabel()}">0.0</td>
+                            </tr>
+                            <tr>
+                                <td th:each="cell : ${row.sheet.second.cells}"
+                                    th:class="${cell.cellClass()}" th:text="${cell.text}"></td>
+                            </tr>
+                            </tbody>
                         </table>
                     </div>
                     <!--/* 페이징 */-->

@@ -6,9 +6,7 @@
   목록 화면(팝업 아님)이 제출한다. alert 로 알리고 쪽지함으로 돌아간다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>처리 결과</title>
+<head th:replace="~{fragments/head :: page('처리 결과', ${ {} })}">
 </head>
 <body>
 <script th:inline="javascript">

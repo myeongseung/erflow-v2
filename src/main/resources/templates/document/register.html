@@ -12,24 +12,7 @@
   본문은 CKEditor 4 가 만든다(CDN). 새 문서일 때 숨은 id 는 -1 이다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>문서 작성</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{//cdn.ckeditor.com/4.22.1/full/ckeditor.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/main/index.js}"></script>
-    <script th:src="@{/js/main/documentRegister.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/main/header.css}">
-    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
-    <link rel="stylesheet" th:href="@{/css/main/index.css}">
-    <link rel="stylesheet" th:href="@{/css/main/documentList.css}">
-    <link rel="stylesheet" th:href="@{/css/main/documentRegister.css}">
+<head th:replace="~{fragments/head :: page('문서 작성', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jodit-4.13.23.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/main/documentRegister.js', '/js/common/editor.js'} })}">
 </head>
 <body>
 <div class="wrap">
@@ -39,9 +22,7 @@
         <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
         <div class="body">
-            <div class="right-align">
-                <span class="menu-name">사용자 &gt; 문서 관리 &gt; 기안 작성</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 문서 관리 &gt; 기안 작성|)}"></div>
             <div class="section">
                 <form th:action="@{/document/register-proc}" name="writeFrm" method="post">
                     <input type="hidden" name="flag" th:value="${flag}">
@@ -80,11 +61,5 @@
         </div>
     </div>
 </div>
-<script type="text/javascript">
-    CKEDITOR.replace("editor1", {
-        width: "80%",
-        height: "400px",
-    });
-</script>
 </body>
 </html>

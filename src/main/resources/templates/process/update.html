@@ -9,20 +9,10 @@
   레거시 그대로다. 이 화면에는 권한 검사도 없다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>공정명 변경</title>
-
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/process/processUpdate.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/process/processUpdate.js}"></script>
+<head th:replace="~{fragments/head :: page('공정명 변경', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/process/processUpdate.js'} })}">
 </head>
 <body>
-<div class="container">
+<div class="page-box">
     <form th:action="@{/process/update-proc}" method="post" name="processUpdateFrm">
         <input type="hidden" name="id" th:value="${processId}">
         <div class="form-group">

@@ -7,7 +7,7 @@
   js/post/boardList.js 가 이 이름들에 걸려 있다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('게시판 목록', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/boardList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/post/boardList.js'} })}">
+<head th:replace="~{fragments/head :: page('게시판 목록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/boardList.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -19,9 +19,7 @@
         <div class="notice1">
             <div class="box">
                 <div class="userBoardList-header">
-                    <div class="right-align">
-                        <span class="menu-name">사용자 &gt; 게시판 </span>
-                    </div>
+                    <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 게시판|)}"></div>
 
                     <div class="userBoardInfo">
                         <div>&nbsp;</div>

@@ -10,17 +10,11 @@
   그렇고 그대로 옮겼다 — D-039 참조.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>협력업체 찾기</title>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/main/findCompany.js}"></script>
+<head th:replace="~{fragments/head :: page('협력업체 찾기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/findCompany.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/company}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <input type="text" placeholder="예) 협력업체 ID or 협력업체 검색" name="search"
                    id="findCompany-input" th:value="${search == null ? '' : search}">

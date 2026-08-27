@@ -13,23 +13,7 @@
   우편번호·도로명은 읽기 전용이고 «우편 찾기» 버튼으로만 바뀐다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>프로필 수정 페이지</title>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js}"></script>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/admin/location.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/common/page.css}">
-    <link rel="stylesheet" th:href="@{/css/main/header.css}">
-    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/userRegister.css}">
+<head th:replace="~{fragments/head :: page('프로필 수정 페이지', ${ {'//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/location.js', '/js/admin/admin.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -38,9 +22,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="user-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name">사용자 &gt; [[${owner.name}]]님의 프로필 수정</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; ${owner.name}님의 프로필 수정|)}"></div>
         <div class="user-insert">
             <div class="user-form">
                 <form th:action="@{/profile/update-proc}" method="post">

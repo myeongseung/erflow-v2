@@ -11,17 +11,11 @@
   주석은 옮기지 않았다 — 화면에 없는 것이고, 그 갈림은 D-035 에 적혀 있다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>제품 찾기</title>
-    <link rel="stylesheet" th:href="@{/css/main/findBank.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/main/findProduct.js}"></script>
+<head th:replace="~{fragments/head :: page('제품 찾기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/main/findProduct.js'} })}">
 </head>
 <body>
 <form th:action="@{/find/product}">
-    <div class="container">
+    <div class="page-box">
         <div class="search-box">
             <!--/* id 가 findWork-input 이다. 레거시가 업종 찾기를 복사해 만들었다 */-->
             <input type="text" placeholder="예) 제품 코드 or 제품 명 검색" name="search"

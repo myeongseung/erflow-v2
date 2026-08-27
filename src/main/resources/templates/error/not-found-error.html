@@ -7,13 +7,10 @@
   마크업을 그대로 옮겼다 — 반복으로 줄이면 style 값이 카드마다 달라 모델을 지어내야 한다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Page Not Found</title>
-    <link rel="stylesheet" th:href="@{/css/internalServerError.css}">
+<head th:replace="~{fragments/head :: page('Page Not Found', ${ {} })}">
 </head>
 <body>
-<div class="container">
+<div class="page-box">
     <div class="error">
         <h1>404</h1>
         <h2>ERROR</h2>

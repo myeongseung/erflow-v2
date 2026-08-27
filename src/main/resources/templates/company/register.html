@@ -9,7 +9,7 @@
   가지도 않는다. 레거시 접근성 결함이지만 고치는 것은 이관이 아니므로 그대로 둔다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('협력업체 추가 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/companyRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/companyRegister.js'} })}">
+<head th:replace="~{fragments/head :: page('협력업체 추가 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/companyRegister.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -18,10 +18,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="company-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name"
-                  th:text="|사용자 > ${flag == 0 ? '영업' : '구매'} > 협력업체 추가|">사용자 &gt; 구매 &gt; 협력업체 추가</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 > ${flag == 0 ? '영업' : '구매'} > 협력업체 추가|)}"></div>
         <div class="company-insert">
             <div class="company-form">
                 <form th:action="@{/company/register}" method="post">

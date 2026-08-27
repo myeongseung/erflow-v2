@@ -14,7 +14,7 @@
   되살렸다(D-107).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isReceiver=${className == 'receiver'}">
-<head th:replace="~{fragments/head :: head('쪽지 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/bootcss/bootstrap.css', '/css/message/index.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/message/index.js', '/js/main/findUser.js'} })}">
+<head th:replace="~{fragments/head :: page('쪽지 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/message/index.js', '/js/main/findUser.js'} })}">
 </head>
 <body>
 <div class="messageindex-wrap">

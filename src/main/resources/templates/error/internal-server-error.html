@@ -11,13 +11,10 @@
   연결한다. 근거는 D-042 에 적었다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Internal Server Error</title>
-    <link rel="stylesheet" th:href="@{/css/internalServerError.css}">
+<head th:replace="~{fragments/head :: page('Internal Server Error', ${ {} })}">
 </head>
 <body>
-<div class="container">
+<div class="page-box">
     <div class="error">
         <h1>500</h1>
         <h2>ERROR</h2>

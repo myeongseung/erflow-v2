@@ -13,18 +13,11 @@
   고유한 id 를 정적으로 적을 방법이 없어서다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>직급 수정 페이지</title>
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/jobRegister.css}">
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/admin/permissions.js}"></script>
+<head th:replace="~{fragments/head :: page('직급 수정 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/permissions.js'} })}">
 </head>
 <body>
 
-<div class="container">
+<div class="page-box">
     <form th:action="@{/admin/permission/job-update-proc}" method="post">
         <h2>직급 수정</h2>
 

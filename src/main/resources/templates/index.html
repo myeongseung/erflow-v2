@@ -17,30 +17,19 @@
   달력은 FullCalendar 가 그린다. 일정은 /calendar/view 로 따로 받아 온다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!--/* 달력이 JSON 을 POST 한다. 그때 실어 보낼 토큰이다(D-086). */-->
-    <meta name="_csrf" th:content="${_csrf?.token}">
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
-    <title>Welcome to ERFlow</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js}" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script th:src="@{https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.9/index.min.js}" type="module"></script>
-    <script th:src="@{https://cdn.jsdelivr.net/npm/fullcalendar@6.1.9/index.global.min.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/main/index.js}"></script>
-    <script th:src="@{/js/main/calendar.js}"></script>
-    <script th:src="@{/js/main/indexCalendar.js}"></script>
-    <link rel="stylesheet" th:href="@{/css/main/modal.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/main/header.css}">
-    <link rel="stylesheet" th:href="@{/css/main/aside.css}">
-    <link rel="stylesheet" th:href="@{/css/main/index.css}">
-    <link rel="stylesheet" th:href="@{/css/main/footer.css}">
-    <link rel="stylesheet" th:href="@{/css/main/documentList.css}">
+<!--/*
+  FullCalendar 를 **두 번** 싣고 있었다(D-119).
+
+    cdnjs   .../fullcalendar/6.1.9/index.min.js     type="module"
+    jsdelivr fullcalendar@6.1.9/index.global.min.js
+
+  앞의 것은 ESM 판이라 module 로 실어도 전역에 아무것도 붙이지 않는다 — 달력을
+  만드는 코드가 window.FullCalendar 를 찾으므로 실제로 일하는 것은 뒤의 전역 판
+  하나뿐이다. 죽은 쪽을 지운다. 자체 호스팅은 라이브러리 교체 때 함께 한다.
+
+  CSRF meta 는 공용 조각이 넣어 준다(D-086) — 달력이 JSON 을 POST 할 때 쓴다.
+*/-->
+<head th:replace="~{fragments/head :: page('Welcome to ERFlow', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/fullcalendar-6.1.9.global.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/main/calendar.js', '/js/main/indexCalendar.js'} })}">
 </head>
 <body>
 <div class="wrap">
@@ -49,10 +38,16 @@
 
     <div class="content-wrap">
         <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-        <div>
+        <!--/*
+          레거시는 이 세 자리가 이름 없는 <div> 였고, 레이아웃을 main/index.css 가
+          픽셀 폭(500px·610px)으로 잡고 있었다. 재설계에서는 격자로 바꾸므로 이름을
+          붙인다 — 이름 없는 div 에 걸린 규칙은 마크업이 한 겹만 바뀌어도 조용히
+          어긋난다(D-119).
+        */-->
+        <div class="main-column">
             <div class="main-content-wrap">
                 <div class="main-wrap">
-                    <div>
+                    <div class="widget-column">
                         <div class="main-table-container">
                             <div class="table-panel-header">
                                 <div class="main-table-head">
@@ -128,7 +123,7 @@
 
                     </div>
 
-                    <div>
+                    <div class="widget-column">
                         <div class="main-table-container">
                             <div class="table-panel-header">
                                 <div class="main-table-head">
@@ -203,7 +198,7 @@
                     </div>
                 </div>
 
-                <div>
+                <div class="calendar-column">
                     <div class="main-calendar-container">
                         <div class="table-panel-header">
                             <div class="main-table-head">

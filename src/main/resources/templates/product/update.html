@@ -9,7 +9,7 @@
   제품 ID 는 고칠 수 없다(기본키). 고치면 다른 제품이 되므로 readonly 다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('제품 수정 페이지', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/productRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js'} })}">
+<head th:replace="~{fragments/head :: page('제품 수정 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/location.js', '/js/main/index.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -18,9 +18,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="product-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name">사용자 &gt; 제품 &gt; 제품 수정 페이지</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 제품 &gt; 제품 수정 페이지|)}"></div>
         <div class="product-insert">
             <div class="product-form">
                 <form th:action="@{/product/update-proc}" method="post" name="productFrm">

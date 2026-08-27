@@ -1,5 +1,6 @@
 package com.erflow.admin.home;
 
+import com.erflow.common.WorkStatus;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -119,11 +120,37 @@ class AdminHomeScreenTest {
     }
 
     @Test
-    @DisplayName("상태 라벨이 두 자리에서 다르다 — 표는 «근무 중», 그래프는 «출근»")
-    void statusLabelsDifferByPlace() {
-        assertThat(WorkStatus.tableLabel(1)).isEqualTo("근무 중");
-        assertThat(WorkStatus.graphLabel(1)).isEqualTo("출근");
-        assertThat(WorkStatus.tableLabel(0)).isEqualTo(WorkStatus.graphLabel(0));
+    @DisplayName("상태 라벨은 한 벌이다 — 표도 그래프도 같은 이름을 쓴다")
+    void statusLabelsAreOneVocabulary() {
+        // 레거시는 같은 코드를 두 배열로 읽었고 3·4 가 뒤바뀌어 있었다.
+        // 이제 WorkStatus 하나만 있다(D-125).
+        assertThat(WorkStatus.label(1)).isEqualTo("근무 중");
+        assertThat(WorkStatus.label(3)).isEqualTo("조퇴");
+        assertThat(WorkStatus.label(4)).isEqualTo("지각");
+        assertThat(WorkStatus.label(9)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("그래프가 라벨을 붙여 보낸다 — 스크립트가 이름을 갖지 않는다")
+    void graphCarriesLabels() throws Exception {
+        String body = mockMvc.perform(get("/admin/graph/view").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 코드→인원 맵이 아니라 라벨이 들어 있는 목록이다.
+        assertThat(body).startsWith("[").contains("\"label\"", "\"status\"", "\"value\"");
+    }
+
+    @Test
+    @DisplayName("그래프를 심는 자리는 <div> 다 — <svg> 안에 <svg> 를 또 넣지 않는다")
+    void graphMountIsAPlainDiv() throws Exception {
+        String html = mockMvc.perform(get("/admin").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 레거시는 <svg id="graph"> 여기에 d3 가 <svg> 를 또 붙였다(D-069).
+        assertThat(html).contains("<div id=\"graph\">");
+        assertThat(html).doesNotContain("<svg id=\"graph\"");
     }
 
     @Test

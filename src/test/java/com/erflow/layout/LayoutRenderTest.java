@@ -84,7 +84,8 @@ class LayoutRenderTest {
             cursor = found;
         }
 
-        // aside.css 가 걸려 있는 class 이름은 손대면 안 된다
+        // 이 class 이름들에 사이드바 모양이 걸려 있다. 전에는 aside.css 였고
+        // 지금은 app.css 다(D-124) — 이름을 바꾸면 사이드바가 무너진다.
         assertThat(html).contains("class=\"sidebar-mainmenu\"", "class=\"nav-flyout\"",
                 "class=\"menu-title\"", "class=\"sidebar-ul\"");
 
@@ -111,9 +112,14 @@ class LayoutRenderTest {
         // 관리자에게는 '설정'이 보인다 (visibility=ADMIN)
         assertThat(html).contains("fa-solid fa-gear", "설정");
 
-        // 레거시 헤더의 고정 요소
+        // 헤더의 고정 요소.
+        //
+        // 「section2」(헤더 아래 파란 띠)는 재설계에서 없앴다(D-119). 관리자 화면과
+        // 헤더를 하나로 합치면서 두 벌이던 상단 바가 하나가 됐고, 그 띠는 둘 중
+        // 한쪽에만 있던 장식이었다.
         assertThat(html).contains("navbar-brand", "/images/common/logo.png",
-                "fa-regular fa-bell fa-lg", "class=\"section2\"");
+                "fa-regular fa-bell fa-lg");
+        assertThat(html).as("합친 상단 바").contains("class=\"app-header\"");
     }
 
     @Test

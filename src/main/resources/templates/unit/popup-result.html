@@ -10,9 +10,7 @@
   유지하고, 개선은 별도 안건으로 둔다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>처리 결과</title>
+<head th:replace="~{fragments/head :: page('처리 결과', ${ {} })}">
 </head>
 <body>
 <script th:inline="javascript">

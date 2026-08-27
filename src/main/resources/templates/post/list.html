@@ -7,7 +7,7 @@
   js/post/postList.js 가 이 이름들에 걸려 있다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('게시글 목록', ${ {'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/index.css', '/css/main/aside.css', '/css/bootcss/bootstrap.css', '/css/post/postList.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', '/js/bootjs/bootstrap.js', '/js/main/index.js', '/js/post/postList.js'} })}">
+<head th:replace="~{fragments/head :: page('게시글 목록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/postList.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -17,15 +17,8 @@
 
     <div class="main-notice">
         <div class="notice1">
-            <div class="right-align">
-                <!--/*
-                  레거시는 «사용자 > 게시판 > <%=boardName%>» 한 덩어리다. 정적 부분만
-                  따로 떼면 레거시에는 없던 정적 텍스트가 생긴 것으로 잡힌다 —
-                  실제로 게이트가 그렇게 보고했다. 통짜 th:text 로 구조를 맞춘다.
-                */-->
-                <span class="menu-name"
-                      th:text="'사용자 > 게시판 > ' + ${board.subject}">사용자 &gt; 게시판 &gt; </span>
-            </div>
+            <!--/* 게시판 이름이 길 표시의 마지막 조각이라 그대로 화면 제목이 된다. */-->
+            <div th:replace="~{fragments/page-head :: head('사용자 > 게시판 > ' + ${board.subject})}"></div>
 
             <div class="box">
                 <table class="table table-striped">

@@ -4,43 +4,28 @@
   출처: legacy/ERFlow/src/main/webapp/admin/user/userList.jsp
 
   관리자 화면의 첫 이관이다. 사용자 쪽 화면과 골격이 다르다 — 헤더·사이드메뉴가
-  관리자 전용 조각이고, 바깥 div 두 겹(admin-wrap / admin-main-content)을 화면이
+  관리자 전용 조각이고, 바깥 div 두 겹(content-wrap / admin-main-content)을 화면이
   직접 감싼다. 레거시 조각이 그 둘을 열고 닫지 않기 때문이다(D-037).
 
-  표에 주민등록번호가 그대로 찍힌다. 레거시 그대로다 — 가리지 않는다(O-012).
+  레거시는 주민등록번호를 13자리 그대로 찍었다(O-012). 뒷자리 한 자리만 남기고
+  가린다 — 999999-9****** (D-117). 성별·내외국인 칸은 뷰가 계산해 주므로 흔들리지
+  않는다.
 
   페이징은 실제로 동작한다. js/admin/userList.js 에 block()/paging() 이 있다 —
   쪽지함·결재처럼 죽어 있는 화면과 다르다(D-045).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>유저 리스트 페이지</title>
-    <script th:src="@{https://code.jquery.com/jquery-latest.min.js}"></script>
-    <script th:src="@{/js/bootjs/bootstrap.js}"></script>
-    <script th:src="@{/js/admin/admin.js}"></script>
-    <script th:src="@{/js/admin/userListAddress.js}"></script>
-    <script th:src="@{/js/admin/userList.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css}">
-    <link rel="stylesheet" th:href="@{/css/common/common.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/admin.css}">
-    <link rel="stylesheet" th:href="@{/css/bootcss/bootstrap.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminSidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/adminHeader.css}">
-    <link rel="stylesheet" th:href="@{/css/admin/userList.css}">
+<head th:replace="~{fragments/head :: page('유저 리스트 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/userListAddress.js', '/js/admin/userList.js'} })}">
 </head>
 <body>
-<div class="admin-wrap">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <th:block th:replace="~{fragments/admin-header :: header}"></th:block>
-
         <div class="table-wrap">
-            <div class="right-align">
-                <span class="menu-name">관리자 &gt; 사원 &gt; 사원관리</span>
-            </div>
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 &gt; 사원관리|)}"></div>
             <form name="searchFrm">
                 <div class="search-option">
                     <select name="keyfield">
@@ -82,7 +67,7 @@
                 <tr th:each="user : ${users}">
                     <td><a th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
                     <td th:text="${user.name}">이름</td>
-                    <td th:text="${user.socialNumber}">주민등록번호</td>
+                    <td th:text="${user.socialNumberMasked}">주민등록번호</td>
                     <td th:text="${user.gender}">성별</td>
                     <td th:text="${user.region}">내·외국인</td>
                     <td th:text="${user.deptName}">부서</td>

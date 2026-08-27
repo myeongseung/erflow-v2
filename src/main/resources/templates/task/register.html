@@ -9,7 +9,7 @@
   registerProc 로 넘어가던 것을 POST /task/register 로 받는다(CSRF 켜짐, D-013).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isSell=${flag == 'sell'}">
-<head th:replace="~{fragments/head :: head(${isSell ? '수주 등록 페이지' : '발주 등록 페이지'}, ${ {'/css/bootcss/bootstrap.css', '/css/jquery-ui.css', '/css/common/common.css', '/css/common/page.css', '/css/main/header.css', '/css/main/aside.css', '/css/main/taskRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '/js/main/index.js', '/js/admin/location.js', '/js/main/task.js', '/js/datepicker.js', '/js/bootjs/bootstrap.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
+<head th:replace="~{fragments/head :: page(${isSell ? '수주 등록 페이지' : '발주 등록 페이지'}, ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/main/index.js', '/js/admin/location.js', '/js/main/task.js', '/js/datepicker.js', '/js/bootjs/bootstrap.bundle.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'} })}">
 </head>
 <body>
 <!--/*
@@ -24,10 +24,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="task-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name"
-                  th:text="|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 등록|">사용자 &gt; 구매 &gt; 발주 등록</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; ${isSell ? '영업' : '구매'} &gt; ${isSell ? '수주' : '발주'} 등록|)}"></div>
         <div class="task-insert">
             <div class="task-form">
                 <form th:action="@{/task/register}" method="post" name="taskFrm">

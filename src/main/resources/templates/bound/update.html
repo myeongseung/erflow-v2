@@ -11,7 +11,7 @@
   칸이 «참고항목» 이며 직원 찾기가 find-user 다. 라벨 for 값도 레거시 그대로다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="isInbound=${flag == 'inbound'}">
-<head th:replace="~{fragments/head :: head(${isInbound ? '입고수정 페이지' : '출고수정 페이지'}, ${ {'http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css', '/css/bootcss/bootstrap.css', '/css/common/common.css', '/css/main/aside.css', '/css/main/header.css', '/css/main/boundRegister.css'} }, ${ {'https://code.jquery.com/jquery-latest.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js', 'https://code.jquery.com/jquery-1.12.4.js', 'https://code.jquery.com/ui/1.12.1/jquery-ui.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/bound.js', '/js/datepicker.js'} })}">
+<head th:replace="~{fragments/head :: page(${isInbound ? '입고수정 페이지' : '출고수정 페이지'}, ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/location.js', '/js/main/index.js', '/js/main/bound.js', '/js/datepicker.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
@@ -20,10 +20,7 @@
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
     <div class="bound-insert-wrap">
-        <div class="right-align">
-            <span class="menu-name"
-                  th:text="|사용자 &gt; ${isInbound ? '구매' : '영업'} &gt; ${isInbound ? '입고' : '출고'} 수정|">사용자 &gt; 구매 &gt; 입고 수정</span>
-        </div>
+        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; ${isInbound ? '구매' : '영업'} &gt; ${isInbound ? '입고' : '출고'} 수정|)}"></div>
         <div class="bound-insert">
             <div class="bound-form">
                 <form th:action="@{/bound/update-proc}" method="post" name="boundFrm">
