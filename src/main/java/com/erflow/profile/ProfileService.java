@@ -27,7 +27,7 @@ public class ProfileService {
     /**
      * @param profileMapper 프로필 조회·수정
      * @param authMapper 비밀번호 확인에 쓰는 조회
-     * @param passwordEncoder 레거시 해시 인코더
+     * @param passwordEncoder 비밀번호 인코더
      * @param clock 오늘을 정하는 시계
      */
     public ProfileService(ProfileMapper profileMapper, AuthMapper authMapper,

@@ -24,7 +24,7 @@ public class AdminUserService {
 
     /**
      * @param adminUserMapper 사원 관리 매퍼
-     * @param passwordEncoder 비밀번호 인코더. 레거시 해시 그대로다
+     * @param passwordEncoder 비밀번호 인코더. 기본 형식(bcrypt)으로 저장한다(D-128)
      */
     public AdminUserService(AdminUserMapper adminUserMapper, PasswordEncoder passwordEncoder) {
         this.adminUserMapper = adminUserMapper;

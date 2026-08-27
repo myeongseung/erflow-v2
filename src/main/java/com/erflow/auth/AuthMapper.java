@@ -55,4 +55,11 @@ public interface AuthMapper {
      * @return 반영된 행 수
      */
     int updatePassword(@Param("id") String id, @Param("password") String password);
+
+    /**
+     * 저장 형식 승격이 필요한 행을 읽는다 — 접두사({@code {bcrypt}} 등)가 없는 값.
+     *
+     * @return 사번과 저장값. 전부 승격됐으면 빈 목록
+     */
+    List<StoredPassword> findLegacyPasswords();
 }

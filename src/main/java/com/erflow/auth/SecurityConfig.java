@@ -1,9 +1,13 @@
 package com.erflow.auth;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -22,9 +26,9 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
  *
  * <h2>레거시를 따르는 것</h2>
  *
- * <p>비밀번호 해시({@link ErflowPasswordEncoder}), 부서·직급 비트마스크
- * ({@link Permissions}), 화면별 권한({@link ScreenAuthorizationManager}) 은 모두
- * 레거시 규칙 그대로다.
+ * <p>부서·직급 비트마스크({@link Permissions})와 화면별 권한
+ * ({@link ScreenAuthorizationManager})은 레거시 규칙 그대로다. 비밀번호 저장 형식은
+ * bcrypt 로 승격했다 — 아래 {@link #passwordEncoder()} 참조(D-128).
  *
  * <p>로그아웃도 레거시대로 <b>링크(GET)</b> 다. CSRF 를 켜면 프레임워크 기본 로그아웃이
  * POST 만 받는데, 레거시 헤더 메뉴는 링크라 그대로 두면 404 가 된다(D-055).
@@ -36,13 +40,25 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 public class SecurityConfig {
 
     /**
-     * 레거시 해시를 그대로 쓰는 인코더.
+     * 비밀번호 인코더 — 저장 형식을 bcrypt 로 승격했다 (D-128, O-006 해소).
+     *
+     * <p>새로 저장하는 비밀번호는 전부 {@code {bcrypt}} 다. 평문을 모르는 채 승격한
+     * 계정은 {@code {erflow-bcrypt}}(레거시 해시를 bcrypt 로 겹씌운 것)로 저장돼 있고,
+     * 로그인이 성공하면 {@link ErflowUserDetailsService} 가 순수 bcrypt 로 다시 쓴다.
+     *
+     * <p>접두사가 없는 값은 레거시 형식으로 본다 — {@link PasswordStorageMigration} 이
+     * 기동 때 전부 승격하지만, 승격 전에 로그인이 와도 막히지 않아야 한다.
      *
      * @return 비밀번호 인코더
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new ErflowPasswordEncoder();
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put("bcrypt", new BCryptPasswordEncoder());
+        encoders.put(WrappedLegacyPasswordEncoder.ID, new WrappedLegacyPasswordEncoder());
+        DelegatingPasswordEncoder encoder = new DelegatingPasswordEncoder("bcrypt", encoders);
+        encoder.setDefaultPasswordEncoderForMatches(new ErflowPasswordEncoder());
+        return encoder;
     }
 
     /**
@@ -60,8 +76,10 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         // /res 는 글꼴이다. 결재 도장 글꼴을 CSS 가 불러온다
+                        // /fonts 는 화면 글꼴(Pretendard). 자체 호스팅으로 바꾸면서
+                        // 생겼다 — 막혀 있으면 로그인 화면조차 글꼴 없이 뜬다(D-119)
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/res/**",
-                                "/favicon.ico")
+                                "/fonts/**", "/favicon.ico")
                             .permitAll()
                         .requestMatchers("/login", "/login/password-error", "/login/find-password")
                             .permitAll()

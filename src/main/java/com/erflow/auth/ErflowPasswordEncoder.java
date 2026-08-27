@@ -20,14 +20,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
  * 저장 형태    base64(salt + 최종해시hex)  ->  디코드하면 40 + 64 = 104 글자
  * </pre>
  *
- * <h2>왜 그대로 옮기는가</h2>
+ * <h2>이제 검증·승격 전용이다 (D-128)</h2>
  *
- * <p>기존 사용자 55명의 비밀번호가 이 형식으로 저장돼 있다. BCrypt 같은 것으로 바꾸면
- * <b>아무도 로그인하지 못한다.</b> 검증은 1:1 로 옮길 수밖에 없다.
+ * <p>1단계에서는 이것이 저장 형식 그 자체였다 — 기존 사용자 55명이 이 형식이라 바꾸면
+ * 아무도 로그인하지 못했다. 지금은 저장 형식이 bcrypt 로 넘어갔고
+ * ({@code SecurityConfig} 의 {@code DelegatingPasswordEncoder}), 이 클래스는 두 자리에만
+ * 남는다: 접두사 없는 레거시 행이 남아 있을 때의 검증(점진 승격 전 안전망), 그리고
+ * 겹씌움 형식({@link WrappedLegacyPasswordEncoder})이 재현해야 하는 안쪽 계산.
  *
- * <p>이 방식은 요즘 기준으로 약하다 — 반복 10회는 너무 적고, salt 가 결과 안에 그대로
- * 들어 있다. 다만 그것은 이관이 아니라 개선이고, 로그인 시 재해시하는 방식으로
- * 점진 교체하는 것이 맞다. 별도 안건으로 둔다.
+ * <p>이 방식이 요즘 기준으로 약한 이유 — 반복 10회는 너무 적고, salt 가 결과 안에
+ * 그대로 들어 있다.
  *
  * <p>레거시는 {@code String.getBytes()} 를 써서 플랫폼 기본 문자셋에 기댔다. 여기서는
  * UTF-8 로 고정한다. salt 와 해시는 ASCII 라 영향이 없고, 비밀번호에 한글이 들어간
@@ -105,12 +107,28 @@ public class ErflowPasswordEncoder implements PasswordEncoder {
      * @return base64 저장값
      */
     static String generate(String rawPassword, String salt) {
+        return Base64.getEncoder()
+                .encodeToString((salt + stretchHex(rawPassword, salt))
+                        .getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 레거시 방식의 최종 해시(hex 64글자)만 만든다.
+     *
+     * <p>겹씌움 형식({@link WrappedLegacyPasswordEncoder})이 bcrypt 에 넣을 값을 만들 때
+     * 쓴다 — bcrypt 는 입력을 72바이트까지만 받아 base64 저장값 전체(140글자)를 넣을 수
+     * 없다.
+     *
+     * @param rawPassword 평문 비밀번호
+     * @param salt hex 40글자
+     * @return SHA-256 을 10번 되풀이한 최종 hex
+     */
+    static String stretchHex(String rawPassword, String salt) {
         String value = rawPassword + salt;
         for (int i = 0; i < STRETCH_COUNT; i++) {
             value = sha256Hex(value);
         }
-        return Base64.getEncoder()
-                .encodeToString((salt + value).getBytes(StandardCharsets.UTF_8));
+        return value;
     }
 
     private static String sha256Hex(String text) {
