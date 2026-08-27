@@ -1,5 +1,6 @@
 package com.erflow.proposal;
 
+import com.erflow.common.SafeHtml;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ import java.util.List;
  *
  * @param id 결재번호. 승인/반려 폼이 돌려보낸다
  * @param subject 문서제목
- * @param content 문서 내용(HTML 그대로 나간다)
+ * @param content 문서 내용(HTML). 화면에는 걸러서 나간다 — {@link #contentSafe()}
  * @param step 이 결재의 차례. 0(기안자 자리)이면 반려 버튼이 없다
  * @param editable 결재할 수 있는 상태인가(진행중이거나 내 차례가 끝난 것). 의견 입력과
  *     버튼이 보일지를 가른다
@@ -29,4 +30,17 @@ public record ProposalDocument(
         List<Integer> reviewCells,
         List<ProposalStamp> stamps,
         List<ProposalComment> comments) {
+
+    /**
+     * 화면에 찍는 문서 내용. 거른 HTML 이다(D-118).
+     *
+     * <p>이 자리가 정화를 «지우기» 로 할 수 없는 이유다 — 결재 문서는 본문 전체가
+     * 표이고 테두리·배경색이 인라인 {@code style} 에 있다. 표와 서식은 남기고
+     * 실행되는 것만 걷어낸다.
+     *
+     * @return 거른 문서 내용
+     */
+    public String contentSafe() {
+        return SafeHtml.clean(content);
+    }
 }

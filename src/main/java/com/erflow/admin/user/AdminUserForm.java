@@ -1,5 +1,7 @@
 package com.erflow.admin.user;
 
+import com.erflow.common.SocialNumbers;
+
 /**
  * 사원 수정 화면이 채워 넣는 값. {@code user_tbl} 한 행이다.
  *
@@ -8,7 +10,7 @@ package com.erflow.admin.user;
  *
  * @param id 사번
  * @param name 이름
- * @param socialNumber 주민등록번호
+ * @param socialNumber 주민등록번호. 화면에는 가려서 찍는다 — {@link #socialNumberMasked()}
  * @param email 이메일
  * @param postalCode 우편번호
  * @param address1 도로명 주소
@@ -30,4 +32,16 @@ public record AdminUserForm(
         int deptId,
         String extensionPhone,
         String mobilePhone) {
+
+    /**
+     * 수정 화면이 찍는 주민등록번호. 뒷자리 한 자리만 남는다(D-117).
+     *
+     * <p>이 칸은 {@code readonly} 이고 {@code updateUser} 문장에 {@code social_number}
+     * 가 없다 — 가린 값이 폼과 함께 되돌아와도 저장되는 곳이 없다.
+     *
+     * @return 가려진 주민등록번호
+     */
+    public String socialNumberMasked() {
+        return SocialNumbers.masked(socialNumber);
+    }
 }

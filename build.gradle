@@ -23,6 +23,90 @@ repositories {
 // 자세한 내용은 migration/design/00-decisions.md 의 D-006 참조.
 ext {
     mybatisStarterVersion = '4.0.1'
+    // 게시글·결재 문서 본문의 HTML 정화(D-118). 결재 문서는 서식이 전부 인라인
+    // style 이라 CSS 속성까지 검사하는 정화기가 필요하다 — 이 라이브러리는 그것을
+    // 내장한다.
+    owaspSanitizerVersion = '20240325.1'
+    // 화면 전면 재설계의 CSS 토대(D-119). standalone 실행 바이너리를 쓰므로
+    // node·node_modules 가 없다 — Gradle 만으로 빌드가 닫힌다.
+    tailwindVersion = '4.3.3'
+}
+
+// ─── Tailwind (D-119) ────────────────────────────────────────────────────────
+//
+// 바이너리는 `tools/` 에 둔다. build/ 에 두면 `clean` 마다 다시 받아야 한다.
+// 만들어진 CSS 는 build/ 에만 두고 리소스 소스셋에 얹는다 — 생성물이 src/ 에
+// 섞이면 무엇이 손으로 쓴 것인지 알 수 없게 되고, 실수로 커밋된다.
+
+String tailwindOs = System.getProperty('os.name').toLowerCase()
+String tailwindArch = System.getProperty('os.arch').toLowerCase()
+boolean tailwindArm = tailwindArch.contains('aarch64') || tailwindArch.contains('arm')
+String tailwindTarget
+if (tailwindOs.contains('win')) {
+    tailwindTarget = tailwindArm ? 'windows-arm64.exe' : 'windows-x64.exe'
+} else if (tailwindOs.contains('mac')) {
+    tailwindTarget = tailwindArm ? 'macos-arm64' : 'macos-x64'
+} else {
+    tailwindTarget = tailwindArm ? 'linux-arm64' : 'linux-x64'
+}
+
+def tailwindBinary = layout.projectDirectory
+        .file("tools/tailwindcss-${tailwindVersion}-${tailwindTarget}")
+def tailwindInput = layout.projectDirectory.file('src/main/tailwind/app.css')
+def tailwindOutDir = layout.buildDirectory.dir('generated/tailwind')
+def tailwindOutFile = layout.buildDirectory.file('generated/tailwind/static/css/app.css')
+
+tasks.register('tailwindFetch') {
+    group = 'tailwind'
+    description = 'Tailwind standalone 바이너리를 받는다 (한 번만).'
+    outputs.file(tailwindBinary)
+    doLast {
+        File target = tailwindBinary.asFile
+        target.parentFile.mkdirs()
+        String url = 'https://github.com/tailwindlabs/tailwindcss/releases/download/' +
+                'v' + tailwindVersion + '/tailwindcss-' + tailwindTarget
+        logger.lifecycle('Tailwind ' + tailwindVersion + ' 내려받기: ' + url)
+        InputStream stream = new java.net.URL(url).openStream()
+        try {
+            java.nio.file.Files.copy(stream, target.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        } finally {
+            stream.close()
+        }
+        target.setExecutable(true)
+    }
+}
+
+tasks.register('tailwindBuild', Exec) {
+    group = 'tailwind'
+    description = '화면과 JS 를 훑어 app.css 를 만든다.'
+    dependsOn 'tailwindFetch'
+
+    inputs.file(tailwindInput)
+    inputs.dir('src/main/resources/templates')
+    inputs.dir('src/main/resources/static/js')
+    outputs.file(tailwindOutFile)
+
+    executable tailwindBinary.asFile.absolutePath
+    args '--input', tailwindInput.asFile.absolutePath,
+            '--output', tailwindOutFile.get().asFile.absolutePath,
+            '--minify'
+}
+
+tasks.register('tailwindWatch', Exec) {
+    group = 'tailwind'
+    description = '화면을 고치는 동안 app.css 를 계속 다시 만든다.'
+    dependsOn 'tailwindFetch'
+    executable tailwindBinary.asFile.absolutePath
+    args '--input', tailwindInput.asFile.absolutePath,
+            '--output', tailwindOutFile.get().asFile.absolutePath,
+            '--watch'
+}
+
+sourceSets.main.resources.srcDir(tailwindOutDir)
+
+tasks.named('processResources') {
+    dependsOn 'tailwindBuild'
 }
 
 dependencies {
@@ -31,6 +115,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation "org.mybatis.spring.boot:mybatis-spring-boot-starter:${mybatisStarterVersion}"
+    implementation "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:${owaspSanitizerVersion}"
 
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 

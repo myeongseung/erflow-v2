@@ -1,5 +1,6 @@
 package com.erflow.post;
 
+import com.erflow.common.SafeHtml;
 import java.time.LocalDateTime;
 
 /**
@@ -62,5 +63,18 @@ public record PostRow(
      */
     public boolean removed() {
         return deleted == 1;
+    }
+
+    /**
+     * 화면에 찍는 본문. 거른 HTML 이다(D-118).
+     *
+     * <p>레거시는 저장된 HTML 을 그대로 실행시켰다(O-010). 태그를 지우는 대신
+     * 거른다 — 이 글들에는 {@code p}·{@code a}·{@code img} 서식이 들어 있어
+     * 이스케이프하면 서식이 글자로 보인다.
+     *
+     * @return 거른 본문
+     */
+    public String contentSafe() {
+        return SafeHtml.clean(content);
     }
 }
