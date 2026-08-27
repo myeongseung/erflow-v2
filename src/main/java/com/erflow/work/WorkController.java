@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * </pre>
  *
  * <p>전 직원의 한 달 근태를 8명씩 끊어 보여준다. 권한은 {@code screen} 표가 건다
- * («근태 관리» 프로그램) — 여기서는 아무것도 하지 않는다.
+ * («근태 확인» 프로그램 — D-129 에서 메뉴 라벨로 개명) — 여기서는 아무것도 하지 않는다.
  */
 @Controller
 public class WorkController {
