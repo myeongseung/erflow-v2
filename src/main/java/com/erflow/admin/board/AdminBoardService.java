@@ -9,7 +9,7 @@ import com.erflow.common.Pagination;
 import com.erflow.post.Board;
 import com.erflow.post.BoardMapper;
 import com.erflow.post.CommentMapper;
-import com.erflow.post.PostFileMapper;
+import com.erflow.post.PostFileService;
 import com.erflow.post.PostService;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class AdminBoardService {
 
     private final CommentMapper commentMapper;
 
-    private final PostFileMapper postFileMapper;
+    private final PostFileService postFileService;
 
     /**
      * @param adminBoardMapper 게시판 관리 매퍼
@@ -44,7 +44,7 @@ public class AdminBoardService {
      * @param permissionMapper 부서·직급 권한 매퍼
      * @param postService 게시글 업무. 목록과 삭제를 그대로 쓴다
      * @param commentMapper 댓글 매퍼
-     * @param postFileMapper 첨부 매퍼
+     * @param postFileService 첨부 업무. 파일까지 지우므로 매퍼가 아니라 이쪽을 부른다(D-132)
      */
     public AdminBoardService(
             AdminBoardMapper adminBoardMapper,
@@ -52,13 +52,13 @@ public class AdminBoardService {
             AdminPermissionMapper permissionMapper,
             PostService postService,
             CommentMapper commentMapper,
-            PostFileMapper postFileMapper) {
+            PostFileService postFileService) {
         this.adminBoardMapper = adminBoardMapper;
         this.boardMapper = boardMapper;
         this.permissionMapper = permissionMapper;
         this.postService = postService;
         this.commentMapper = commentMapper;
-        this.postFileMapper = postFileMapper;
+        this.postFileService = postFileService;
     }
 
     /**
@@ -229,7 +229,7 @@ public class AdminBoardService {
 
     private boolean removePost(int postId) {
         commentMapper.deleteByPost(postId);
-        postFileMapper.deleteByPost(postId);
+        postFileService.detachAll(postId);
         return postService.remove(postId);
     }
 

@@ -7,9 +7,13 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -31,6 +35,8 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 public class PostFileService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PostFileService.class);
 
     private final PostFileMapper postFileMapper;
     private final Path uploadDir;
@@ -122,18 +128,44 @@ public class PostFileService {
     }
 
     /**
-     * 게시글의 첨부를 전부 지운다.
+     * 게시글의 첨부를 전부 지운다 — DB 행과 디스크 파일 둘 다 (D-132, O-009 해소).
      *
-     * <p>레거시는 DB 행만 지우고 디스크 파일을 남긴다. 여기서도 남긴다 — 지우는
-     * 쪽이 옳아 보이지만, 옮기면서 없던 삭제를 더하면 되돌릴 수 없는 차이가 된다.
-     * 별도 안건으로 둔다(O-009).
+     * <p>레거시는 DB 행만 지워 파일이 디스크에 쌓였다. 1단계에서는 그대로 옮겼지만
+     * (없던 삭제를 더하면 되돌릴 수 없는 차이가 된다) 이제 고친다.
+     *
+     * <p>파일은 <b>트랜잭션이 커밋된 뒤에</b> 지운다. 트랜잭션 안에서 지우면 나중에
+     * 롤백됐을 때 행은 되살아나는데 파일은 이미 없다 — 내려받기가 깨지는 행이 생긴다.
+     * 반대로 커밋 뒤 파일 삭제가 실패하면 고아 파일 하나가 남을 뿐이라(전과 같은
+     * 상태) 경고만 남긴다.
      *
      * @param postId 글번호
      * @return 지워진 건수
      */
     @Transactional
     public int detachAll(int postId) {
-        return postFileMapper.deleteByPost(postId);
+        List<PostAttachment> attachments = postFileMapper.findByPost(postId);
+        int deleted = postFileMapper.deleteByPost(postId);
+        if (!attachments.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            removeFiles(attachments);
+                        }
+                    });
+        }
+        return deleted;
+    }
+
+    private void removeFiles(List<PostAttachment> attachments) {
+        for (PostAttachment attachment : attachments) {
+            try {
+                Files.deleteIfExists(uploadDir.resolve(attachment.name()));
+            } catch (IOException exception) {
+                LOG.warn("첨부 파일을 지우지 못했다 — 고아 파일로 남는다: {} ({})",
+                        attachment.name(), exception.getMessage());
+            }
+        }
     }
 
     /**
