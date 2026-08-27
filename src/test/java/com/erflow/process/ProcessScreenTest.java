@@ -138,20 +138,68 @@ class ProcessScreenTest {
     }
 
     @Test
-    @DisplayName("삭제는 저장 프로시저에 기댄다 — 없으면 실패로 돌아온다")
+    @DisplayName("가운데를 지우면 앞뒤가 이어지고 자리 번호가 당겨진다 (D-133)")
     @Transactional
-    void deleteDependsOnStoredProcedure() {
+    void deleteRelinksChain() {
+        processService.createChain(List.of(
+                new ProcessService.ProcessStep("T-1", "절단"),
+                new ProcessService.ProcessStep("T-2", "가공"),
+                new ProcessService.ProcessStep("T-3", "도장")));
+
+        assertThat(processService.delete(List.of("T-2"))).isTrue();
+
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM process_tbl WHERE id = 'T-2'", Integer.class)).isZero();
+        var first = jdbc.queryForMap(
+                "SELECT process_tbl_next_id AS next, priority FROM process_tbl WHERE id = 'T-1'");
+        assertThat(first.get("next")).isEqualTo("T-3");
+        assertThat(((Number) first.get("priority")).intValue()).isEqualTo(1);
+        var last = jdbc.queryForMap(
+                "SELECT process_tbl_prev_id AS prev, priority FROM process_tbl WHERE id = 'T-3'");
+        assertThat(last.get("prev")).isEqualTo("T-1");
+        assertThat(((Number) last.get("priority")).intValue()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("첫 공정을 지우면 다음 공정이 머리가 된다 (D-133)")
+    @Transactional
+    void deleteHeadPromotesNext() {
         processService.createChain(List.of(
                 new ProcessService.ProcessStep("T-1", "절단"),
                 new ProcessService.ProcessStep("T-2", "가공")));
 
-        // DeleteProcess 프로시저가 이 스키마에 없다(D-073). 예외를 삼키고 실패로
-        // 돌려준다 — 레거시도 그랬다. 프로시저가 생기면 이 시험이 참으로 바뀐다.
-        boolean deleted = processService.delete(List.of("T-1"));
-        boolean exists = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM process_tbl WHERE id = 'T-1'", Integer.class) == 1;
+        assertThat(processService.delete(List.of("T-1"))).isTrue();
 
-        assertThat(deleted).isNotEqualTo(exists);
+        var row = jdbc.queryForMap(
+                "SELECT process_tbl_prev_id AS prev, process_tbl_next_id AS next, priority "
+                        + "FROM process_tbl WHERE id = 'T-2'");
+        assertThat(row.get("prev")).isNull();
+        assertThat(row.get("next")).isNull();
+        assertThat(((Number) row.get("priority")).intValue()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("참조되는 공정은 지우지 않는다 — 하나라도 걸리면 전부 그대로 (D-133)")
+    @Transactional
+    void deleteRefusesReferencedProcess() {
+        processService.createChain(List.of(
+                new ProcessService.ProcessStep("T-1", "절단"),
+                new ProcessService.ProcessStep("T-2", "가공")));
+        jdbc.update("INSERT INTO production_tbl (process_tbl_id, product_tbl_id, count) "
+                + "VALUES ('T-2', 'P-검증', 1)");
+
+        assertThat(processService.delete(List.of("T-1", "T-2"))).isFalse();
+
+        // T-1 은 지울 수 있었지만 T-2 가 걸렸으므로 둘 다 남아야 한다.
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM process_tbl WHERE id IN ('T-1', 'T-2')", Integer.class))
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("없는 공정을 지우면 실패다")
+    void deleteMissingFails() {
+        assertThat(processService.delete(List.of("없는공정"))).isFalse();
     }
 
     @Test

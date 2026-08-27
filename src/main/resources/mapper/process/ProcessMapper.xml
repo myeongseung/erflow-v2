@@ -68,15 +68,32 @@
     </update>
 
     <!--
-      레거시 deleteProcess: {call DeleteProcess(?)}
-
-      **저장 프로시저다.** 지우면서 앞뒤 고리를 다시 잇는 것으로 보이지만 그 안을 볼 수
-      없다 — 우리 계정에는 루틴 조회 권한이 없고, 복제한 DB 에도 그 프로시저가 없다.
-      호출을 그대로 옮긴다. 없으면 예외가 나고 레거시와 같은 «삭제에 실패했습니다» 가
-      뜬다(D-073). 지어내지 않는다.
+      삭제는 이제 우리 SQL 이다(D-133). 레거시는 저장 프로시저 DeleteProcess 를
+      불렀는데(D-073) 그 정의를 볼 수 없었고(erflow 에 존재하지만 앱 계정에 조회
+      권한이 없다), erflow_v2 에는 프로시저가 없어 삭제가 영영 실패하는 상태였다.
+      고리 잇기와 자리 번호 당기기는 ProcessService 가 순서대로 지시한다 —
+      비트마스크와 같은 이유로 판정을 SQL 에 몰지 않는다.
     -->
-    <update id="callDeleteProcess" statementType="CALLABLE">
-        {call DeleteProcess(#{id, mode=IN, jdbcType=VARCHAR})}
+    <update id="updateNextOf">
+        UPDATE process_tbl SET process_tbl_next_id = #{nextId} WHERE id = #{id}
     </update>
+
+    <update id="updatePrevOf">
+        UPDATE process_tbl SET process_tbl_prev_id = #{prevId} WHERE id = #{id}
+    </update>
+
+    <update id="decrementPriority">
+        UPDATE process_tbl SET priority = priority - 1 WHERE id = #{id}
+    </update>
+
+    <!-- 공정을 가리키는 기록 — 관리(management_tbl)·생산(production_tbl) -->
+    <select id="countReferences" resultType="int">
+        SELECT (SELECT COUNT(*) FROM management_tbl WHERE process_tbl_id = #{id})
+             + (SELECT COUNT(*) FROM production_tbl WHERE process_tbl_id = #{id})
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM process_tbl WHERE id = #{id}
+    </delete>
 
 </mapper>

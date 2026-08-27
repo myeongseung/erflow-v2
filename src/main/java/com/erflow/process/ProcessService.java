@@ -1,8 +1,9 @@
 package com.erflow.process;
 
 import com.erflow.common.Pagination;
+import java.util.HashSet;
 import java.util.List;
-import org.springframework.dao.DataAccessException;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,25 +89,80 @@ public class ProcessService {
     }
 
     /**
-     * 공정들을 지운다.
+     * 공정들을 지운다 — 고리를 다시 잇고 자리 번호를 당긴다 (D-133, O-013 해소).
      *
-     * <p>저장 프로시저 {@code DeleteProcess} 를 부른다. 그 프로시저가 없으면 예외가 나고
-     * 레거시와 같이 실패로 돌아간다 — 레거시도 예외를 삼키고 false 를 돌려줬다(D-073).
+     * <p>레거시는 저장 프로시저 {@code DeleteProcess} 를 불렀는데 그 정의를 볼 수
+     * 없었고(D-073), 이 스키마에는 프로시저가 없어 삭제가 영영 실패했다. 이제 우리가
+     * 만든다 — 등록({@link #createChain})의 대칭이다.
+     *
+     * <ul>
+     *   <li>이전 공정의 다음 고리가 지워지는 공정의 다음을 가리키게 잇는다. 반대쪽도
+     *       같다. 사슬의 끝을 지우면 그 자리는 {@code null} 이 된다</li>
+     *   <li>지워지는 공정 <b>뒤</b>의 공정들은 자리 번호를 한 칸씩 당긴다 — 사슬을
+     *       따라가며 당기므로 다른 사슬은 건드리지 않는다</li>
+     *   <li>관리·생산 기록이 참조하는 공정은 지우지 않는다 — 지우면 그 기록들이 없는
+     *       공정을 가리키게 된다(첨부 파일의 O-009 와 같은 종류의 고아)</li>
+     * </ul>
+     *
+     * <p><b>전부 지우거나 하나도 지우지 않는다.</b> 먼저 전부 검사하고 나서 지운다 —
+     * 화면은 «지웠다/못 지웠다» 만 말할 수 있으므로, 절반만 지워 놓고 «못 지웠다» 고
+     * 말하는 상태를 만들지 않는다.
      *
      * @param ids 지울 공정ID 들
-     * @return 전부 지웠으면 {@code true}
+     * @return 전부 지웠으면 {@code true}. 하나라도 못 지우면 아무것도 지우지 않고
+     *     {@code false}
      */
     @Transactional
     public boolean delete(List<String> ids) {
-        boolean result = true;
+        if (ids == null || ids.isEmpty()) {
+            return false;
+        }
         for (String id : ids) {
-            try {
-                result &= processMapper.callDeleteProcess(id) == 1;
-            } catch (DataAccessException expected) {
-                result = false;
+            if (processMapper.findById(id) == null || processMapper.countReferences(id) > 0) {
+                return false;
             }
         }
+        boolean result = true;
+        for (String id : ids) {
+            result &= unlinkAndDelete(id);
+        }
         return result;
+    }
+
+    private boolean unlinkAndDelete(String id) {
+        ProcessRow row = processMapper.findById(id);
+        if (row == null) {
+            // 같은 ID 를 두 번 보냈을 때 — 앞 순회에서 이미 지워졌다.
+            return false;
+        }
+        if (row.prevId() != null) {
+            processMapper.updateNextOf(row.prevId(), row.nextId());
+        }
+        if (row.nextId() != null) {
+            processMapper.updatePrevOf(row.nextId(), row.prevId());
+        }
+        pullForward(row.nextId());
+        return processMapper.deleteById(id) == 1;
+    }
+
+    /**
+     * 지워진 자리 뒤의 공정들을 사슬을 따라가며 한 칸씩 당긴다.
+     *
+     * <p>{@code priority > n 인 전부} 로 당기면 안 된다 — 자리 번호는 사슬마다 1부터
+     * 매겨지므로 다른 사슬까지 밀린다. 끊긴 고리나 고리 순환을 만나면 멈춘다.
+     *
+     * @param startId 지워진 공정의 다음 공정ID. {@code null} 이면 할 일이 없다
+     */
+    private void pullForward(String startId) {
+        Set<String> visited = new HashSet<>();
+        for (String id = startId; id != null && visited.add(id); ) {
+            ProcessRow row = processMapper.findById(id);
+            if (row == null) {
+                return;
+            }
+            processMapper.decrementPriority(id);
+            id = row.nextId();
+        }
     }
 
     /**
