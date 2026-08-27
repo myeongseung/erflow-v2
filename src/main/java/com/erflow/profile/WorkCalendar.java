@@ -1,5 +1,7 @@
 package com.erflow.profile;
 
+import com.erflow.common.WorkTally;
+import com.erflow.common.WorkStatus;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,6 +35,18 @@ import java.util.Map;
  * @param secondHalf 17일부터 그 달 마지막 날까지
  */
 public record WorkCalendar(WorkHalf firstHalf, WorkHalf secondHalf) {
+
+    /**
+     * 한 달 합계.
+     *
+     * <p>두 줄을 더한다. 레거시는 이 숫자를 어디에도 보여 주지 않았다 —
+     * 줄마다의 합계를 위아래로 붙여 놓아 <b>합계처럼 보이게 해 두었다</b>(D-077).
+     *
+     * @return 정상·지각·조퇴·연차 한 달 합계
+     */
+    public WorkTally total() {
+        return WorkTally.sum(firstHalf.tally(), secondHalf.tally());
+    }
 
     /** 윗줄 마지막 날. */
     private static final int FIRST_HALF_END = 16;
@@ -111,47 +125,43 @@ public record WorkCalendar(WorkHalf firstHalf, WorkHalf secondHalf) {
             boolean weekend = sunday || saturday;
 
             ProfileWork work = passed(date, today) ? byDate.get(date) : null;
-            String color = null;
+            int status = work == null ? -1 : work.effectiveStatus();
+            String paint = null;
 
-            if (work != null) {
-                switch (work.effectiveStatus()) {
-                    case 0 -> {
-                        if (!weekend) {
-                            color = "#E51A2E";
-                        }
-                    }
-                    // 코드 1(근무 중)은 정상 근무와 같이 세어진다.
-                    case 1, 2 -> {
-                        color = "greenyellow";
-                        ++normal;
-                    }
-                    case 3 -> {
-                        color = "skyblue";
-                        ++leave;
-                    }
-                    case 4 -> {
-                        if (!weekend) {
-                            color = "yellow";
-                            ++late;
-                        }
-                    }
-                    case 5 -> {
-                        if (!weekend) {
-                            color = "#dbdbdb";
-                            vacation += 0.5d;
-                        }
-                    }
-                    // 연차만 요일을 보지 않는다. 레거시 그대로다.
-                    case 6 -> {
-                        color = "#dbdbdb";
-                        vacation += 1.0d;
-                    }
-                    default -> {
-                        // 아는 코드가 아니면 아무 색도 칠하지 않는다.
+            switch (status) {
+                case 0 -> paint = weekend ? null : WorkStatus.styleClass(0);
+                // 코드 1(근무 중)은 정상 근무와 같이 세어진다. 다만 색은 갈라 보인다 —
+                // 지난 날인데 1 이면 퇴근을 안 찍은 날이다(D-125).
+                case 1, 2 -> {
+                    paint = WorkStatus.styleClass(status);
+                    ++normal;
+                }
+                case 3 -> {
+                    paint = WorkStatus.styleClass(3);
+                    ++leave;
+                }
+                case 4 -> {
+                    if (!weekend) {
+                        paint = WorkStatus.styleClass(4);
+                        ++late;
                     }
                 }
+                case 5 -> {
+                    if (!weekend) {
+                        paint = WorkStatus.styleClass(5);
+                        vacation += 0.5d;
+                    }
+                }
+                // 연차만 요일을 보지 않는다. 레거시 그대로다.
+                case 6 -> {
+                    paint = WorkStatus.styleClass(6);
+                    vacation += 1.0d;
+                }
+                default -> {
+                    // 기록이 없거나 아는 코드가 아니면 아무 색도 칠하지 않는다.
+                }
             }
-            days.add(WorkDay.inside(day, sunday, saturday, color));
+            days.add(WorkDay.inside(day, sunday, saturday, paint));
         }
         return new WorkHalf(List.copyOf(days), normal, late, leave, vacation);
     }

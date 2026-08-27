@@ -1,5 +1,6 @@
 package com.erflow.admin.home;
 
+import com.erflow.common.WorkStatus;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -39,7 +40,7 @@ public record WorkRow(String userName, String startedAt, String endedAt, int sta
      * @return 근무 상태 라벨
      */
     public String statusLabel() {
-        return WorkStatus.tableLabel(status);
+        return WorkStatus.label(status);
     }
 
     /**

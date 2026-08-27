@@ -1,5 +1,6 @@
 package com.erflow.profile;
 
+import com.erflow.common.WorkTally;
 import java.util.List;
 
 /**
@@ -12,6 +13,13 @@ import java.util.List;
  * @param vacation 연차 일수. 반차가 0.5로 더해져 소수가 된다
  */
 public record WorkHalf(List<WorkDay> days, int normal, int late, int leave, double vacation) {
+
+    /**
+     * @return 이 줄만의 통계
+     */
+    public WorkTally tally() {
+        return new WorkTally(normal, late, leave, vacation);
+    }
 
     /**
      * 화면에 찍히는 연차.

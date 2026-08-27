@@ -1,5 +1,7 @@
 package com.erflow.work;
 
+import com.erflow.common.WorkTally;
+import com.erflow.common.WorkStatus;
 import com.erflow.profile.ProfileWork;
 import java.time.DayOfWeek;
 import java.time.Duration;
@@ -37,6 +39,18 @@ import java.util.Map;
  */
 public record AttendanceSheet(AttendanceHalf first, AttendanceHalf second) {
 
+    /**
+     * 한 달 합계.
+     *
+     * <p>두 줄을 더한다. 레거시는 이 숫자를 어디에도 보여 주지 않았다 —
+     * 줄마다의 합계를 위아래로 붙여 놓아 <b>합계처럼 보이게 해 두었다</b>(D-077).
+     *
+     * @return 정상·지각·조퇴·연차 한 달 합계
+     */
+    public WorkTally total() {
+        return WorkTally.sum(first.tally(), second.tally());
+    }
+
     /** 윗줄 마지막 날. */
     private static final int FIRST_HALF_END = 16;
 
@@ -46,11 +60,16 @@ public record AttendanceSheet(AttendanceHalf first, AttendanceHalf second) {
     private static final DateTimeFormatter STORED =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    private static final String ABSENT = "color: #E51A2E; font-weight: bold;";
-    private static final String LEAVE = "color: #8507F7; font-weight: bold;";
-    private static final String LATE = "color: #F06F0A; font-weight: bold;";
-    private static final String HALF_DAY = "color: #5F2700; font-weight: bold;";
-    private static final String VACATION = "color: #9B9696; font-weight: bold;";
+    /*
+      색은 여기 없다. 레거시는 칸마다 style="color: #8507F7; font-weight: bold;" 를
+      뱉었고, 그래서 같은 조퇴가 달력과 이 표에서 다른 색이었다. 이제
+      상태 클래스만 내보내고 app.css 의 .att-cell 이 글자색을 정한다(D-125).
+    */
+    private static final String ABSENT = WorkStatus.styleClass(0);
+    private static final String LEAVE = WorkStatus.styleClass(3);
+    private static final String LATE = WorkStatus.styleClass(4);
+    private static final String HALF_DAY = WorkStatus.styleClass(5);
+    private static final String VACATION = WorkStatus.styleClass(6);
 
     /**
      * 한 사람의 두 줄을 만든다.

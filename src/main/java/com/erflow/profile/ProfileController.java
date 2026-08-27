@@ -1,5 +1,6 @@
 package com.erflow.profile;
 
+import com.erflow.common.WorkStatus;
 import com.erflow.auth.ErflowUserDetails;
 import jakarta.servlet.http.HttpSession;
 import java.time.YearMonth;
@@ -81,6 +82,9 @@ public class ProfileController {
         model.addAttribute("minMonth", profileService.minMonth().toString());
         model.addAttribute("calendar",
                 profileService.calendar(user.id(), owner.id(), month));
+        // 범례를 손으로 적어 두면 색을 고칠 때 같이 안 고쳐진다. 레거시 범례가
+        // 실제로 다섯 칸뿐이라 반차가 빠져 있었다. 상태 목록에서 그려 낸다(D-125).
+        model.addAttribute("statuses", WorkStatus.all());
         return "profile/view";
     }
 

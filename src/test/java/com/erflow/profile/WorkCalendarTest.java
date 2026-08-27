@@ -2,6 +2,7 @@ package com.erflow.profile;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.erflow.common.WorkTally;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
@@ -45,8 +46,8 @@ class WorkCalendarTest {
         assertThat(second.get(13).inMonth()).isTrue();
         assertThat(second.get(14).inMonth()).isFalse();
         assertThat(second.get(14).label()).isEmpty();
-        assertThat(second.get(14).cellStyle()).isNull();
-        assertThat(second.get(13).cellStyle()).isEqualTo("height: 50px;");
+        assertThat(second.get(14).cellClass()).isNull();
+        assertThat(second.get(13).cellClass()).isEqualTo("work-cell");
     }
 
     @Test
@@ -55,14 +56,16 @@ class WorkCalendarTest {
         List<WorkDay> days = WorkCalendar.of(NOVEMBER, LATER, List.of()).firstHalf().days();
 
         // 2023-11-04 토, 11-05 일
-        assertThat(days.get(3).headerStyle()).isEqualTo("color: blue;");
-        assertThat(days.get(4).headerStyle()).isEqualTo("color: red;");
-        assertThat(days.get(5).headerStyle()).isNull();
+        assertThat(days.get(3).headerClass()).isEqualTo("is-saturday");
+        assertThat(days.get(4).headerClass()).isEqualTo("is-sunday");
+        assertThat(days.get(5).headerClass()).isNull();
     }
 
     @Test
-    @DisplayName("통계는 줄마다 따로 세어진다 — 한 달 합계는 어디에도 없다")
+    @DisplayName("줄별 통계는 그대로다 — 줄마다 따로 세어진다")
     void statisticsResetBetweenRows() {
+        // 화면은 이제 한 달 합계만 보여 준다(D-127). 그래도 줄별 셈은 남겨 둔다 —
+        // total() 이 이 둘을 더해 만드는 것이므로 여기가 틀어지면 합계도 틀린다.
         WorkCalendar calendar = WorkCalendar.of(NOVEMBER, LATER, List.of(
                 worked("2023-11-01", 2), worked("2023-11-02", 2),
                 worked("2023-11-20", 2)));
@@ -78,8 +81,8 @@ class WorkCalendarTest {
                 List.of(worked("2023-11-01", 1)));
 
         assertThat(calendar.firstHalf().normal()).isEqualTo(1);
-        assertThat(calendar.firstHalf().days().get(0).cellStyle())
-                .isEqualTo("height: 50px; background-color: greenyellow;");
+        assertThat(calendar.firstHalf().days().get(0).cellClass())
+                .isEqualTo("work-cell is-working");
     }
 
     @Test
@@ -92,8 +95,8 @@ class WorkCalendarTest {
                 List.of(worked("2023-11-04", 0)));
 
         assertThat(late.firstHalf().late()).isZero();
-        assertThat(late.firstHalf().days().get(3).cellStyle()).isEqualTo("height: 50px;");
-        assertThat(absent.firstHalf().days().get(3).cellStyle()).isEqualTo("height: 50px;");
+        assertThat(late.firstHalf().days().get(3).cellClass()).isEqualTo("work-cell");
+        assertThat(absent.firstHalf().days().get(3).cellClass()).isEqualTo("work-cell");
     }
 
     @Test
@@ -126,7 +129,7 @@ class WorkCalendarTest {
                 List.of(new ProfileWork(null, "2023-11-01 18:00:00", 2)));
 
         assertThat(calendar.firstHalf().normal()).isZero();
-        assertThat(calendar.firstHalf().days().get(0).cellStyle()).isEqualTo("height: 50px;");
+        assertThat(calendar.firstHalf().days().get(0).cellClass()).isEqualTo("work-cell");
     }
 
     @Test
@@ -145,8 +148,8 @@ class WorkCalendarTest {
                 worked("2023-11-10", 2), worked("2023-11-11", 2)));
 
         assertThat(calendar.firstHalf().normal()).isEqualTo(1);
-        assertThat(calendar.firstHalf().days().get(10).cellStyle())
-                .isEqualTo("height: 50px;");
+        assertThat(calendar.firstHalf().days().get(10).cellClass())
+                .isEqualTo("work-cell");
     }
 
     @Test
@@ -157,6 +160,27 @@ class WorkCalendarTest {
 
         assertThat(calendar.firstHalf().normal()).isZero();
         assertThat(calendar.firstHalf().leave()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("한 달 합계는 두 줄을 가로지른다 — 줄별 합계가 아니다")
+    void totalSpansBothHalves() {
+        // 윗줄(1~16)에 정상 둘·지각 하나, 아랫줄(17~)에 정상 하나·조퇴 하나·반차 하나.
+        WorkCalendar calendar = WorkCalendar.of(NOVEMBER, LATER, List.of(
+                worked("2023-11-01", 2), worked("2023-11-02", 2), worked("2023-11-03", 4),
+                worked("2023-11-20", 2), worked("2023-11-21", 3), worked("2023-11-22", 5)));
+
+        // 레거시가 보여 주던 것 — 줄마다 따로다.
+        assertThat(calendar.firstHalf().normal()).isEqualTo(2);
+        assertThat(calendar.secondHalf().normal()).isEqualTo(1);
+
+        // 화면 어디에도 없던 숫자(D-077).
+        WorkTally total = calendar.total();
+        assertThat(total.normal()).isEqualTo(3);
+        assertThat(total.late()).isEqualTo(1);
+        assertThat(total.leave()).isEqualTo(1);
+        assertThat(total.vacation()).isEqualTo(0.5d);
+        assertThat(total.vacationLabel()).isEqualTo("0.5");
     }
 
     private static ProfileWork worked(String day, int status) {

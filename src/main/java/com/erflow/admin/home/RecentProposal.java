@@ -38,7 +38,7 @@ public record RecentProposal(
     /**
      * @return 상태 칸 배경색
      */
-    public String statusColor() {
-        return ProposalStatus.color(result);
+    public String statusClass() {
+        return ProposalStatus.styleClass(result);
     }
 }

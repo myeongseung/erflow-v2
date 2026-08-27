@@ -1,5 +1,6 @@
 package com.erflow.work;
 
+import com.erflow.common.WorkTally;
 import java.util.List;
 
 /**
@@ -16,6 +17,13 @@ import java.util.List;
  */
 public record AttendanceHalf(
         List<AttendanceCell> cells, int normal, int late, int leave, double vacation) {
+
+    /**
+     * @return 이 줄만의 통계
+     */
+    public WorkTally tally() {
+        return new WorkTally(normal, late, leave, vacation);
+    }
 
     /**
      * 화면에 찍히는 연차. 레거시가 {@code double} 을 그대로 찍어 «0.0» 처럼 보인다.

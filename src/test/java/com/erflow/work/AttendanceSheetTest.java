@@ -33,7 +33,7 @@ class AttendanceSheetTest {
 
         AttendanceCell cell = sheet.first().cells().get(0);
         assertThat(cell.text()).isEqualTo("08:30");
-        assertThat(cell.style()).isNull();
+        assertThat(cell.statusClass()).isNull();
         assertThat(sheet.first().normal()).isEqualTo(1);
     }
 
@@ -55,10 +55,10 @@ class AttendanceSheetTest {
         AttendanceSheet weekend = sheet(work("2023-11-04 09:00:00", null, 0));
 
         assertThat(weekday.first().cells().get(0).text()).isEqualTo("결근");
-        assertThat(weekday.first().cells().get(0).style()).contains("#E51A2E");
+        assertThat(weekday.first().cells().get(0).statusClass()).isEqualTo("is-absent");
         assertThat(weekend.first().cells().get(3).text()).isEmpty();
         // 글자 없는 칸에 style 만 남는다. 보이지 않지만 레거시가 그렇게 그린다.
-        assertThat(weekend.first().cells().get(3).style()).contains("#E51A2E");
+        assertThat(weekend.first().cells().get(3).statusClass()).isEqualTo("is-absent");
     }
 
     @Test
@@ -106,7 +106,7 @@ class AttendanceSheetTest {
         AttendanceSheet sheet = sheet(work("2023-11-01 09:00:00", null, 9));
 
         assertThat(sheet.first().cells().get(0).text()).isEqualTo("결근");
-        assertThat(sheet.first().cells().get(0).style()).isNull();
+        assertThat(sheet.first().cells().get(0).statusClass()).isNull();
     }
 
     @Test
@@ -139,6 +139,21 @@ class AttendanceSheetTest {
 
         assertThat(sheet.first().vacationLabel()).isEqualTo("0.5");
         assertThat(sheet.second().vacationLabel()).isEqualTo("0.0");
+    }
+
+    @Test
+    @DisplayName("한 달 합계는 두 줄을 가로지른다 — 줄별 합계가 아니다")
+    void totalSpansBothHalves() {
+        AttendanceSheet sheet = sheet(
+                work("2023-11-01 09:00:00", "2023-11-01 18:00:00", 2),
+                work("2023-11-02 09:00:00", "2023-11-02 18:00:00", 2),
+                work("2023-11-20 09:00:00", "2023-11-20 18:00:00", 2));
+
+        assertThat(sheet.first().normal()).isEqualTo(2);
+        assertThat(sheet.second().normal()).isEqualTo(1);
+
+        // 화면 어디에도 없던 숫자(D-077).
+        assertThat(sheet.total().normal()).isEqualTo(3);
     }
 
     private static AttendanceSheet sheet(ProfileWork... works) {

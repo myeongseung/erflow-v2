@@ -1,6 +1,7 @@
 package com.erflow.admin.home;
 
-import java.util.Map;
+import com.erflow.common.WorkStatus;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,11 +49,18 @@ public class AdminHomeController {
     /**
      * 근무 현황 그래프가 읽는 값.
      *
-     * @return 상태 코드별 인원
+     * <p>레거시는 {@code Map<코드, 인원>} 을 그대로 내보냈고 라벨은 스크립트가 자기
+     * 배열에서 꺼내 썼다. 그 배열이 서버와 어긋나 있었다(D-125). 이제 라벨을 여기서
+     * 붙여 보낸다 — {@link WorkStatus} 가 유일한 정답이다.
+     *
+     * @return 상태별 인원. 그날 아무도 없던 상태는 들어 있지 않다
      */
     @GetMapping("/admin/graph/view")
     @ResponseBody
-    public Map<Integer, Integer> graph() {
-        return homeService.workCounts();
+    public List<WorkStatusCount> graph() {
+        return homeService.workCounts().entrySet().stream()
+                .map(entry -> new WorkStatusCount(
+                        entry.getKey(), WorkStatus.label(entry.getKey()), entry.getValue()))
+                .toList();
     }
 }
