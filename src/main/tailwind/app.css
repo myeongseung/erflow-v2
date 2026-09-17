@@ -1136,6 +1136,44 @@
         gap: 0.375rem;
     }
 
+    /*
+      주소 입력 한 벌 (D-138).
+
+      아홉 화면이 다음 우편번호 서비스로 채우는 같은 구조를 쓰는데, 입력 다섯이
+      줄바꿈 하나 없이 한 덩어리로 몰려 있었다. 우편번호와 찾기 버튼이 한 줄,
+      그 아래로 도로명 주소 · 참고항목 · 상세주소가 한 칸씩 온다.
+    */
+    .address-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+    }
+
+    .address-line {
+        display: flex;
+        gap: 0.375rem;
+    }
+
+    /* 우편번호는 다섯 자리다 — 문단만큼 길 이유가 없다. */
+    .address-line > input[type="text"] {
+        width: 9rem;
+    }
+
+    /* 권한 체크박스 묶음 — 직급·부서 수정 화면. <br> 로 줄을 갈랐던 것을 대신한다. */
+    .checkbox-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
+        margin-top: 0.875rem;
+    }
+
+    .checkbox-container > label {
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+    }
+
     /* 입력 앞에 붙는 이름표(«코멘트» 같은 것). */
     .input-group-text {
         display: inline-flex;

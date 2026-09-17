@@ -162,7 +162,7 @@ class BoundScreenTest {
 
         String html = render("/bound/update?flag=inbound&id=" + id, "bound-update.html");
 
-        assertThat(html).contains("입고 수정").contains("제출").contains("우편 찾기");
+        assertThat(html).contains("입고 수정").contains("제출").contains("우편번호 찾기");
     }
 
     @Test

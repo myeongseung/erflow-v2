@@ -48,16 +48,19 @@
                                 name="email" placeholder="사원 이메일" th:value="${user.email} ?: ''">
                         </div>
                         <div class="form-group">
-                            <label for="input4">사원 주소:</label> <input type="text"
-                                id="sample6_postcode" placeholder="우편번호" name="postalCode"
-                                th:value="${user.postalCode} ?: ''" readonly>
-                            <input type="text" id="sample6_extraAddress" placeholder="동/읍/면" readonly>
-                            <input type="button" class="btn_execDaumPostcode" value="우편 찾기">
-                            <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"
-                                   th:value="${user.address1} ?: ''" readonly><br>
-                            <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2"
-                                   th:value="${user.address2} ?: ''">
-
+                            <label for="sample6_postcode">사원 주소:</label>
+                            <div class="address-group">
+                                <div class="address-line">
+                                    <input type="text" id="sample6_postcode" placeholder="우편번호"
+                                           name="postalCode" th:value="${user.postalCode} ?: ''" readonly>
+                                    <button type="button" class="btn btn_execDaumPostcode">우편번호 찾기</button>
+                                </div>
+                                <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"
+                                       th:value="${user.address1} ?: ''" readonly>
+                                <input type="text" id="sample6_extraAddress" placeholder="참고항목 (동/읍/면)" readonly>
+                                <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2"
+                                       th:value="${user.address2} ?: ''">
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="job">직급</label> <select name="job" id="job">

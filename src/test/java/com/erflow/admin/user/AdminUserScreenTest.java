@@ -189,7 +189,7 @@ class AdminUserScreenTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(html).contains("관리자 &gt; 사원 &gt; 사원추가")
-                .contains("사원 생성").contains("우편 찾기");
+                .contains("사원 생성").contains("우편번호 찾기");
         // 직급·부서 콤보가 실제로 채워진다.
         String firstJob = jdbc.queryForObject(
                 "SELECT name FROM job_tbl WHERE id != -1 LIMIT 1", String.class);

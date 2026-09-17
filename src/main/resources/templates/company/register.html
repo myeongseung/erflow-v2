@@ -29,12 +29,16 @@
                         <input type="text" th:value="${flag == 0 ? '상청' : '하청'}" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="input4">회사 주소:</label>
-                        <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode">
-                        <input type="text" id="sample6_extraAddress" placeholder="참고항목">
-                        <input type="button" class="btn_execDaumPostcode" value="우편 찾기">
-                        <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1"><br>
-                        <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2">
+                        <label for="sample6_postcode">회사 주소:</label>
+                        <div class="address-group">
+                            <div class="address-line">
+                                <input type="text" id="sample6_postcode" placeholder="우편번호" name="postalCode">
+                                <button type="button" class="btn btn_execDaumPostcode">우편번호 찾기</button>
+                            </div>
+                            <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1">
+                            <input type="text" id="sample6_extraAddress" placeholder="참고항목 (동/읍/면)">
+                            <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2">
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="companyPhone">업체 전화번호</label>

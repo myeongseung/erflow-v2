@@ -15,10 +15,14 @@
     <form th:action="@{/admin/permission/job-register-proc}" method="post">
         <h2>직급 생성</h2>
 
-        <label for="jobName">직급명:</label>
-        <input type="text" id="jobName" name="jobName">
+        <div class="form-group">
+            <label for="jobName">직급명:</label>
+            <input type="text" id="jobName" name="jobName">
+        </div>
 
-        <button type="submit">생성하기</button>
+        <div class="btn-group">
+            <button type="submit">생성하기</button>
+        </div>
     </form>
 
 </div>

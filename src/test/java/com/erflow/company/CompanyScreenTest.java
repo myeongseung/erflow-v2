@@ -133,7 +133,7 @@ class CompanyScreenTest {
         assertThat(register).contains("sidebar-ul", "navbar-brand");
         assertThat(update).contains("sidebar-ul", "navbar-brand");
 
-        assertThat(register).contains("회사명", "우편 찾기", "업체 찾기", "은행 찾기", "제출");
+        assertThat(register).contains("회사명", "우편번호 찾기", "업체 찾기", "은행 찾기", "제출");
         assertThat(update).contains("상청", "하청", first.name());
     }
 

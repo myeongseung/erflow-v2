@@ -21,23 +21,26 @@
     <form th:action="@{/admin/permission/job-update-proc}" method="post">
         <h2>직급 수정</h2>
 
-        <label for="jobName">기존 직급 명칭: [[${form.name}]]</label>
-        <input type="hidden" id="jobId" name="jobId" th:value="${form.id}">
-        <input type="text" id="jobName" name="jobName" th:value="${form.name}">
+        <div class="form-group">
+            <label for="jobName">기존 직급 명칭: [[${form.name}]]</label>
+            <input type="hidden" id="jobId" name="jobId" th:value="${form.id}">
+            <input type="text" id="jobName" name="jobName" th:value="${form.name}">
+        </div>
 
         <div class="checkbox-container">
-            <label>직급 권한:</label><br>
+            <label>직급 권한:</label>
             <div class="input-group">
                 <input type="checkbox" id="chkAll">
                 <label for="chkAll">전체 선택</label>
             </div>
-            <br>
             <div class="input-group" th:each="choice, i : ${form.choices}">
                 <input type="checkbox" id="permission" th:id="|permission${i.count}|"
                        name="permissions" th:value="${choice.classId}"
                        th:checked="${choice.checked}">
                 <label for="permission" th:for="|permission${i.count}|">[[${choice.name}]]</label>
             </div>
+        </div>
+        <div class="btn-group">
             <button type="submit">수정하기</button>
         </div>
     </form>
