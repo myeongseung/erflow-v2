@@ -128,12 +128,31 @@ class LayoutRenderTest {
         // 레거시는 <% if (adminTester.isAdmin(session)) { %> 로 감쌌다.
         // 그 조건이 스크립틀릿 안에 있어 추출되지 않으므로 seed 에 손으로 고정했고,
         // 실제로 지켜지는지는 여기서 본다.
+        //
+        // 프로그램 권한은 전부 가진 사용자로 본다 — 권한이 없어 숨는 것(D-135)과
+        // «관리자 전용» 이라 숨는 것을 갈라서 봐야 한다.
         String html = render("/__preview/header", "header-nonadmin.html",
-                TestUsers.noPermission());
+                TestUsers.everyProgramButNotAdmin());
 
         assertThat(html).doesNotContain("fa-solid fa-gear");
         assertThat(html).doesNotContain(">설정<");
         assertThat(html).as("나머지 항목은 그대로").contains("쪽지", "프로필", "로그아웃");
+    }
+
+    @Test
+    @DisplayName("들어갈 수 없는 메뉴는 그려지지 않는다 (D-135)")
+    void inaccessibleMenusAreNotRendered() throws Exception {
+        // 권한이 전혀 없는 사용자 — 사이드바의 권한 대상 메뉴가 전부 사라지고,
+        // 헤더에는 권한 대상이 아닌 로그아웃만 남는다.
+        String side = render("/__preview/side", "side-menu-nopermission.html",
+                TestUsers.noPermission());
+        String header = render("/__preview/header", "header-nopermission.html",
+                TestUsers.noPermission());
+
+        assertThat(side).doesNotContain("문서 관리", "전자결재", "생산관리", "구매",
+                "영업", "근태 관리", "게시판");
+        assertThat(header).doesNotContain("쪽지", "프로필", "설정");
+        assertThat(header).as("권한 대상이 아닌 항목은 남는다").contains("로그아웃");
     }
 
     /** 테스트 전용 미리보기 화면. 운영 코드에는 포함되지 않는다. */

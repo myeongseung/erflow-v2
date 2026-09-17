@@ -35,6 +35,20 @@ public final class TestUsers {
     }
 
     /**
+     * 관리자 비트만 빼고 전부 가진 사용자.
+     *
+     * <p>모든 프로그램에 들어갈 수 있지만 관리자는 아니다 — «관리자 전용» 과
+     * «프로그램 권한» 을 갈라서 봐야 하는 시험이 쓴다(D-135).
+     *
+     * @return 관리자가 아닌 전권 사용자
+     */
+    public static ErflowUserDetails everyProgramButNotAdmin() {
+        return new ErflowUserDetails(
+                new AuthUser("worker", "전권", "(시험용)", Long.MAX_VALUE, Long.MAX_VALUE, false),
+                false);
+    }
+
+    /**
      * 비밀번호를 바꿔야 하는 사용자.
      *
      * <p>레거시는 비밀번호가 사번과 같으면 로그인시키지 않고 변경 화면으로 보냈다.

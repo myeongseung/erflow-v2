@@ -184,27 +184,14 @@ public interface AdminPermissionMapper {
     int deleteJob(@Param("jobId") int jobId);
 
     /**
-     * 프로그램 목록 한 페이지.
+     * 메뉴와 그 메뉴가 가리키는 프로그램 권한을 한 줄로 읽는다 (D-135).
      *
-     * @param keyword 프로그램 이름 검색어. 부분 일치
-     * @param start 조회 시작 위치
-     * @param count 가져올 건수
-     * @return 프로그램 목록
+     * <p>메뉴 관리 화면의 재료다. 화면을 가리키지 않는 메뉴(그룹·로그아웃·설정)는
+     * 프로그램 칸이 {@code null} 로 온다.
+     *
+     * @return 사이드바 먼저, 그 안에서는 표시 순서대로
      */
-    List<ProgramRow> findProgramPage(
-            @Param("keyword") String keyword,
-            @Param("start") int start,
-            @Param("count") int count);
-
-    /**
-     * 조건에 걸리는 프로그램 수.
-     *
-     * <p>목록과 달리 <b>완전 일치</b>로 센다. 레거시가 그렇다(D-064).
-     *
-     * @param keyword 프로그램 이름
-     * @return 건수
-     */
-    int countPrograms(@Param("keyword") String keyword);
+    List<MenuProgramRow> findMenuPrograms();
 
     /**
      * 프로그램 한 행.

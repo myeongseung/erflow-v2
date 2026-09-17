@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--/*
+  메뉴 관리 (D-135). 레거시 프로그램 리스트(programList.jsp)를 대체한다.
+
+  프로그램 하나가 메뉴 하나로 들어가는 문이므로, 권한을 프로그램 이름이 아니라
+  «메뉴가 보이는 모양» 그대로 늘어놓고 고친다. 여기서 권한을 바꾸면 그 사람의
+  사이드바·헤더에서 메뉴가 나타나고 사라진다 — 표시와 접근이 같은 값 하나다.
+
+  어느 메뉴도 가리키지 않는 프로그램(부서 일정 등록)은 아래에 따로 붙는다.
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: page('메뉴 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js'} })}">
+</head>
+<body>
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+
+    <div class="admin-main-content">
+        <div class="table-wrap">
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 권한 관리 &gt; 메뉴 관리|)}"></div>
+
+            <p>권한을 바꾸면 그 부서·직급 사람의 화면에서 메뉴가 나타나거나 사라집니다.
+                관리자는 언제나 모든 메뉴를 봅니다.</p>
+
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">위치</th>
+                    <th scope="col">그룹</th>
+                    <th scope="col">메뉴</th>
+                    <th scope="col">들어갈 수 있는 부서</th>
+                    <th scope="col">들어갈 수 있는 직급</th>
+                    <th scope="col">부서 권한</th>
+                    <th scope="col">직급 권한</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${menus}">
+                    <td th:text="${entry.placement}">사이드바</td>
+                    <td th:text="${entry.groupLabel}">그룹</td>
+                    <td th:text="${entry.menuLabel}">메뉴</td>
+                    <th:block th:if="${entry.programRowId != null}">
+                        <td th:text="${entry.deptNames}">부서들</td>
+                        <td th:text="${entry.jobNames}">직급들</td>
+                        <td><a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">수정</a></td>
+                        <td><a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">수정</a></td>
+                    </th:block>
+                    <th:block th:if="${entry.programRowId == null}">
+                        <td colspan="4" th:text="${entry.note}">권한 대상 아님</td>
+                    </th:block>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="7"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="table-wrap" th:if="${!orphans.isEmpty()}">
+            <h3 class="page-title">메뉴에 없는 프로그램</h3>
+            <p>메뉴가 아니라 화면 안의 동작에 걸린 권한입니다. 예를 들어 «부서 일정 등록»은
+                일정 화면에서 부서 일정을 만들 수 있는지를 정합니다.</p>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">프로그램</th>
+                    <th scope="col">들어갈 수 있는 부서</th>
+                    <th scope="col">들어갈 수 있는 직급</th>
+                    <th scope="col">부서 권한</th>
+                    <th scope="col">직급 권한</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${orphans}">
+                    <td th:text="${entry.programName}">프로그램</td>
+                    <td th:text="${entry.deptNames}">부서들</td>
+                    <td th:text="${entry.jobNames}">직급들</td>
+                    <td><a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">수정</a></td>
+                    <td><a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">수정</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

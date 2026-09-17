@@ -24,4 +24,13 @@ public interface MenuMapper {
      * @return 부모 우선, 같은 부모 안에서는 {@code sort_order} 순
      */
     List<MenuNode> findByPlacement(@Param("placement") String placement);
+
+    /**
+     * 메뉴가 가리키는 화면들의 요구 권한을 읽는다 (D-135).
+     *
+     * <p>값만 가져온다 — 비트 판정은 Java({@code Permissions})에서 한다.
+     *
+     * @return 화면 번호와 부서·직급 권한 값. 권한 행이 없는 화면은 0
+     */
+    List<MenuAccess> findMenuAccess();
 }

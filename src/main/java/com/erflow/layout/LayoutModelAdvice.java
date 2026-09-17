@@ -28,11 +28,14 @@ public class LayoutModelAdvice {
     /**
      * 사이드 메뉴.
      *
+     * <p>들어갈 수 없는 항목은 빠진다(D-135). 로그인 전(권한 0)이면 권한 대상 메뉴가
+     * 전부 빠지는데, 그 화면들(로그인·오류)은 어차피 사이드바를 그리지 않는다.
+     *
      * @return 사이드바 메뉴 트리
      */
     @ModelAttribute("sideMenu")
     public List<MenuNode> sideMenu() {
-        return menuService.sideMenu(isAdmin());
+        return menuService.sideMenu(isAdmin(), deptPermission(), jobPermission());
     }
 
     /**
@@ -42,7 +45,7 @@ public class LayoutModelAdvice {
      */
     @ModelAttribute("headerMenu")
     public List<MenuNode> headerMenu() {
-        return menuService.headerMenu(isAdmin());
+        return menuService.headerMenu(isAdmin(), deptPermission(), jobPermission());
     }
 
     /**
@@ -69,6 +72,16 @@ public class LayoutModelAdvice {
     private boolean isAdmin() {
         ErflowUserDetails user = principal();
         return user != null && user.admin();
+    }
+
+    private long deptPermission() {
+        ErflowUserDetails user = principal();
+        return user == null ? 0L : user.deptPermission();
+    }
+
+    private long jobPermission() {
+        ErflowUserDetails user = principal();
+        return user == null ? 0L : user.jobPermission();
     }
 
     private static ErflowUserDetails principal() {

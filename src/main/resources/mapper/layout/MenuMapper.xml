@@ -44,4 +44,18 @@
          ORDER BY parent_id IS NOT NULL, parent_id, sort_order
     </select>
 
+    <!--
+      메뉴가 가리키는 화면의 요구 권한 (D-135). 권한 행이 없으면 0 — 화면 접근 판정
+      (AuthMapper.findScreenAccess)과 같은 규칙이다. 0 이면 아무도 못 들어가므로
+      메뉴도 아무에게도 안 보인다. 비트 판정은 Java 에서 한다.
+    -->
+    <select id="findMenuAccess" resultType="com.erflow.layout.MenuAccess">
+        SELECT DISTINCT s.screen_id               AS screenId,
+               COALESCE(l.dept_level, 0)          AS deptLevel,
+               COALESCE(l.job_level, 0)           AS jobLevel
+          FROM menu m
+          JOIN screen s ON m.screen_id = s.screen_id
+          LEFT JOIN permission_program_tbl l ON l.program_id = s.program_id
+    </select>
+
 </mapper>

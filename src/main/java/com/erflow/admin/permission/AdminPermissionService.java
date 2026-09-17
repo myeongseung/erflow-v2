@@ -1,9 +1,12 @@
 package com.erflow.admin.permission;
 
 import com.erflow.auth.Permissions;
-import com.erflow.common.Pagination;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -235,21 +238,59 @@ public class AdminPermissionService {
     }
 
     /**
-     * 프로그램 목록 한 페이지.
+     * 메뉴 관리 화면 한 벌 (D-135).
      *
-     * <p>세는 쪽과 가져오는 쪽의 조건이 다르다 — 목록은 부분 일치, 건수는 완전 일치다.
-     * 그래서 검색하면 줄은 나오는데 페이지가 그려지지 않는다. 레거시 그대로다(D-064).
+     * <p>메뉴 트리를 평면 목록으로 내놓는다 — 하위 메뉴는 그룹 이름을 달고 나온다.
+     * 각 줄에 그 메뉴로 들어갈 수 있는 부서·직급 <b>이름</b>을 함께 준다. 비트를
+     * 이름으로 푸는 계산은 여기(Java)서 한다.
      *
-     * @param keyword 프로그램 이름 검색어
-     * @param requestedPage 요청된 페이지
-     * @return 목록과 페이징
+     * <p>어느 메뉴도 가리키지 않는 프로그램(부서 일정 등록처럼 화면 없이 코드로 묻는
+     * 것)은 뒤에 따로 붙는다 — 메뉴만 보면 빠뜨리므로.
+     *
+     * @return 메뉴 줄들과, 메뉴에 없는 프로그램 줄들
      */
     @Transactional(readOnly = true)
-    public ProgramPage programs(String keyword, int requestedPage) {
-        Pagination pagination = Pagination.of(mapper.countPrograms(keyword), requestedPage);
-        return new ProgramPage(
-                mapper.findProgramPage(keyword, pagination.start(), pagination.numPerPage()),
-                pagination);
+    public MenuOverview menuOverview() {
+        List<PermissionRow> depts = mapper.findDeptPermissions(null);
+        List<PermissionRow> jobs = mapper.findJobPermissions(null);
+
+        List<MenuProgramRow> rows = mapper.findMenuPrograms();
+        Map<Integer, String> groupLabels = new HashMap<>();
+        for (MenuProgramRow row : rows) {
+            groupLabels.put(row.menuId(), row.label());
+        }
+
+        List<MenuPermissionEntry> menus = new ArrayList<>();
+        Set<Integer> linkedProgramRows = new HashSet<>();
+        for (MenuProgramRow row : rows) {
+            if (!row.hasScreen() && row.parentId() == null && !"HEADER".equals(row.placement())) {
+                // 사이드바 그룹 제목 — 하위 줄이 그룹 이름을 달고 나오므로 줄이 필요 없다.
+                continue;
+            }
+            if (row.programRowId() != null) {
+                linkedProgramRows.add(row.programRowId());
+            }
+            String group = row.parentId() == null ? "" : groupLabels.get(row.parentId());
+            menus.add(new MenuPermissionEntry(
+                    "SIDE".equals(row.placement()) ? "사이드바" : "헤더",
+                    group == null ? "" : group,
+                    row.label(),
+                    row.programRowId(),
+                    row.programName(),
+                    note(row),
+                    names(depts, row.deptLevel()),
+                    names(jobs, row.jobLevel())));
+        }
+
+        List<MenuPermissionEntry> orphans = new ArrayList<>();
+        for (ProgramRow program : mapper.findPrograms()) {
+            if (!linkedProgramRows.contains(program.id())) {
+                orphans.add(new MenuPermissionEntry(
+                        "", "", "", program.id(), program.programName(), "",
+                        names(depts, program.deptLevel()), names(jobs, program.jobLevel())));
+            }
+        }
+        return new MenuOverview(menus, orphans);
     }
 
     /**
@@ -322,6 +363,40 @@ public class AdminPermissionService {
         }
         long level = levelsOf(mapper.findJobPermissions(null), checked);
         return mapper.updateProgramJobLevel(program.programId(), level) == 1;
+    }
+
+    /**
+     * 권한 대상이 아니거나 잠긴 메뉴의 설명.
+     *
+     * <p>화면이 없는 항목(로그아웃·설정)은 권한을 갈 수 없고, 화면은 있는데 권한 행이
+     * 없는 항목에는 아무도 못 들어간다 — 화면 접근 판정과 같은 규칙이다.
+     */
+    private static String note(MenuProgramRow row) {
+        if (!row.hasScreen()) {
+            return "ADMIN".equals(row.visibility())
+                    ? "권한 대상 아님 — 관리자만" : "권한 대상 아님 — 모두";
+        }
+        if (row.programRowId() == null) {
+            return "권한 행 없음 — 아무도 못 들어감";
+        }
+        return "";
+    }
+
+    /** 비트가 걸리는 부서·직급 이름들. 관리자는 목록에 없다 — 언제나 들어갈 수 있다. */
+    private static String names(List<PermissionRow> all, Long level) {
+        if (level == null) {
+            return "";
+        }
+        StringBuilder joined = new StringBuilder();
+        for (PermissionRow row : all) {
+            if ((level & row.level()) != 0L) {
+                if (!joined.isEmpty()) {
+                    joined.append(", ");
+                }
+                joined.append(row.name());
+            }
+        }
+        return joined.isEmpty() ? "관리자만" : joined.toString();
     }
 
     /** 그 번호의 자기 비트 하나. 없으면 0. 지울 때 걷어낼 비트를 찾는다(D-109). */
@@ -435,12 +510,36 @@ public class AdminPermissionService {
     }
 
     /**
-     * 프로그램 목록 한 페이지.
+     * 메뉴 관리 화면 한 벌 (D-135).
      *
-     * @param rows 이 페이지의 프로그램
-     * @param pagination 페이징 정보
+     * @param menus 메뉴 줄들. 사이드바 먼저, 표시 순서대로
+     * @param orphans 어느 메뉴도 가리키지 않는 프로그램 줄들
      */
-    public record ProgramPage(List<ProgramRow> rows, Pagination pagination) {
+    public record MenuOverview(
+            List<MenuPermissionEntry> menus, List<MenuPermissionEntry> orphans) {
+    }
+
+    /**
+     * 메뉴 관리 화면의 한 줄 (D-135).
+     *
+     * @param placement 표시 위치 문구. 사이드바 또는 헤더
+     * @param groupLabel 속한 그룹 이름. 최상위면 빈 문자열
+     * @param menuLabel 메뉴 문구
+     * @param programRowId 권한 행 번호. 수정 링크에 싣는다. 권한 대상이 아니면 {@code null}
+     * @param programName 프로그램 이름. 권한 대상이 아니면 {@code null}
+     * @param note 권한 대상이 아니거나 잠긴 줄의 설명. 그 밖에는 빈 문자열
+     * @param deptNames 들어갈 수 있는 부서 이름들
+     * @param jobNames 들어갈 수 있는 직급 이름들
+     */
+    public record MenuPermissionEntry(
+            String placement,
+            String groupLabel,
+            String menuLabel,
+            Integer programRowId,
+            String programName,
+            String note,
+            String deptNames,
+            String jobNames) {
     }
 
     /**

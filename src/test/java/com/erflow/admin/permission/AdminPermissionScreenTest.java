@@ -44,6 +44,9 @@ class AdminPermissionScreenTest {
     private AdminPermissionService permissionService;
 
     @Autowired
+    private AdminPermissionMapper permissionMapper;
+
+    @Autowired
     private JdbcTemplate jdbc;
 
     @Autowired
@@ -316,41 +319,50 @@ class AdminPermissionScreenTest {
         mockMvc.perform(get("/admin/permission/job-dept-list")
                         .with(user(TestUsers.noPermission())))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/admin/permission/program-list")
+        mockMvc.perform(get("/admin/permission/menu-list")
                         .with(user(TestUsers.noPermission())))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("프로그램 리스트가 그려진다")
-    void programListRenders() throws Exception {
+    @DisplayName("메뉴 관리가 그려진다 — 프로그램 리스트를 대체했다(D-135)")
+    void menuListRenders() throws Exception {
         String html = mockMvc.perform(
-                        get("/admin/permission/program-list").with(user(TestUsers.admin())))
+                        get("/admin/permission/menu-list").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("프로그램ID").contains("부서 권한").contains("직급 권한");
-        assertThat(permissionService.programs(null, 1).rows()).isNotEmpty();
+        // 메뉴가 사이드바 모양 그대로 나온다 — 그룹과 메뉴, 들어갈 수 있는 사람.
+        assertThat(html).contains("메뉴 관리")
+                .contains("들어갈 수 있는 부서").contains("들어갈 수 있는 직급")
+                .contains("문서 관리").contains("근태 확인").contains("사이드바").contains("헤더");
+        // 권한 수정 링크는 기존 프로그램 권한 화면으로 잇는다.
+        assertThat(html).contains("/admin/permission/program-dept-update")
+                .contains("/admin/permission/program-job-update");
     }
 
     @Test
-    @DisplayName("프로그램 검색은 줄은 나오는데 건수가 0이다 — 레거시 그대로다")
-    void programSearchCountsDifferently() {
-        ProgramRow any = permissionService.programs(null, 1).rows().get(0);
-        String part = any.programName().substring(0, 1);
+    @DisplayName("메뉴에 없는 프로그램도 메뉴 관리에 나온다 — 빠뜨리면 고칠 곳이 없다")
+    void menuOverviewCarriesOrphanPrograms() {
+        var overview = permissionService.menuOverview();
 
-        var page = permissionService.programs(part, 1);
-
-        // 목록은 부분 일치라 걸리고, 건수는 완전 일치라 0 이다(D-064).
-        assertThat(page.rows()).isNotEmpty();
-        assertThat(page.pagination().totalRecord()).isZero();
+        assertThat(overview.menus()).isNotEmpty();
+        // «부서 일정 등록» 은 화면이 아니라 코드에 걸린 권한이라 메뉴가 없다.
+        assertThat(overview.orphans())
+                .extracting(AdminPermissionService.MenuPermissionEntry::programName)
+                .contains("부서 일정 등록");
+        // 메뉴 줄과 잔여 줄을 합치면 프로그램 권한 행이 전부 나온다.
+        long linked = overview.menus().stream()
+                .filter(entry -> entry.programRowId() != null).count();
+        assertThat(linked + overview.orphans().size())
+                .isEqualTo(permissionMapper.findPrograms().size());
     }
 
     @Test
     @DisplayName("프로그램 권한은 관리자 비트로 시작한다 — 체크를 다 지워도 남는다")
     @Transactional
     void programKeepsAdminBit() {
-        ProgramRow program = permissionService.programs(null, 1).rows().get(0);
+        ProgramRow program = permissionMapper.findPrograms().get(0);
 
         assertThat(permissionService.updateProgramDeptLevel(program.id(), List.of())).isTrue();
 
@@ -365,7 +377,7 @@ class AdminPermissionScreenTest {
     @DisplayName("체크한 부서만 프로그램에 들어갈 수 있다")
     @Transactional
     void programGrantsOnlyCheckedDepartments() {
-        ProgramRow program = permissionService.programs(null, 1).rows().get(0);
+        ProgramRow program = permissionMapper.findPrograms().get(0);
         var depts = permissionService.list(null, null).depts();
         PermissionRow allowed = depts.get(0);
         PermissionRow blocked = depts.get(1);
@@ -385,7 +397,7 @@ class AdminPermissionScreenTest {
     @Transactional
     void programPermissionReachesTheAuthorizationQuery() {
         // 판정이 생성물(program)이 아니라 레거시 표를 읽는지 확인한다(D-063).
-        ProgramRow program = permissionService.programs(null, 1).rows().get(0);
+        ProgramRow program = permissionMapper.findPrograms().get(0);
         String route = jdbc.queryForObject(
                 "SELECT route FROM screen WHERE program_id = ? LIMIT 1",
                 String.class, program.programId());

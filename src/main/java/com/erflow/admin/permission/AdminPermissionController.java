@@ -264,24 +264,21 @@ public class AdminPermissionController {
     }
 
     /**
-     * 프로그램 리스트.
+     * 메뉴 관리 (D-135). 프로그램 리스트를 대체한다.
      *
-     * @param keyword 프로그램 이름 검색어
-     * @param nowPage 현재 페이지
+     * <p>메뉴마다 «누가 들어갈 수 있는가» 를 보여주고 그 자리에서 프로그램 권한 수정
+     * 화면으로 잇는다. 들어갈 수 없는 메뉴는 화면에 그려지지도 않으므로(D-135), 이
+     * 화면의 권한이 곧 메뉴 표시를 정한다.
+     *
      * @param model 뷰 모델
-     * @return 목록 템플릿
+     * @return 메뉴 관리 템플릿
      */
-    @GetMapping("/program-list")
-    public String programList(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "1") int nowPage,
-            Model model) {
-
-        AdminPermissionService.ProgramPage page = permissionService.programs(keyword, nowPage);
-        model.addAttribute("programs", page.rows());
-        model.addAttribute("page", page.pagination());
-        model.addAttribute("keyword", keyword == null ? "" : keyword);
-        return "admin/permission/program-list";
+    @GetMapping("/menu-list")
+    public String menuList(Model model) {
+        AdminPermissionService.MenuOverview overview = permissionService.menuOverview();
+        model.addAttribute("menus", overview.menus());
+        model.addAttribute("orphans", overview.orphans());
+        return "admin/permission/menu-list";
     }
 
     /**
@@ -389,7 +386,7 @@ public class AdminPermissionController {
 
     private String programResult(Model model, String message) {
         model.addAttribute("message", message);
-        model.addAttribute("nextPage", "/admin/permission/program-list");
+        model.addAttribute("nextPage", "/admin/permission/menu-list");
         model.addAttribute("closePopup", false);
         return RESULT;
     }
