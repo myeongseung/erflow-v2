@@ -219,6 +219,27 @@ public class AdminUserController {
     }
 
     /**
+     * 비밀번호 초기화 처리 (D-134).
+     *
+     * <p>레거시에 없던 기능이다. 임시 비밀번호를 걸고, 그 평문을 <b>이 응답 한 번만</b>
+     * 보여 준다 — 새로 고치면 새 임시 비밀번호가 걸릴 뿐, 지나간 값은 어디에도 없다.
+     *
+     * @param id 사번
+     * @param model 뷰 모델
+     * @return 임시 비밀번호 안내 템플릿. 대상이 없으면 잘못된 접근 화면
+     */
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam(required = false) String id, Model model) {
+        AdminUserService.TempPassword reset = id == null ? null
+                : adminUserService.resetPassword(id);
+        if (reset == null) {
+            return "redirect:/access-error";
+        }
+        model.addAttribute("reset", reset);
+        return "admin/user/reset-password";
+    }
+
+    /**
      * 레거시가 값을 다듬는 방식.
      *
      * <p>{@code value.trim().equals("") ? null : value} 였다 — 판정만 다듬고 <b>저장하는

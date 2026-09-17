@@ -85,10 +85,11 @@ public class LoginController {
             @AuthenticationPrincipal ErflowUserDetails user,
             HttpServletRequest request) {
 
+        // changePassword 는 관리자 초기화가 켠 «변경 필요» 플래그도 함께 끈다(D-134)
         boolean changed = user != null
                 && password != null
                 && password.equals(rePassword)
-                && authMapper.updatePassword(user.id(), passwordEncoder.encode(password)) > 0;
+                && authMapper.changePassword(user.id(), passwordEncoder.encode(password)) > 0;
 
         if (!changed) {
             return "redirect:/permission-error";

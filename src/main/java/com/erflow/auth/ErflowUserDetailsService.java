@@ -35,7 +35,9 @@ public class ErflowUserDetailsService implements UserDetailsService, UserDetails
      * {@inheritDoc}
      *
      * <p>비밀번호가 사번과 같으면 최초 로그인으로 본다. 레거시
-     * {@code UserController.isInitialLogin} 이 같은 판정을 했다.
+     * {@code UserController.isInitialLogin} 이 같은 판정을 했다. 관리자가 초기화한
+     * 계정도 같은 길로 보낸다 — 초기화하면 비밀번호가 더는 사번이 아니라서, 저장된
+     * 플래그({@code password_change_required})로 판정한다(D-134).
      */
     @Override
     @Transactional(readOnly = true)
@@ -44,7 +46,8 @@ public class ErflowUserDetailsService implements UserDetailsService, UserDetails
         if (user == null || user.password() == null) {
             throw new UsernameNotFoundException("사용자를 찾을 수 없다");
         }
-        boolean initial = passwordEncoder.matches(user.id(), user.password());
+        boolean initial = user.passwordChangeRequired()
+                || passwordEncoder.matches(user.id(), user.password());
         return new ErflowUserDetails(user, initial);
     }
 
@@ -65,7 +68,8 @@ public class ErflowUserDetailsService implements UserDetailsService, UserDetails
         ErflowUserDetails details = (ErflowUserDetails) user;
         authMapper.updatePassword(details.id(), newPassword);
         AuthUser updated = new AuthUser(details.id(), details.name(), newPassword,
-                details.deptPermission(), details.jobPermission());
+                details.deptPermission(), details.jobPermission(),
+                details.passwordChangeRequired());
         return new ErflowUserDetails(updated, details.passwordChangeRequired());
     }
 }

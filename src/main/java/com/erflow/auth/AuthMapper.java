@@ -50,11 +50,24 @@ public interface AuthMapper {
     /**
      * 비밀번호를 바꾼다.
      *
+     * <p>저장 형식 승격(같은 평문을 새 형식으로 다시 쓰는 것)이 쓰는 길이라 «변경 필요»
+     * 플래그는 건드리지 않는다. 본인이 새 비밀번호로 바꾸는 길은
+     * {@link #changePassword} 다.
+     *
      * @param id 사번
      * @param password 새 비밀번호 해시
      * @return 반영된 행 수
      */
     int updatePassword(@Param("id") String id, @Param("password") String password);
+
+    /**
+     * 본인이 비밀번호를 새로 정한다 — «변경 필요» 플래그도 함께 끈다 (D-134).
+     *
+     * @param id 사번
+     * @param password 새 비밀번호 해시
+     * @return 반영된 행 수
+     */
+    int changePassword(@Param("id") String id, @Param("password") String password);
 
     /**
      * 저장 형식 승격이 필요한 행을 읽는다 — 접두사({@code {bcrypt}} 등)가 없는 값.

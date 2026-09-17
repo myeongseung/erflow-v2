@@ -938,6 +938,31 @@
         color: var(--color-bad);
     }
 
+    /*
+      비밀번호 초기화 결과 (D-134).
+
+      임시 비밀번호는 이 화면 한 번만 보인다 — 관리자가 눈으로 옮겨 적거나 읽어 줄
+      값이므로 크게, 고정폭으로, 글자 사이를 띄워 찍는다.
+    */
+    .reset-password-result {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        max-width: 36rem;
+    }
+
+    .reset-password-value strong {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--color-line-firm);
+        border-radius: var(--radius-sharp);
+        background: var(--color-paper-sunk);
+        font-family: var(--font-mono);
+        font-size: 1.375rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+    }
+
     /* ═══ 입력 ═════════════════════════════════════════════════════════ */
 
     .form-group {

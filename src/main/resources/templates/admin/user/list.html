@@ -61,6 +61,7 @@
                     <th scope="col">이메일</th>
                     <th scope="col">입사일</th>
                     <th scope="col">주소</th>
+                    <th scope="col">비밀번호</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -81,11 +82,21 @@
                            (은행·제품 찾기 팝업과 같은 방식, D-035). 여는 창은 같다 */-->
                     <td><a href="javascript:void(0);" class="a-user-address"
                            th:data-id="${user.id}">보기</a></td>
+                    <!--/* 비밀번호 초기화(D-134). 임시 비밀번호는 처리 결과 화면에
+                           한 번만 보인다. Thymeleaf 3.1 은 이벤트 속성에 동적 값을
+                           허용하지 않으므로(D-035 와 같은 제약) 확인 문구는 고정이다 */-->
+                    <td>
+                        <form th:action="@{/admin/user/reset-password}" method="post"
+                              onsubmit="return confirm('이 사원의 비밀번호를 임시 값으로 초기화할까요?\n임시 비밀번호는 다음 화면에 한 번만 보입니다.');">
+                            <input type="hidden" name="id" th:value="${user.id}">
+                            <button class="btn" type="submit">초기화</button>
+                        </form>
+                    </td>
                 </tr>
                 </tbody>
                 <tfoot>
                 <tr>
-                    <td colspan="12"></td>
+                    <td colspan="13"></td>
                 </tr>
                 </tfoot>
             </table>

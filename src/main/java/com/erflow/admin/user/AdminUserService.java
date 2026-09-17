@@ -2,6 +2,7 @@ package com.erflow.admin.user;
 
 import com.erflow.admin.AdminOption;
 import com.erflow.common.Pagination;
+import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -17,6 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AdminUserService {
+
+    /** 임시 비밀번호에 쓰는 글자 — 눈으로 헷갈리는 0·O·1·l·I 는 뺐다. */
+    private static final String TEMP_PASSWORD_ALPHABET =
+            "23456789ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz";
+
+    /** 임시 비밀번호 글자 수 (붙임표 제외). */
+    private static final int TEMP_PASSWORD_LENGTH = 8;
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final AdminUserMapper adminUserMapper;
 
@@ -127,6 +137,49 @@ public class AdminUserService {
         }
     }
 
+    /**
+     * 비밀번호를 임시 값으로 초기화한다 (D-134).
+     *
+     * <p>임시 비밀번호 평문은 이 반환값에만 있다 — DB 에는 해시만 남고, 다시 조회할
+     * 길이 없다. 화면이 한 번 보여 주고 끝이다. 관리자가 본인에게 직접 전달한다.
+     *
+     * <p>초기화된 계정은 «변경 필요» 상태가 되어, 임시 비밀번호로 로그인하면 곧장
+     * 비밀번호 변경 화면으로 간다.
+     *
+     * @param id 사번
+     * @return 임시 비밀번호와 대상 사원. 사원이 없거나 {@code admin} 이면 {@code null}
+     */
+    @Transactional
+    public TempPassword resetPassword(String id) {
+        AdminUserForm user = adminUserMapper.findForUpdate(id);
+        if (user == null) {
+            return null;
+        }
+        String plain = newTempPassword();
+        if (adminUserMapper.resetPassword(id, passwordEncoder.encode(plain)) != 1) {
+            return null;
+        }
+        return new TempPassword(user.id(), user.name(), plain);
+    }
+
+    /**
+     * 임시 비밀번호를 만든다.
+     *
+     * <p>여덟 글자를 넷씩 나눠 사이에 붙임표를 둔다 — 전화나 종이로 전달할 값이라
+     * 읽어 주기 쉬워야 한다. 같은 이유로 헷갈리는 글자(0·O·1·l·I)는 뺐다.
+     */
+    private String newTempPassword() {
+        StringBuilder plain = new StringBuilder(TEMP_PASSWORD_LENGTH + 1);
+        for (int i = 0; i < TEMP_PASSWORD_LENGTH; i++) {
+            if (i == TEMP_PASSWORD_LENGTH / 2) {
+                plain.append('-');
+            }
+            plain.append(TEMP_PASSWORD_ALPHABET.charAt(
+                    RANDOM.nextInt(TEMP_PASSWORD_ALPHABET.length())));
+        }
+        return plain.toString();
+    }
+
     private static List<AdminOption> byName(List<AdminOption> options) {
         // 레거시 Collections.sort + Comparator 가 String.compareTo 로 견준다.
         // DB 에 ORDER BY 를 붙이지 않는 이유가 여기 있다 — 정렬 기준이 DB collation 이
@@ -160,5 +213,15 @@ public class AdminUserService {
      * @param pagination 페이징 정보
      */
     public record UserPage(List<AdminUserRow> rows, Pagination pagination) {
+    }
+
+    /**
+     * 초기화 결과 — 임시 비밀번호 평문이 사는 유일한 곳 (D-134).
+     *
+     * @param id 사번
+     * @param name 이름
+     * @param password 임시 비밀번호 평문
+     */
+    public record TempPassword(String id, String name, String password) {
     }
 }

@@ -84,4 +84,16 @@ public interface AdminUserMapper {
      * @return 반영된 행 수
      */
     int updateUser(@Param("user") AdminUserEdit user);
+
+    /**
+     * 비밀번호를 임시 값으로 갈고 «변경 필요» 플래그를 켠다 (D-134).
+     *
+     * <p>{@code admin} 계정은 갈지 않는다 — 사원 리스트가 {@code admin} 을 빼는 것과
+     * 같은 자리다.
+     *
+     * @param id 사번
+     * @param password 해시된 임시 비밀번호
+     * @return 반영된 행 수
+     */
+    int resetPassword(@Param("id") String id, @Param("password") String password);
 }

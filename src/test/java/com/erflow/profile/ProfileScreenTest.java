@@ -271,7 +271,7 @@ class ProfileScreenTest {
         return mockMvc.perform(get("/profile").param("id", owner)
                         .with(user(new ErflowUserDetails(
                                 new AuthUser(viewer, "시험", "(시험용)",
-                                        Long.MIN_VALUE, Long.MIN_VALUE), false))))
+                                        Long.MIN_VALUE, Long.MIN_VALUE, false), false))))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
     }

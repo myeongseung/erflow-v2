@@ -20,7 +20,7 @@ public final class TestUsers {
      */
     public static ErflowUserDetails admin() {
         return new ErflowUserDetails(
-                new AuthUser("admin", "관리자", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE),
+                new AuthUser("admin", "관리자", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false),
                 false);
     }
 
@@ -31,7 +31,7 @@ public final class TestUsers {
      */
     public static ErflowUserDetails noPermission() {
         return new ErflowUserDetails(
-                new AuthUser("nobody", "무권한", "(시험용)", 0L, 0L), false);
+                new AuthUser("nobody", "무권한", "(시험용)", 0L, 0L, false), false);
     }
 
     /**
@@ -43,7 +43,7 @@ public final class TestUsers {
      */
     public static ErflowUserDetails passwordChangeRequired() {
         return new ErflowUserDetails(
-                new AuthUser("newbie", "신규", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE),
+                new AuthUser("newbie", "신규", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false),
                 true);
     }
 }

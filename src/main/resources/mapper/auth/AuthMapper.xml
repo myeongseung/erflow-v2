@@ -24,7 +24,8 @@
                u.name,
                u.password,
                COALESCE(d.permission, 0) AS deptPermission,
-               COALESCE(j.permission, 0) AS jobPermission
+               COALESCE(j.permission, 0) AS jobPermission,
+               u.password_change_required AS passwordChangeRequired
           FROM user_tbl u
           LEFT JOIN permission_dept_tbl d ON u.dept_tbl_id = d.dept_tbl_id
           LEFT JOIN permission_job_tbl  j ON u.job_tbl_id  = j.job_tbl_id
@@ -71,9 +72,24 @@
          WHERE p.program_id = #{programId}
     </select>
 
+    <!--
+      저장 형식 승격이 쓰는 길 — 같은 평문을 새 형식으로 다시 쓸 뿐이라
+      «변경 필요» 플래그는 건드리지 않는다.
+    -->
     <update id="updatePassword">
         UPDATE user_tbl
            SET password = #{password}
+         WHERE id = #{id}
+    </update>
+
+    <!--
+      본인이 비밀번호를 새로 정하는 길 — 관리자 초기화가 켠 «변경 필요» 플래그를
+      여기서 끈다(D-134).
+    -->
+    <update id="changePassword">
+        UPDATE user_tbl
+           SET password = #{password},
+               password_change_required = 0
          WHERE id = #{id}
     </update>
 
