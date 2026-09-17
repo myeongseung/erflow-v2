@@ -12,8 +12,10 @@
   직급 쪽 삭제 버튼에 name="deptFlag" 가 붙어 있다. 직급 폼인데 이름이 dept 다 —
   아무 데서도 읽지 않는 값이라 화면과 동작이 달라지지 않는다. 그대로 둔다.
 
-  두 검색 버튼의 모양이 다르다. 직급은 <button>검색</button>, 부서는
-  <input type="button" value="search"> 라 화면 글자도 «검색» 과 «search» 로 다르다.
+  배치를 D-136 에서 고쳤다. readFrm(hidden 폼)이 main-wrap 격자의 첫 칸을 차지해
+  직급 리스트가 오른쪽으로 밀리고 부서 리스트가 다음 줄로 떨어졌다 — 폼을 격자
+  밖으로 뺐다. 부서 쪽 검색 버튼도 직급과 같은 모양으로 통일했다(레거시는
+  <input type="button" value="search"> 여서 글자가 «search» 였다).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('직급·부서 리스트', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/jobDeptList.js'} })}">
@@ -27,25 +29,24 @@
     <div class="admin-main-content">
         <div class="all-wrap">
             <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 권한 관리 &gt; 직급·부서 리스트|)}"></div>
+            <!--/* 검색어를 나르는 hidden 폼. main-wrap(두 칸 격자) 안에 두면 첫
+                   칸을 차지해 표 둘이 밀린다(D-136) — 격자 밖에 둔다. */-->
+            <form name="readFrm" th:action="@{/admin/permission/job-dept-list}" method="get">
+                <input type="hidden" name="deptKeyword" th:value="${deptKeyword}">
+                <input type="hidden" name="jobKeyword" th:value="${jobKeyword}">
+            </form>
             <div class="main-wrap">
-                <form name="readFrm" th:action="@{/admin/permission/job-dept-list}" method="get">
-                    <input type="hidden" name="deptKeyword" th:value="${deptKeyword}">
-                    <input type="hidden" name="jobKeyword" th:value="${jobKeyword}">
-                </form>
-                <div class="job-list scrollable-table">
+                <div class="job-list">
                     <span>직급 리스트</span>
                     <form th:action="@{/admin/permission/job-delete-proc}" method="post" name="jobFrm">
-                        <div class="search-delete-container">
-                            <div class="search-delete-content">
-                                <div style="display: flex">
-                                    <button type="submit" name="deptFlag" class="btn btn-danger">삭제</button>
-                                    <button type="button" class="btn btn-primary open-job-btn">추가</button>
-                                </div>
-
-                                <div class="search-container">
-                                    <input type="text" name="jobKeyword" placeholder="직급 검색..." class="form-control">
-                                    <button type="button" name="jobms" value="search" class="btn btn-primary ml-2">검색</button>
-                                </div>
+                        <div class="search-delete-content">
+                            <div class="button-group">
+                                <button type="submit" name="deptFlag" class="btn btn-danger">삭제</button>
+                                <button type="button" class="btn btn-primary open-job-btn">추가</button>
+                            </div>
+                            <div class="search-container">
+                                <input type="text" name="jobKeyword" placeholder="직급 검색..." class="form-control">
+                                <button type="button" name="jobms" value="search" class="btn btn-primary">검색</button>
                             </div>
                         </div>
                         <table class="table table-striped">
@@ -73,23 +74,20 @@
                     </form>
                 </div>
 
-                <div class="dept-list scrollable-table">
+                <div class="dept-list">
                     <span>부서 리스트</span>
                     <form th:action="@{/admin/permission/dept-delete-proc}" method="post" name="deptFrm">
-                        <div class="search-delete-container">
-                            <div class="search-delete-content">
-                                <div style="display: flex">
-                                    <button type="submit" class="btn btn-danger">삭제</button>
-                                    <button type="button" class="btn btn-primary open-dept-btn">추가</button>
-                                </div>
-                                <div class="search-container">
-                                    <input type="text" name="deptKeyword" placeholder="부서 검색..." class="form-control">
-                                    <!--/* 레거시는 onclick="searchDept()" 도 달아 두었다. 그 함수는
-                                           이 화면이 읽지 않는 파일에 있어 한 번도 걸린 적이 없다.
-                                           실제로 검색을 여는 것은 jobDeptList.js 의 [name=deptms] 핸들러다 */-->
-                                    <input type="button" name="deptms" value="search"
-                                           class="btn btn-primary ml-2">
-                                </div>
+                        <div class="search-delete-content">
+                            <div class="button-group">
+                                <button type="submit" class="btn btn-danger">삭제</button>
+                                <button type="button" class="btn btn-primary open-dept-btn">추가</button>
+                            </div>
+                            <div class="search-container">
+                                <input type="text" name="deptKeyword" placeholder="부서 검색..." class="form-control">
+                                <!--/* 레거시는 onclick="searchDept()" 도 달아 두었다. 그 함수는
+                                       이 화면이 읽지 않는 파일에 있어 한 번도 걸린 적이 없다.
+                                       실제로 검색을 여는 것은 jobDeptList.js 의 [name=deptms] 핸들러다 */-->
+                                <button type="button" name="deptms" class="btn btn-primary">검색</button>
                             </div>
                         </div>
                         <table class="table table-striped">
