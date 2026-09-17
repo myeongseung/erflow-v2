@@ -484,10 +484,21 @@
       들어왔다 — 빼먹으면 :not() 사슬의 특이도(0,4,0)가 사이드바 폭 규칙을 이겨
       사이드바가 본문처럼 늘어난다.
     */
+    /*
+      폭도 여기서 한 번에 묶는다(D-137). 묶기 전에는 표 화면이 모니터 폭까지
+      무한정 늘어났다 — 화면마다 제멋대로로 보이던 절반이 이것이다. 최대 80rem,
+      남는 공간은 margin 이 양쪽으로 나눠 가져 본문이 가운데 온다.
+
+      메인 화면(main-column)은 제외 목록에 있어 안 걸린다 — 위젯 판은 자기
+      격자가 폭을 나눈다.
+    */
     .admin-main-content > *:not(.admin-header),
     .content-wrap > *:not(.app):not(.sidebar):not(.main-column):not(.aside-bar):not(.admin-main-content) {
         flex: 1 1 auto;
+        width: 100%;
+        max-width: 80rem;
         min-width: 0;
+        margin-inline: auto;
         padding: 1.25rem 1.5rem 2.5rem;
     }
 
@@ -1091,9 +1102,12 @@
 
       `:has()` 로 «form-group 을 담은 form» 만 고른다 — 목록 화면의 검색 폼은
       form-group 을 쓰지 않으므로 걸리지 않는다.
+
+      폭은 44rem 이다(D-137). 처음 36rem 은 주소·이메일처럼 긴 칸이 답답하게
+      좁았다 — 화면마다 제멋대로로 보이던 나머지 절반이 이것이다.
     */
     form:has(.form-group) {
-        max-width: 36rem;
+        max-width: 44rem;
         padding: 1.25rem 1.375rem 1.375rem;
         border: 1px solid var(--color-line);
         border-radius: var(--radius-soft);
