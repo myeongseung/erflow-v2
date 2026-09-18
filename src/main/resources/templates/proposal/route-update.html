@@ -16,7 +16,9 @@
 <div class="content-wrap">
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
-    <div class="proposal-insert-wrap">
+    <!--/* 격자 없는 일반 컨테이너(D-139). proposal-insert-wrap 은 결재 문서 보기의
+           2열 격자라 폼이 오른쪽 22rem 칸에 처박혔다. */-->
+    <div class="form-page">
         <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 전자결재 &gt; 결재라인 수정 페이지|)}"></div>
         <div class="proposal-insert">
             <div class="proposal-form">

@@ -24,9 +24,13 @@
     <div class="content-wrap">
         <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
-        <div class="main-content-wrap">
-            <div class="article">
-                <div class="content">
+        <!--/*
+          격자 없는 일반 컨테이너(D-139). 전에는 main-content-wrap(메인 화면의
+          «위젯 1fr + 달력 24rem» 격자)을 빌려 써서, 표가 1fr 칸(약 750px)에 갇혀
+          한 달의 절반이 잘려 보였다. content-wrap 의 직계 자식이면 폭 80rem 을
+          자동으로 받는다(D-137).
+        */-->
+        <div class="work-page">
 
                     <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 근태 관리 &gt; 근태 확인|)}"></div>
                     <form name="workFrm">
@@ -146,8 +150,6 @@
                         <input type="hidden" name="keyfield">
                         <input type="hidden" name="keyword">
                     </form>
-                </div>
-            </div>
         </div>
     </div>
 </div>

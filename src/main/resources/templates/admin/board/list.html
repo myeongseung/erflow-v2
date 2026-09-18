@@ -22,8 +22,15 @@
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <div class="empty-space"></div>
-        <div class="main-notice">
+        <!--/*
+          다른 관리자 화면과 같은 골격으로 맞춘다(D-142) — 제목 줄(page-head)이
+          있고, 표 둘은 직급·부서 리스트(D-136)와 같은 main-wrap 격자에 나란히
+          온다. 전에는 admin-main-content 의 직계 자식으로 empty-space 가 있어
+          본문 여백 규칙(D-137)이 빈 div 에도 붙어 위가 뻥 뚫려 보였다.
+        */-->
+        <div class="board-admin">
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 게시판 관리|)}"></div>
+            <div class="main-notice main-wrap">
 
             <div class="left">
                 <div class="empty-space"></div>
@@ -210,6 +217,7 @@
                 <input type="hidden" name="keyfield" th:value="${keyfield}">
                 <input type="hidden" name="keyword" th:value="${keyword}">
             </form>
+        </div>
         </div>
     </div>
 </div>

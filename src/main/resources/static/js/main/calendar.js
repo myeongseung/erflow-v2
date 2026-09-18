@@ -65,6 +65,17 @@ document.addEventListener('DOMContentLoaded', function() {
 	var calendar = new FullCalendar.Calendar(calendarEl, {
 		initialView: 'dayGridMonth',
 		height: 600,
+		// 한국어 표기(D-144). 싣고 있는 FullCalendar 번들에는 로케일 데이터가
+		// 없다 — locale: 'ko' 는 조용히 무시된다. 화면에 보이는 세 가지(제목·
+		// 오늘 버튼·요일 머리)만 손으로 적는다. FullCalendar 의 날짜는 시간대
+		// 표시가 없는 값이라 요일은 getUTCDay 로 읽어야 한다(공식 문서 지침).
+		buttonText: { today: '오늘' },
+		titleFormat: function(info) {
+			return info.date.year + '년 ' + (info.date.month + 1) + '월';
+		},
+		dayHeaderContent: function(arg) {
+			return ['일', '월', '화', '수', '목', '금', '토'][arg.date.getUTCDay()];
+		},
 		eventClick: function(info) {
 			modalTitle.value = info.event.title;
 			modalContent.value = info.event.extendedProps.content;

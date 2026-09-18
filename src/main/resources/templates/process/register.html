@@ -21,18 +21,23 @@
 <div class="content-wrap">
     <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
 
-    <div class="proposal-insert-wrap">
+    <!--/*
+      바깥 상자는 격자 없는 일반 컨테이너다(D-139). 전에는 proposal-insert-wrap 을
+      썼는데 그건 결재 문서 보기의 2열 격자(본문 1fr + 오른쪽 22rem)라, 폼이
+      오른쪽 22rem 칸에 처박혔다.
+    */-->
+    <div class="form-page">
         <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 생산관리 &gt; 공정 등록|)}"></div>
         <div class="proposal-insert">
             <div class="proposal-form">
                 <form th:action="@{/process/processRegister}" method="post" name="processFrm">
                     <div class="form-group d-grid gap-2">
-                        <label for="input1">공정ID:</label>
-                        <input type="text" class="processId" name="processId" value="" placeholder="공정ID">
+                        <label for="processId">공정ID</label>
+                        <input type="text" id="processId" class="processId" name="processId" value="" placeholder="공정ID">
                     </div>
                     <div class="form-group d-grid gap-2">
-                        <label for="input2">공정명</label>
-                        <input type="text" class="processName" name="processName" value="" placeholder="공정명">
+                        <label for="processName">공정명</label>
+                        <input type="text" id="processName" class="processName" name="processName" value="" placeholder="공정명">
                     </div>
                     <div class="form-group d-grid gap-2">
                         <input type="button" class="btn btn-secondary btn-lg"
