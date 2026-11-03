@@ -1,120 +1,75 @@
 <!DOCTYPE html>
 <!--/*
-  게시판 목록.
+  게시판 목록 (D-159).
   출처: legacy/ERFlow/src/main/webapp/post/boardList.jsp
 
-  마크업 구조와 class 이름은 레거시 그대로다. css/post/boardList.css 와
-  js/post/boardList.js 가 이 이름들에 걸려 있다.
+  목록 틀(D-148)의 카드 하나. 게시판 이름을 누르면 그 게시판의 글 목록으로 간다.
+  검색과 쪽 번호는 보통의 GET 폼·링크다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('게시판 목록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/boardList.js'} })}">
+<head th:replace="~{fragments/head :: page('게시판', ${ {'/js/common/table.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="main-notice">
-        <div class="notice1">
-            <div class="box">
-                <div class="userBoardList-header">
-                    <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 게시판|)}"></div>
-
-                    <div class="userBoardInfo">
-                        <div>&nbsp;</div>
-                        <div class="search-option">
-                            <!--/* 레거시에 name 도 값도 없는 셀렉트다. 검색은 언제나 이름으로 한다. */-->
-                            <select name="" id="">
-                                <option>게시판 이름</option>
-                            </select>
-                            <form name="boardFrm">
-                                <div class="main-search-container">
-                                    <div class="main-search-border">
-                                        <input class="main-search-text" type="search"
-                                               placeholder="검색" aria-label="Search"
-                                               name="keyword" th:value="${keyword}">
-                                    </div>
-                                    <div class="main-search-icon">
-                                        <i class="fa-solid fa-magnifying-glass fa-lg"
-                                           title="검색하기"></i>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 게시판', |게시판 ${page.totalRecord}|, ~{::content})}">
+<th:block th:fragment="content">
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <h2 class="card-title">게시판</h2>
+                <span class="count-badge" th:text="${page.totalRecord}">4</span>
+            </div>
+            <form class="toolbar-search" th:action="@{/post/board-list}" method="get">
+                <div class="main-search-container">
+                    <div class="main-search-border">
+                        <input class="main-search-text" type="search" name="keyword"
+                               placeholder="게시판 이름 검색" aria-label="게시판 이름 검색어" th:value="${keyword}">
+                    </div>
+                    <div class="main-search-icon">
+                        <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
                     </div>
                 </div>
-
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th class="board-number">번호</th>
-                        <th class="board-list">이름</th>
-                        <th class="board-count">게시글 수</th>
-                        <th class="board-title">최신글 제목</th>
-                        <th class="">업로드 시간</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="board : ${boards}">
-                        <td th:text="${board.id}">1</td>
-                        <td th:text="${board.subject}">게시판</td>
-                        <td th:text="${board.postCount}">0</td>
-                        <td th:if="${board.hasRecent()}">
-                            <a th:href="@{/post/view(boardId=${board.id}, id=${board.recentPostId})}"
-                               style="text-decoration: none;"
-                               th:text="${board.recentSubject}">제목</a>
-                        </td>
-                        <td th:unless="${board.hasRecent()}">작성글 없음</td>
-                        <!--/*
-                          레거시는 rs.getString("created_at") 을 그대로 찍는다.
-                          WebHelper.getDate(yyyy년 MM월 dd일)를 게시판에서는 쓰지 않는다 —
-                          같은 앱 안에서도 화면마다 형식이 다르다. 게이트는 이 자리를
-                          «dyn» 으로 보므로 형식이 틀려도 통과한다(D-020).
-                        */-->
-                        <td th:text="${board.hasRecent()
-                                       ? #temporals.format(board.recentCreatedAt, 'yyyy-MM-dd HH:mm:ss')
-                                       : '작성글 없음'}">작성글 없음</td>
-                        <td>
-                            <button type="button" class="btn btn-light board-select"
-                                    th:data-id="${board.id}">선택</button>
-                        </td>
-                    </tr>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td colspan="4"></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div class="userBoardList-footer">
-                <div class="page-controller">
-                    <a th:if="${page.hasPreviousBlock()}" class="disabled"
-                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|">이전</a>
-                    <ul class="page-numbers">
-                        <a th:each="number : ${page.pageNumbers}"
-                           th:href="|javascript:paging('${number}')|"
-                           th:classappend="${number == page.nowPage} ? 'disabled'">
-                            <li th:text="${number}">1</li>
-                        </a>
-                    </ul>
-                    <a th:if="${page.hasNextBlock()}"
-                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
-                </div>
-            </div>
-
-            <!--/* js/post/boardList.js 가 이 폼을 읽어 페이지 이동과 검색을 만든다. */-->
-            <form name="readFrm">
-                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
-                <input type="hidden" name="keyword" th:value="${keyword}">
             </form>
         </div>
-    </div>
-</div>
+        <div class="table-scroll">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th scope="col">게시판</th>
+                    <th scope="col">글 수</th>
+                    <th scope="col">최신 글</th>
+                    <th scope="col">최근 글 시각</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(boards)}">
+                    <td colspan="4" class="empty-cell">검색 결과가 없습니다.</td>
+                </tr>
+                <tr th:each="board : ${boards}">
+                    <td><a class="row-link" th:href="@{/post/list(boardId=${board.id})}" th:text="${board.subject}">게시판</a></td>
+                    <td th:text="${board.postCount}">0</td>
+                    <td class="ellipsis-cell">
+                        <a th:if="${board.hasRecent()}"
+                           th:href="@{/post/view(boardId=${board.id}, id=${board.recentPostId})}"
+                           th:text="${board.recentSubject}" th:title="${board.recentSubject}">제목</a>
+                        <span class="muted-text" th:unless="${board.hasRecent()}">글 없음</span>
+                    </td>
+                    <td th:text="${board.hasRecent()} ? ${#temporals.format(board.recentCreatedAt, 'yyyy-MM-dd HH:mm')} : '-'">-</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-controller" th:if="${page.totalPage > 1}">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="@{/post/board-list(nowPage=${page.pagePerBlock * (page.nowBlock - 2) + 1},keyword=${keyword})}">이전</a>
+            <ul class="page-numbers">
+                <li th:each="n : ${page.pageNumbers}">
+                    <a th:href="@{/post/board-list(nowPage=${n},keyword=${keyword})}"
+                       th:classappend="${n == page.nowPage} ? 'disabled'" th:text="${n}">1</a>
+                </li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="@{/post/board-list(nowPage=${page.pagePerBlock * page.nowBlock + 1},keyword=${keyword})}">다음</a>
+        </div>
+    </section>
+</th:block>
 </body>
 </html>

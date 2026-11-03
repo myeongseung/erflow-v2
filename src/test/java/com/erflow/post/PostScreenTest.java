@@ -107,7 +107,7 @@ class PostScreenTest {
         for (BoardRow row : rows) {
             assertThat(html).contains(row.subject());
         }
-        assertThat(html).contains("게시글 수").contains("최신글 제목").contains("선택");
+        assertThat(html).contains("글 수").contains("최신 글").contains("class=\"list-card\"");
     }
 
     @Test
@@ -174,8 +174,8 @@ class PostScreenTest {
                 "post-view.html");
 
         assertThat(html).contains(target.post().subject());
-        assertThat(html).contains("작성자:").contains("작성일:")
-                .contains("댓글수:").contains("조회수:");
+        assertThat(html).contains("class=\"post-article\"").contains("class=\"post-author\"")
+                .contains("조회 <b").contains("댓글 <b");
         for (CommentRow comment : commentService.list(postId)) {
             assertThat(html).contains(comment.comment());
         }
@@ -208,13 +208,13 @@ class PostScreenTest {
     }
 
     @Test
-    @DisplayName("글쓰기 화면은 게시판 이름을 자유게시판으로 고정해 그린다")
-    void registerHardcodesBoardName() throws Exception {
-        // 레거시 결함을 그대로 옮긴 것이다. D-032 참조.
-        String html = render("/post/register?boardId=" + anyBoardWithPosts(),
-                "post-register.html");
+    @DisplayName("글쓰기 화면은 실제 게시판 이름을 그린다 — D-032 를 고쳤다(D-159)")
+    void registerShowsRealBoardName() throws Exception {
+        int boardId = anyBoardWithPosts();
+        String html = render("/post/register?boardId=" + boardId, "post-register.html");
 
-        assertThat(html).contains("value=\"자유게시판\"");
+        assertThat(html).contains(boardService.get(boardId).subject())
+                .contains("name=\"filename\"").contains("id=\"editor1\"");
     }
 
     @Test

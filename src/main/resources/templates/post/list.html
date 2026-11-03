@@ -1,138 +1,90 @@
 <!DOCTYPE html>
 <!--/*
-  게시글 목록.
+  게시글 목록 (D-159).
   출처: legacy/ERFlow/src/main/webapp/post/postList.jsp
 
-  마크업 구조와 class 이름은 레거시 그대로다. css/post/postList.css 와
-  js/post/postList.js 가 이 이름들에 걸려 있다.
+  목록 틀(D-148)의 카드 하나. 제목을 누르면 글 보기로, «글쓰기» 는 쓰기 화면으로
+  간다. 검색과 쪽 번호는 보통의 GET 폼·링크이고 게시판 번호를 같이 싣는다.
+  답글은 pos 만큼 들여쓰고 «답글 :» 을 앞에 붙인다(PostRow 설명 참조).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('게시글 목록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/postList.js'} })}">
+<head th:replace="~{fragments/head :: page(${board.subject}, ${ {'/js/common/table.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="main-notice">
-        <div class="notice1">
-            <!--/* 게시판 이름이 길 표시의 마지막 조각이라 그대로 화면 제목이 된다. */-->
-            <div th:replace="~{fragments/page-head :: head('사용자 > 게시판 > ' + ${board.subject})}"></div>
-
-            <div class="box">
-                <table class="table table-striped">
-                    <form th:action="@{/post/register}">
-                        <input type="hidden" name="boardId" th:value="${boardId}">
-                        <tr>
-                            <td class="table-name" colspan="4" th:text="${board.subject}">게시판</td>
-                            <td id="postlist-th">
-                                <button type="submit" value="write">글쓰기</button>
-                            </td>
-                        </tr>
-                    </form>
-                    <tr>
-                        <th>글번호</th>
-                        <th>제목</th>
-                        <th>작성자</th>
-                        <th>작성날짜</th>
-                        <th>조회수</th>
-                    </tr>
-
-                    <tr th:each="row : ${posts}">
-                        <td th:text="${row.displayNumber}">1</td>
-                        <td align="left">
-                            <!--/*
-                              들여쓰기와 "답글 : " 은 레거시가 out.println 으로 찍는다.
-                              pos 가 들여쓰기 깊이다(PostRow 설명 참조).
-                              실데이터에 pos > 0 인 글이 없어 실화면으로는 검증되지 않는다.
-                            */-->
-                            <a class="post-reader" th:data-value="${row.post.id}" href="#">
-                                <th:block th:each="i : ${#numbers.sequence(1, row.post.pos, 1)}"
-                                          th:if="${row.post.pos > 0}">&nbsp;&nbsp;</th:block>
-                                <th:block th:if="${row.post.reply()}">답글 : </th:block>
-                                <span th:text="${row.post.subject}">제목</span></a>
-                            <img th:if="${row.hasAttachment()}" th:src="@{/images/post/icon.gif}"
-                                 alt="첨부파일" align="middle"/>
-                            <span th:if="${row.hasComments()}">
-                                <a class="comment-reader" href="#"
-                                   th:text="'(' + ${row.commentCount} + ')'">(0)</a>
-                            </span>
-                        </td>
-                        <td>
-                            <a th:href="@{/profile(id=${row.post.userId})}"
-                               style="text-decoration: none" th:text="${row.post.name}">작성자</a>
-                        </td>
-                        <!--/* 레거시는 rs.getString 결과를 그대로 찍는다. board-list.html 설명 참조. */-->
-                        <td th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2023-01-01 00:00:00</td>
-                        <td th:text="${row.post.count}">0</td>
-                    </tr>
-
-                    <tfoot>
-                    <tr>
-                        <td colspan="5"></td>
-                    </tr>
-                    </tfoot>
-                </table>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 게시판 &gt; ' + ${board.subject}, |글 ${page.totalRecord}|, ~{::content})}">
+<th:block th:fragment="content">
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <a class="btn btn-primary" th:href="@{/post/register(boardId=${boardId})}">글쓰기</a>
+                <a class="btn" th:href="@{/post/board-list}">게시판 목록</a>
             </div>
-
-            <div class="userBoardList-footer">
-                <form name="postFrm">
-                    <div class="userBoardInfo">
-                        <div>&nbsp;</div>
-                        <div class="search-option">
-                            <select name="keyfield">
-                                <option value="" th:selected="${keyfield == ''}">전체조회</option>
-                                <option value="subject" th:selected="${keyfield == 'subject'}">제목</option>
-                                <option value="author" th:selected="${keyfield == 'author'}">작성자</option>
-                            </select>
-
-                            <div class="main-search-container">
-                                <div class="main-search-border">
-                                    <input class="main-search-text" type="search"
-                                           placeholder="검색" aria-label="Search"
-                                           name="keyword" th:value="${keyword}">
-                                </div>
-                                <div class="main-search-icon">
-                                    <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
-                                </div>
-                            </div>
-                        </div>
+            <form class="toolbar-search" th:action="@{/post/list}" method="get">
+                <input type="hidden" name="boardId" th:value="${boardId}">
+                <select name="keyfield" aria-label="검색할 칸">
+                    <option value="" th:selected="${keyfield == ''}">전체 조회</option>
+                    <option value="subject" th:selected="${keyfield == 'subject'}">제목</option>
+                    <option value="author" th:selected="${keyfield == 'author'}">작성자</option>
+                </select>
+                <div class="main-search-container">
+                    <div class="main-search-border">
+                        <input class="main-search-text" type="search" name="keyword"
+                               placeholder="글 검색" aria-label="글 검색어" th:value="${keyword}">
                     </div>
-                </form>
-
-                <div class="page-controller">
-                    <a th:if="${page.hasPreviousBlock()}" class="disabled"
-                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|">이전</a>
-                    <ul class="page-numbers">
-                        <a th:each="number : ${page.pageNumbers}"
-                           th:href="|javascript:paging('${number}')|"
-                           th:classappend="${number == page.nowPage} ? 'disabled'">
-                            <li th:text="${number}">1</li>
-                        </a>
-                    </ul>
-                    <a th:if="${page.hasNextBlock()}"
-                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+                    <div class="main-search-icon">
+                        <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-    </div>
-
-    <!--/* js/post/postList.js 가 이 폼들을 읽어 검색·페이징·글 열기를 만든다. */-->
-    <form name="searchFrm">
-        <input type="hidden" name="keyfield" value="">
-        <input type="hidden" name="keyword" value="">
-    </form>
-    <form name="readFrm">
-        <input type="hidden" name="boardId" th:value="${boardId}">
-        <input type="hidden" name="nowPage" th:value="${page.nowPage}">
-        <input type="hidden" name="keyfield" th:value="${keyfield}">
-        <input type="hidden" name="keyword" th:value="${keyword}">
-    </form>
-    <form th:action="@{/post/view}" name="showFrm">
-        <input type="hidden" name="boardId" th:value="${boardId}">
-        <input type="hidden" name="id">
-    </form>
-</div>
+        <div class="table-scroll">
+            <table class="table table-striped table-nowrap">
+                <thead>
+                <tr>
+                    <th scope="col" class="num-col">번호</th>
+                    <th scope="col">제목</th>
+                    <th scope="col">작성자</th>
+                    <th scope="col">작성일</th>
+                    <th scope="col">조회</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(posts)}">
+                    <td colspan="5" class="empty-cell">글이 없습니다.</td>
+                </tr>
+                <tr th:each="row : ${posts}">
+                    <td class="num-col" th:text="${row.displayNumber}">1</td>
+                    <td class="subject-cell">
+                        <span class="reply-indent" th:if="${row.post.pos > 0}"
+                              th:style="'width:' + ${row.post.pos * 1.25} + 'rem'"></span>
+                        <span class="reply-mark" th:if="${row.post.reply()}">답글</span>
+                        <a class="row-link" th:href="@{/post/view(boardId=${boardId}, id=${row.post.id})}"
+                           th:text="${row.post.subject}" th:title="${row.post.subject}">제목</a>
+                        <span class="subject-extra" th:if="${row.hasAttachment()}" title="첨부 있음">
+                            <img th:src="@{/images/post/icon.gif}" alt="첨부"></span>
+                        <a class="comment-count" th:if="${row.hasComments()}"
+                           th:href="@{/post/view(boardId=${boardId}, id=${row.post.id})}"
+                           th:text="'[' + ${row.commentCount} + ']'">[0]</a>
+                    </td>
+                    <td><a th:href="@{/profile(id=${row.post.userId})}" th:text="${row.post.name}">작성자</a></td>
+                    <td th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</td>
+                    <td th:text="${row.post.count}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="page-controller" th:if="${page.totalPage > 1}">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="@{/post/list(boardId=${boardId},nowPage=${page.pagePerBlock * (page.nowBlock - 2) + 1},keyfield=${keyfield},keyword=${keyword})}">이전</a>
+            <ul class="page-numbers">
+                <li th:each="n : ${page.pageNumbers}">
+                    <a th:href="@{/post/list(boardId=${boardId},nowPage=${n},keyfield=${keyfield},keyword=${keyword})}"
+                       th:classappend="${n == page.nowPage} ? 'disabled'" th:text="${n}">1</a>
+                </li>
+            </ul>
+            <a th:if="${page.hasNextBlock()}"
+               th:href="@{/post/list(boardId=${boardId},nowPage=${page.pagePerBlock * page.nowBlock + 1},keyfield=${keyfield},keyword=${keyword})}">다음</a>
+        </div>
+    </section>
+</th:block>
 </body>
 </html>

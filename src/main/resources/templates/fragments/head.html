@@ -53,4 +53,5 @@
     <script th:each="js : ${scripts}" th:src="@{${js}}"
             th:async="${#strings.startsWith(js, '//')}"></script>
     <script th:src="@{/js/common/csrf.js}"></script>
+    <script th:src="@{/js/common/menu.js}"></script>
 </head>

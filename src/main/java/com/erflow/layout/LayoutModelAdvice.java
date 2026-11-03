@@ -93,6 +93,54 @@ public class LayoutModelAdvice {
     }
 
     /**
+     * 지금 있는 사용자 메뉴의 주소 (D-159). 사용자 사이드바가 현재 항목을 밝힌다.
+     *
+     * <p>요청 주소(경로 + 물음표 뒤)로 시작하는 메뉴 주소 가운데 가장 긴 것을 고른다.
+     * 없으면 첫 경로 조각이 같은 메뉴(예: /post/view 는 /post/board-list)로 한다.
+     *
+     * @param request 현재 요청
+     * @return 현재 항목의 메뉴 주소. 맞는 것이 없으면 {@code null}
+     */
+    @ModelAttribute("currentMenuUrl")
+    public String currentMenuUrl(HttpServletRequest request) {
+        String current = request.getRequestURI()
+                + (request.getQueryString() == null ? "" : "?" + request.getQueryString());
+        List<String> urls = new java.util.ArrayList<>();
+        for (MenuNode root : sideMenu()) {
+            if (!root.isGroup()) {
+                urls.add(root.url());
+            }
+            for (MenuNode child : root.children()) {
+                if (!child.isGroup()) {
+                    urls.add(child.url());
+                }
+            }
+        }
+        String best = null;
+        for (String url : urls) {
+            if (current.startsWith(url) && (best == null || url.length() > best.length())) {
+                best = url;
+            }
+        }
+        if (best != null) {
+            return best;
+        }
+        String head = firstSegment(request.getRequestURI());
+        for (String url : urls) {
+            if (url.equals(head) || url.startsWith(head + "/") || url.startsWith(head + "?")) {
+                return url;
+            }
+        }
+        return null;
+    }
+
+    /** {@code /post/list} → {@code /post}. */
+    private static String firstSegment(String path) {
+        int second = path.indexOf('/', 1);
+        return second < 0 ? path : path.substring(0, second);
+    }
+
+    /**
      * 지금 있는 관리자 구역 (D-150). 관리자 사이드바가 현재 항목을 밝힌다.
      *
      * <p>주소의 앞부분으로 가른다 — 한 구역의 목록·추가·수정이 같은 항목에 속한다.

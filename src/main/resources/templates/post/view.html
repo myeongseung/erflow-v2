@@ -1,244 +1,120 @@
 <!DOCTYPE html>
 <!--/*
-  게시글 보기.
+  게시글 보기 (D-159).
   출처: legacy/ERFlow/src/main/webapp/post/postView.jsp
 
-  마크업 구조와 class 이름은 레거시 그대로다. css/post/postView.css 와
-  js/post/postView.js 가 이 이름들에 걸려 있다.
-
-  레거시는 표시 조건을 스크립틀릿 if 로 감쌌다. 마크업 자체는 남으므로 정답에도
-  모든 갈래가 들어 있다. th:if 도 같아서 템플릿끼리 견주면 짝이 맞는다.
+  글 한 장(제목 · 쓴 사람과 시각 · 조회·댓글 수 · 동작 단추 · 첨부 · 본문)과 그 아래
+  댓글 카드. 수정·삭제·답변은 POST 폼이고(D-031) 댓글 답글·수정은 접힌 폼을
+  js/post/view.js 가 연다. 댓글 삭제도 POST 폼(commentDeleteFrm)이다.
+  본문은 허용목록으로 거른 HTML 이다(D-118).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page(${post.subject}, ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/post/postView.js'} })}">
+<head th:replace="~{fragments/head :: page(${post.subject}, ${ {'/js/post/view.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="main-notice">
-        <div class="wrap">
-            <div class="context">
-                <div class="empty-space"></div>
-                <div class="body-border">
-                    <div class="iheader">
-                        <table class="subject">
-                            <div class="subject-one-wrap">
-                                <div class="subject-one">
-                                    <div class="subject-center" th:text="${post.subject}">제목</div>
-                                </div>
-                            </div>
-                            <hr>
-                            <tr>
-                                <div class="subject-group">
-                                    <div class="subject-middle-group">
-                                        <div class="left-subject">
-                                            <div>작성자: &nbsp;</div>
-                                            <div class="subject-content2" th:text="${post.name}">작성자</div>
-                                        </div>
-
-                                        <div class="right-subject">
-                                            <div class="empty-space-right"></div>
-                                            <div>작성일: &nbsp;</div>
-                                            <!--/* 레거시는 rs.getString 결과를 그대로 찍는다. D-026 참조. */-->
-                                            <div th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2023-01-01 00:00:00</div>
-                                            <div class="empty-space-right"></div>
-                                            <div>댓글수: &nbsp;</div>
-                                            <div th:text="${commentCount}">0</div>
-                                            <div class="empty-space-right"></div>
-                                            <div>조회수: &nbsp;</div>
-                                            <div th:text="${post.count}">0</div>
-                                            <div class="dropstart" role="group">
-                                                <button type="button" class="btn btn-light dropdown-toggle"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li th:if="${mine}">
-                                                        <form id="updateForm" th:action="@{/post/update}" method="post">
-                                                            <input type="hidden" name="id" th:value="${post.id}">
-                                                            <input type="hidden" name="boardId" th:value="${boardId}">
-                                                            <a id="updateLink" class="dropdown-item" href="#">수정하기</a>
-                                                        </form>
-                                                    </li>
-                                                    <li th:if="${admin or mine}">
-                                                        <form id="deleteForm" th:action="@{/post/delete}" method="post">
-                                                            <input type="hidden" name="boardId" th:value="${boardId}">
-                                                            <input type="hidden" name="postId" th:value="${post.id}">
-                                                            <a id="deleteLink" class="dropdown-item" href="#">삭제하기</a>
-                                                        </form>
-                                                    </li>
-                                                    <li th:unless="${post.removed()}">
-                                                        <form id="replyForm" th:action="@{/post/reply}" method="post">
-                                                            <input type="hidden" name="boardId" th:value="${boardId}">
-                                                            <input type="hidden" name="postId" th:value="${post.id}">
-                                                            <a id="replyLink" class="dropdown-item" href="#">답변하기</a>
-                                                        </form>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <hr>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="btn-group drop"
-                                         th:if="${!post.removed() and !attachments.isEmpty()}">
-                                        <button type="button" class="btn btn-secondary dropdown-toggle"
-                                                data-bs-toggle="dropdown" aria-expanded="false">첨부파일</button>
-                                        <ul class="dropdown-menu">
-                                            <li th:each="file : ${attachments}">
-                                                <a th:href="@{/post/download(file=${file.name})}"
-                                                   class="dropdown-item"
-                                                   th:text="${file.displayName()}">파일명</a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="ibody">
-                        <!--/*
-                          레거시는 out.print(content) 로 본문을 그대로 내보냈다 — 저장된
-                          HTML 이 그대로 실행된다(O-010). th:utext 는 여전히 «걸러진
-                          HTML» 을 내보내는 자리다. 다른 것은 값이다: contentSafe 가
-                          허용목록으로 거른 HTML 이다(D-118).
-
-                          이스케이프하지 않는 이유는 서식이다. 이 글들에는 p·a·img 가
-                          들어 있어 글자로 바꾸면 서식이 보인다.
-                        */-->
-                        <div class="content" th:utext="${post.contentSafe}">본문</div>
-                    </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 게시판 &gt; ' + ${board.subject} + ' &gt; 글 보기', null, ~{::content})}">
+<th:block th:fragment="content">
+    <article class="post-article">
+        <header class="post-head">
+            <h2 class="post-title" th:text="${post.subject}">제목</h2>
+            <div class="post-meta">
+                <a class="post-author" th:href="@{/profile(id=${post.userId})}" th:text="${post.name}">작성자</a>
+                <span class="meta-sep">·</span>
+                <span th:text="${#temporals.format(post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</span>
+                <span class="meta-sep">·</span>
+                <span>조회 <b th:text="${post.count}">0</b></span>
+                <span class="meta-sep">·</span>
+                <span>댓글 <b th:text="${commentCount}">0</b></span>
+                <div class="post-actions">
+                    <form th:unless="${post.removed()}" th:action="@{/post/reply}" method="post">
+                        <input type="hidden" name="boardId" th:value="${boardId}">
+                        <input type="hidden" name="postId" th:value="${post.id}">
+                        <button class="btn" type="submit">답변</button>
+                    </form>
+                    <form th:if="${mine}" th:action="@{/post/update}" method="post">
+                        <input type="hidden" name="id" th:value="${post.id}">
+                        <input type="hidden" name="boardId" th:value="${boardId}">
+                        <button class="btn" type="submit">수정</button>
+                    </form>
+                    <form th:if="${admin or mine}" th:action="@{/post/delete}" method="post"
+                          onsubmit="return confirm('이 글을 지울까요?');">
+                        <input type="hidden" name="boardId" th:value="${boardId}">
+                        <input type="hidden" name="postId" th:value="${post.id}">
+                        <button class="btn btn-danger" type="submit">삭제</button>
+                    </form>
                 </div>
             </div>
-            <a href="#comment"></a>
-            <div class="all-comment-wrap">
-                <div class="all-comment">
-                    <th:block th:unless="${post.removed()}">
-                        <form th:action="@{/post/comment/register}" method="post">
-                            <input type="hidden" name="boardId" th:value="${boardId}">
-                            <input type="hidden" name="postId" th:value="${post.id}">
-                            <table class="comment">
-                                <tr class="comment-header">
-                                    <td class="name" th:text="${currentUserName}">이름</td>
-                                </tr>
-                                <tr class="comment-body">
-                                    <td class="post-body">
-                                        <textarea rows="3" name="comment" placeholder="댓글쓰기"></textarea>
-                                    </td>
-                                    <td class="post-enter">
-                                        <button type="submit">입력</button>
-                                    </td>
-                                </tr>
-                            </table>
-                        </form>
-
-                        <th:block th:if="${!comments.isEmpty()}">
-                            <table class="comment" th:each="c : ${comments}">
-                                <tr class="comment-header">
-                                    <td class="left-header" th:style="'padding-left:' + ${c.indent()} + 'px'">
-                                        <div class="name" th:text="${c.userName} + '(' + ${c.userId} + ')'">이름(사번)</div>
-                                        <div class="time" th:text="${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2023-01-01 00:00:00</div>
-                                    </td>
-                                    <td class="drop-menu">
-                                        <div class="dropstart" role="group">
-                                            <th:block th:if="${c.userId == currentUserId or admin or c.replyable()}">
-                                                <button type="button" class="btn btn-light dropdown-toggle"
-                                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                                    <i class="fa-solid fa-ellipsis-vertical"></i>
-                                                </button>
-                                                <ul class="dropdown-menu">
-                                                    <li th:if="${c.userId == currentUserId}">
-                                                        <a class="dropdown-item edit-expand-button" role="form"
-                                                           aria-expanded="false" aria-controls="collapseExample"
-                                                           th:data-id="${c.id}">수정하기</a>
-                                                    </li>
-                                                    <li th:if="${admin or c.userId == currentUserId}">
-                                                        <a class="dropdown-item delete-comment-button"
-                                                           th:data-id="${c.id}">삭제하기</a>
-                                                    </li>
-                                                    <li th:if="${c.replyable()}">
-                                                        <a class="dropdown-item reply-expand-button"
-                                                           data-bs-toggle="collapse" role="form"
-                                                           aria-expanded="false" aria-controls="collapseExample"
-                                                           th:data-id="${c.id}">답글달기</a>
-                                                    </li>
-                                                </ul>
-                                            </th:block>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="comment-body">
-                                    <td class="content-body"
-                                        th:style="'padding-left:' + ${c.indent()} + 'px'"
-                                        th:text="${c.comment}">내용</td>
-                                </tr>
-                                <hr>
-                                <form th:action="@{/post/comment/reply}" method="post">
-                                    <input type="hidden" name="boardId" th:value="${boardId}">
-                                    <input type="hidden" name="postId" th:value="${post.id}">
-                                    <input type="hidden" name="refId" th:value="${c.refId}">
-                                    <div class="reply-component">
-                                        <tr class="comment-footer">
-                                            <td class="post-reply" th:data-id="${c.id}">
-                                                <div class="fold">
-                                                    <div class="card card-body">
-                                                        <div class="post-reply-comments">
-                                                            <textarea rows="3" name="comment" placeholder="답글달기"></textarea>
-                                                            <button type="submit">입력</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </div>
-                                </form>
-                                <form th:action="@{/post/comment/update}" method="post">
-                                    <input type="hidden" name="boardId" th:value="${boardId}">
-                                    <input type="hidden" name="postId" th:value="${post.id}">
-                                    <input type="hidden" name="id" th:value="${c.id}">
-                                    <div class="edit-component">
-                                        <tr class="comment-footer">
-                                            <td class="edit-reply" th:data-id="${c.id}">
-                                                <div class="fold">
-                                                    <div class="card card-body">
-                                                        <div class="post-reply-comments">
-                                                            <textarea rows="3" name="comment" placeholder="댓글수정"
-                                                                      th:text="${c.comment}"></textarea>
-                                                            <button type="submit">수정</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </div>
-                                </form>
-                            </table>
-                        </th:block>
-                        <p th:if="${comments.isEmpty()}">등록된 댓글이 없습니다.</p>
-                        <hr>
-                    </th:block>
-                    <p th:if="${post.removed()}">삭제된 게시물에는 댓글을 작성할 수 없습니다.</p>
-                </div>
-            </div>
-        </div>
+            <ul class="post-files" th:if="${!post.removed() and !attachments.isEmpty()}">
+                <li class="post-files-label">첨부</li>
+                <li th:each="file : ${attachments}">
+                    <a th:href="@{/post/download(file=${file.name})}" th:text="${file.displayName()}">파일명</a>
+                </li>
+            </ul>
+        </header>
+        <div class="content post-body" th:utext="${post.contentSafe}">본문</div>
+    </article>
+    <div class="post-nav">
+        <a class="btn" th:href="@{/post/list(boardId=${boardId})}">목록</a>
     </div>
 
-    <!--/*
-      레거시는 댓글 삭제가 링크(GET)였다. CSRF 방어를 켠 뒤로 GET 삭제만 방어를
-      비켜 가므로 POST 로 받는다. js/post/postView.js 가 이 폼을 채워 보낸다.
-      D-031 참조.
-    */-->
+    <section class="list-card comment-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <h2 class="card-title">댓글</h2>
+                <span class="count-badge" th:text="${commentCount}">0</span>
+            </div>
+        </div>
+        <div class="comment-body">
+            <th:block th:unless="${post.removed()}">
+                <form class="comment-form" th:action="@{/post/comment/register}" method="post">
+                    <input type="hidden" name="boardId" th:value="${boardId}">
+                    <input type="hidden" name="postId" th:value="${post.id}">
+                    <textarea name="comment" rows="2" placeholder="댓글을 적어 주세요" aria-label="댓글"></textarea>
+                    <button class="btn btn-primary" type="submit">등록</button>
+                </form>
+                <p class="empty-note" th:if="${comments.isEmpty()}">등록된 댓글이 없습니다.</p>
+                <ul class="comment-list" th:unless="${comments.isEmpty()}">
+                    <li class="comment-item" th:each="c : ${comments}"
+                        th:classappend="${c.depth > 0} ? 'is-reply'" th:data-id="${c.id}">
+                        <div class="comment-head">
+                            <span class="comment-name" th:text="${c.userName}">이름</span>
+                            <span class="comment-id" th:text="${c.userId}">사번</span>
+                            <span class="comment-time" th:text="${#temporals.format(c.createdAt, 'yyyy-MM-dd HH:mm')}">시각</span>
+                            <span class="comment-actions">
+                                <button type="button" class="link-btn" data-fold="reply" th:if="${c.replyable()}">답글</button>
+                                <button type="button" class="link-btn" data-fold="edit" th:if="${c.userId == currentUserId}">수정</button>
+                                <button type="button" class="link-btn" data-delete th:data-id="${c.id}"
+                                        th:if="${admin or c.userId == currentUserId}">삭제</button>
+                            </span>
+                        </div>
+                        <p class="comment-text" th:text="${c.comment}">내용</p>
+                        <form class="comment-fold" data-fold-name="reply" th:if="${c.replyable()}"
+                              th:action="@{/post/comment/reply}" method="post">
+                            <input type="hidden" name="boardId" th:value="${boardId}">
+                            <input type="hidden" name="postId" th:value="${post.id}">
+                            <input type="hidden" name="refId" th:value="${c.refId}">
+                            <textarea name="comment" rows="2" placeholder="답글" aria-label="답글"></textarea>
+                            <button class="btn btn-primary" type="submit">등록</button>
+                        </form>
+                        <form class="comment-fold" data-fold-name="edit" th:if="${c.userId == currentUserId}"
+                              th:action="@{/post/comment/update}" method="post">
+                            <input type="hidden" name="boardId" th:value="${boardId}">
+                            <input type="hidden" name="postId" th:value="${post.id}">
+                            <input type="hidden" name="id" th:value="${c.id}">
+                            <textarea name="comment" rows="2" aria-label="댓글 수정" th:text="${c.comment}"></textarea>
+                            <button class="btn btn-primary" type="submit">수정</button>
+                        </form>
+                    </li>
+                </ul>
+            </th:block>
+            <p class="empty-note" th:if="${post.removed()}">삭제된 게시물에는 댓글을 작성할 수 없습니다.</p>
+        </div>
+    </section>
+
     <form th:action="@{/post/comment/delete}" method="post" name="commentDeleteFrm">
         <input type="hidden" name="boardId" th:value="${boardId}">
         <input type="hidden" name="postId" th:value="${post.id}">
         <input type="hidden" name="id">
     </form>
-</div>
+</th:block>
 </body>
 </html>

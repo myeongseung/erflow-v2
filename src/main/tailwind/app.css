@@ -1688,8 +1688,262 @@
     }
 
     /* 카드가 세로로 둘이면 사이를 띄운다 — 격자(.list-grid) 안의 나란한 둘은 아니다 */
-    .admin-page > .list-card + .list-card {
+    .admin-page > .list-card + .list-card,
+    .page > .list-card + .list-card {
         margin-top: 1.5rem;
+    }
+
+    /* ═══ 사용자 껍데기(D-159) — 관리자 본문 상자와 같은 폭 규칙 ══════════ */
+
+    .main-column > .page {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 80rem;
+        min-width: 0;
+        margin-inline: auto;
+        padding: 1.25rem 1.5rem 2.5rem;
+    }
+
+    /* ═══ 게시판(D-159) ════════════════════════════════════════════════ */
+
+    .muted-text {
+        color: var(--color-ink-mute);
+    }
+
+    .table .num-col {
+        width: 4rem;
+    }
+
+    /* 제목 칸 — 들여쓰기 · 답글 표시 · 제목 · 첨부 · 댓글 수가 한 줄에 선다 */
+    .subject-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        min-width: 0;
+    }
+
+    .reply-indent {
+        display: inline-block;
+        flex: none;
+    }
+
+    .reply-mark {
+        flex: none;
+        padding: 0 0.375rem;
+        border-radius: 999px;
+        background: var(--color-paper-sunk);
+        color: var(--color-ink-soft);
+        font-size: 0.6875rem;
+        font-weight: 600;
+    }
+
+    .subject-cell > .row-link {
+        max-width: 34rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .subject-extra img {
+        height: 0.875rem;
+        vertical-align: middle;
+    }
+
+    .comment-count {
+        color: var(--color-accent);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* 첨부 파일 이름 목록(글쓰기·수정) */
+    .file-list {
+        margin: 0.375rem 0 0;
+        padding: 0;
+        list-style: none;
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+    }
+
+    .file-list:empty {
+        display: none;
+    }
+
+    .file-list + input[type="file"] {
+        margin-top: 0.375rem;
+    }
+
+    /* ── 글 한 장 */
+
+    .post-article {
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .post-head {
+        padding: 1.125rem 1.375rem 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .post-title {
+        margin: 0 0 0.5rem;
+        color: var(--color-ink);
+        font-size: 1.25rem;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+        line-height: 1.3;
+    }
+
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.375rem 0.5rem;
+        color: var(--color-ink-soft);
+        font-size: 0.75rem;
+    }
+
+    .post-meta b {
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .meta-sep {
+        color: var(--color-ink-mute);
+    }
+
+    .post-author {
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 0.375rem;
+        margin-left: auto;
+    }
+
+    .post-actions form {
+        margin: 0;
+    }
+
+    .post-files {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem 0.75rem;
+        margin: 0.75rem 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.75rem;
+    }
+
+    .post-files-label {
+        color: var(--color-ink-mute);
+        font-weight: 600;
+    }
+
+    .post-body {
+        min-height: 12rem;
+        padding: 1.25rem 1.375rem;
+        border-radius: 0;
+    }
+
+    .post-nav {
+        display: flex;
+        justify-content: flex-end;
+        margin: 0.75rem 0 1.25rem;
+    }
+
+    /* ── 댓글 카드 */
+
+    .comment-body {
+        padding: 0.875rem 1rem 1rem;
+    }
+
+    .comment-form {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .comment-form textarea {
+        flex: 1 1 auto;
+        min-height: 3.25rem;
+    }
+
+    .empty-note {
+        margin: 0.875rem 0 0;
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
+    }
+
+    .comment-list {
+        margin: 0.875rem 0 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .comment-item {
+        padding: 0.75rem 0;
+        border-top: 1px solid var(--color-line);
+    }
+
+    .comment-item.is-reply {
+        margin-left: 1.75rem;
+        padding-left: 0.875rem;
+        border-left: 2px solid var(--color-line);
+    }
+
+    .comment-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .comment-name {
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .comment-id,
+    .comment-time {
+        color: var(--color-ink-mute);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 0.625rem;
+        margin-left: auto;
+    }
+
+    .comment-text {
+        margin: 0.375rem 0 0;
+        color: var(--color-ink);
+        font-size: 0.8125rem;
+        line-height: 1.7;
+        white-space: pre-wrap;
+    }
+
+    /* 답글·수정 폼은 접혀 있다가 단추로 열린다(js/post/view.js) */
+    .comment-fold {
+        display: none;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-top: 0.625rem;
+        padding: 0.625rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-sharp);
+        background: var(--color-paper-sunk);
+    }
+
+    .comment-fold textarea {
+        flex: 1 1 auto;
+        min-height: 3rem;
     }
 
     .toolbar-actions,
@@ -1845,7 +2099,8 @@
         overflow-wrap: anywhere;
     }
 
-    /* 편집기가 드는 폼(문서 양식)은 44rem 이 좁다 — 64rem */
+    /* 편집기가 드는 폼(문서 양식·게시글)은 44rem 이 좁다 — 64rem */
+    form.wide-form:has(.form-group),
     form.template-form:has(.form-group) {
         max-width: 64rem;
     }
@@ -2695,182 +2950,6 @@
 
     .stack-container {
         display: none;
-    }
-
-    /* ═══ 게시글 보기 ══════════════════════════════════════════════════
-       레거시는 머리말을 <table class="subject"> 안에 div 로 쌓았다 — 브라우저가
-       표 밖으로 밀어내는 잘못된 마크업이다. 구조는 건드리지 않고 표 노릇을
-       그만두게 해서 블록으로 읽히게 한다(D-124).                          */
-
-    .main-notice > .wrap {
-        max-width: 60rem;
-    }
-
-    .body-border {
-        overflow: hidden;
-        border: 1px solid var(--color-line);
-        border-radius: var(--radius-soft);
-        background: var(--color-surface);
-    }
-
-    .subject {
-        display: block;
-        width: 100%;
-        border: 0;
-    }
-
-    .iheader {
-        padding: 1rem 1.25rem 0.75rem;
-    }
-
-    .subject-center {
-        margin-bottom: 0.75rem;
-        color: var(--color-ink);
-        font-size: 1.125rem;
-        font-weight: 650;
-        letter-spacing: -0.015em;
-    }
-
-    .subject-group,
-    .subject-middle-group {
-        display: block;
-    }
-
-    .subject-middle-group {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem 1rem;
-        padding: 0.625rem 0 0.125rem;
-    }
-
-    .left-subject,
-    .right-subject {
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-        color: var(--color-ink-soft);
-        font-size: 0.75rem;
-    }
-
-    .right-subject {
-        flex-wrap: wrap;
-    }
-
-    .subject-content2 {
-        color: var(--color-ink);
-        font-weight: 600;
-    }
-
-    .empty-space-right {
-        width: 0.625rem;
-    }
-
-    .iheader .btn-group.drop {
-        padding-top: 0.625rem;
-    }
-
-    .ibody {
-        border: 0;
-        border-top: 1px solid var(--color-line);
-        border-radius: 0;
-    }
-
-    /* ── 댓글 */
-
-    .all-comment-wrap {
-        margin-top: 1rem;
-    }
-
-    .all-comment {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 1rem 1.25rem;
-        border: 1px solid var(--color-line);
-        border-radius: var(--radius-soft);
-        background: var(--color-surface);
-    }
-
-    /* 댓글 쓰기 — 입력과 단추가 한 줄에 선다. */
-    .post-body {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-
-    .post-body textarea {
-        flex: 1 1 auto;
-        min-height: 3.25rem;
-    }
-
-    .post-enter {
-        flex: none;
-    }
-
-    .comment {
-        padding-top: 0.75rem;
-        border-top: 1px solid var(--color-line);
-    }
-
-    .comment:first-of-type {
-        padding-top: 0;
-        border-top: 0;
-    }
-
-    .comment-header,
-    .left-header {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .comment-header {
-        justify-content: space-between;
-    }
-
-    .comment-header .name {
-        color: var(--color-ink);
-        font-size: 0.8125rem;
-        font-weight: 600;
-    }
-
-    .comment-header .time {
-        color: var(--color-ink-mute);
-        font-size: 0.6875rem;
-        font-variant-numeric: tabular-nums;
-    }
-
-    .content-body {
-        padding: 0.25rem 0 0;
-        color: var(--color-ink);
-        font-size: 0.8125rem;
-        line-height: 1.7;
-    }
-
-    /* 답글·수정 폼이 접혀 있는 자리(.fold)는 열릴 때 판이 된다. */
-    .post-reply-comments {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-        padding: 0.625rem;
-        border: 1px solid var(--color-line);
-        border-radius: var(--radius-sharp);
-        background: var(--color-paper-sunk);
-    }
-
-    .post-reply-comments textarea {
-        flex: 1 1 auto;
-        min-height: 3rem;
-    }
-
-    /* ⋮ 단추는 글자가 없다. 작게 둔다. */
-    .dropstart > .dropdown-toggle,
-    .drop-menu .dropdown-toggle {
-        width: 1.75rem;
-        min-height: 1.75rem;
-        padding: 0;
     }
 
     /* ═══ 결재 문서 보기 ═══════════════════════════════════════════════

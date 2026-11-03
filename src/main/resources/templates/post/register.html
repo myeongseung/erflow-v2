@@ -1,72 +1,37 @@
 <!DOCTYPE html>
 <!--/*
-  글쓰기.
+  글쓰기 (D-159).
   출처: legacy/ERFlow/src/main/webapp/post/postRegister.jsp
 
-  마크업 구조와 class 이름은 레거시 그대로다. css/post/postRegister.css 와
-  js/post/postRegister.js 가 이 이름들에 걸려 있다.
+  폼 카드 하나 — 제목 · 본문(편집기, D-120) · 첨부 · 취소/게시. 게시판 이름은 길
+  표시에 있다(옛 화면은 «자유게시판» 으로 박혀 있었다, D-032). 첨부는 여러 개이고
+  고른 파일 이름을 js/post/write.js 가 아래에 적어 준다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('게시글 등록', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/post/postRegister.js', '/js/vendor/jodit-4.13.23.min.js', '/js/main/index.js', '/js/common/editor.js'} })}">
+<head th:replace="~{fragments/head :: page('글쓰기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jodit-4.13.23.min.js', '/js/common/editor.js', '/js/post/write.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div id="main-wrap">
-        <form method="post" th:action="@{/post/register}" id="board-write"
-              enctype="multipart/form-data">
-            <input type="hidden" name="boardId" th:value="${boardId}">
-            <div class="board-bodyeditor">
-                <div class="empty-space">&nbsp;</div>
-                <div class="empty-space"></div>
-                <div class="empty-space">&nbsp;</div>
-                <div class="empty-space"></div>
-
-                <div class="write-header-wrap">
-                    <div class="write-header">
-                        <!--/*
-                          레거시는 boardName 을 계산해 두고도 value="자유게시판" 을
-                          박아 두었다. 어느 게시판에 글을 써도 "자유게시판"이 뜬다.
-                          그대로 옮긴다 — D-032 참조.
-                        */-->
-                        <input type="text" class="write-header-type" value="자유게시판" readonly>
-                        <input type="text" name="subject" class="write-header-subject"
-                               placeholder="제목을 입력해주세요" required>
-                    </div>
-                </div>
-            </div>
-            <div class="write-body">
-                <textarea name="content" id="editor1" class="ckeditor-textarea"
-                          rows="10" cols="80"></textarea>
-            </div>
-            <div class="write-header-wrap">
-                <div class="write-header">
-                    <div class="left-align">
-                        <div>
-                            <input type="file" name="filename" class="write-header-type" multiple>
-                        </div>
-                        <div id="listbox" style="display:none">
-                            <div id="listfile">
-                                첨부파일 :
-                                <div class="center-align" id="fileList"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="empty-space"></div>
-            <div class="board-button">
-                <div>
-                    <button type="submit" class="btn btn-primary btn-lg">게시하기</button>
-                    <button type="button" class="btn btn-secondary btn-lg"
-                            th:data-id="${boardId}">돌아가기</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 게시판 &gt; ' + ${board.subject} + ' &gt; 글쓰기', null, ~{::content})}">
+<th:block th:fragment="content">
+    <form class="wide-form" method="post" th:action="@{/post/register}" enctype="multipart/form-data">
+        <input type="hidden" name="boardId" th:value="${boardId}">
+        <div class="form-group">
+            <label for="subject">제목</label>
+            <input type="text" id="subject" name="subject" placeholder="제목을 입력해주세요" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="editor1">본문</label>
+            <textarea name="content" id="editor1" rows="10" cols="80"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="filename">첨부 파일</label>
+            <input type="file" id="filename" name="filename" multiple>
+            <ul class="file-list" id="fileList"></ul>
+        </div>
+        <div class="btn-group">
+            <a class="btn" th:href="@{/post/list(boardId=${boardId})}">취소</a>
+            <button class="btn btn-primary" type="submit">게시</button>
+        </div>
+    </form>
+</th:block>
 </body>
 </html>
