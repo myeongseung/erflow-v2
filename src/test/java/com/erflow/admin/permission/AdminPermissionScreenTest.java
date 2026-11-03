@@ -67,7 +67,7 @@ class AdminPermissionScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 권한 관리 &gt; 직급·부서 관리")
+        assertThat(html).contains("관리자 &gt; 직급·부서 관리")
                 .contains("직급 추가").contains("부서 추가").contains("겸하는 권한")
                 .contains("id=\"job-add\"").contains("id=\"dept-add\"")
                 .doesNotContain("data-open-on-load");

@@ -45,20 +45,20 @@ class AdminShellTest {
     @DisplayName("관리자 화면은 껍데기 조각 하나를 쓰고 지금 있는 메뉴를 밝힌다")
     void shellMarksTheCurrentMenu() throws Exception {
         String users = render("/admin/user/list");
-        // 사원 관리는 최상위 항목이라 li 에, 메뉴 관리는 하위 항목이라 안쪽 li 에 붙는다.
+        // 항목 여섯이 평평하다(D-158) — 현재 항목 하나만 is-current 를 받는다.
         assertThat(users).contains("class=\"admin-page\"").contains("class=\"page-title\"")
                 .containsPattern("class=\"sidebar-mainmenu is-current\"[^<]*<a href=\"/admin/user/list\"");
-        assertThat(users).doesNotContain("class=\"is-current\"");
+        assertThat(users).containsOnlyOnce("is-current");
 
         String menus = render("/admin/permission/menu-list");
         assertThat(menus).containsPattern(
-                "class=\"is-current\"[^<]*<a href=\"/admin/permission/menu-list\"");
-        assertThat(menus).doesNotContain("class=\"sidebar-mainmenu is-current\"");
+                "class=\"sidebar-mainmenu is-current\"[^<]*<a href=\"/admin/permission/menu-list\"");
+        assertThat(menus).containsOnlyOnce("is-current");
 
         // 수정 주소도 그 구역의 항목에 속한다.
         String edit = render("/admin/permission/job-register");
         assertThat(edit).containsPattern(
-                "class=\"is-current\"[^<]*<a href=\"/admin/permission/job-dept-list\"");
+                "class=\"sidebar-mainmenu is-current\"[^<]*<a href=\"/admin/permission/job-dept-list\"");
     }
 
     @Test

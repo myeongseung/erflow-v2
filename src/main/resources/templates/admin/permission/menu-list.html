@@ -13,7 +13,7 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('메뉴 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/permissions.js', '/js/common/dialog.js'} })}">
 </head>
-<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 권한 관리 &gt; 메뉴 관리', |메뉴 ${#lists.size(menus)}|, ~{::content})}">
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 메뉴 관리', |메뉴 ${#lists.size(menus)}|, ~{::content})}">
 <th:block th:fragment="content">
     <p class="page-lead">권한을 바꾸면 그 부서·직급 사람의 화면에서 메뉴가 나타나거나 사라집니다.
         관리자는 언제나 모든 메뉴를 봅니다.</p>

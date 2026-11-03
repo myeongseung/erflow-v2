@@ -67,8 +67,9 @@ class AdminUserScreenTest {
                 .contains("주민등록번호").contains("내·외국인")
                 // 추가 폼이 같은 화면의 대화상자다(D-148). 열린 채로 시작하지는 않는다
                 .contains("id=\"user-add\"").doesNotContain("data-open-on-load")
-                // 관리자 사이드메뉴가 함께 그려진다
-                .contains("사원 관리").contains("권한 관리").contains("게시판 관리");
+                // 관리자 사이드메뉴가 함께 그려진다 — 항목 여섯이 평평하다(D-158)
+                .contains("사원 관리").contains("직급·부서 관리").contains("게시판 관리")
+                .doesNotContain("권한 관리");
     }
 
     @Test

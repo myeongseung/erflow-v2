@@ -59,7 +59,7 @@ class AdminTemplateScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 문서 관리 &gt; 문서 양식")
+        assertThat(html).contains("관리자 &gt; 문서 양식")
                 .contains("양식 추가").contains("양식 이름").contains("미리보기")
                 .contains("class=\"dialog is-wide\"").doesNotContain("bootstrap.bundle");
     }

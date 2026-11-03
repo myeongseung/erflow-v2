@@ -1687,8 +1687,8 @@
         white-space: nowrap;
     }
 
-    /* 카드가 세로로 둘이면 사이를 띄운다 */
-    .list-card + .list-card {
+    /* 카드가 세로로 둘이면 사이를 띄운다 — 격자(.list-grid) 안의 나란한 둘은 아니다 */
+    .admin-page > .list-card + .list-card {
         margin-top: 1.5rem;
     }
 

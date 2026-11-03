@@ -5,6 +5,8 @@
   사용자 쪽 사이드메뉴와 달리 DB 에서 오지 않는다 — 항목이 여기 적혀 있다.
   바깥 상자(content-wrap)는 껍데기 조각(fragments/admin-shell)이 갖는다.
 
+  항목 여섯이 한 높이로 평평하다(D-158). 그룹 제목(권한 관리·문서 관리)은 뺐다 —
+  밑에 항목이 하나·둘뿐이라 가르는 뜻이 없었다.
   현재 항목은 adminArea(LayoutModelAdvice)로 밝힌다 — 한 구역의 목록·추가·수정이
   같은 항목에 속한다. 맨 아래 사람 카드는 me(이름·부서·직급)를 쓴다(D-150).
 */-->
@@ -15,29 +17,17 @@
                 <li class="sidebar-mainmenu" th:classappend="${adminArea == 'home'} ? 'is-current'">
                     <a th:href="@{/admin}"><i class="fa-solid fa-house"></i><span class="menu-title">관리자 홈</span></a>
                 </li>
-                <!--/* 사원 리스트와 사원 추가가 한 화면이라 항목도 하나다(D-148). */-->
                 <li class="sidebar-mainmenu" th:classappend="${adminArea == 'user'} ? 'is-current'">
                     <a th:href="@{/admin/user/list}"><i class="fa-solid fa-users"></i><span class="menu-title">사원 관리</span></a>
                 </li>
-                <li class="sidebar-mainmenu">
-                    <span class="menu-title">권한 관리</span>
-                    <ul class="nav-flyout">
-                        <li th:classappend="${adminArea == 'jobdept'} ? 'is-current'">
-                            <a th:href="@{/admin/permission/job-dept-list}"><i class="fa-solid fa-sitemap"></i>직급·부서 관리</a>
-                        </li>
-                        <!--/* 프로그램 리스트를 메뉴 관리로 대체했다(D-135). */-->
-                        <li th:classappend="${adminArea == 'menu'} ? 'is-current'">
-                            <a th:href="@{/admin/permission/menu-list}"><i class="fa-solid fa-list"></i>메뉴 관리</a>
-                        </li>
-                    </ul>
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'jobdept'} ? 'is-current'">
+                    <a th:href="@{/admin/permission/job-dept-list}"><i class="fa-solid fa-sitemap"></i><span class="menu-title">직급·부서 관리</span></a>
                 </li>
-                <li class="sidebar-mainmenu">
-                    <span class="menu-title">문서 관리</span>
-                    <ul class="nav-flyout">
-                        <li th:classappend="${adminArea == 'document'} ? 'is-current'">
-                            <a th:href="@{/admin/document/form-list}"><i class="fa-solid fa-file-lines"></i>문서 양식</a>
-                        </li>
-                    </ul>
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'menu'} ? 'is-current'">
+                    <a th:href="@{/admin/permission/menu-list}"><i class="fa-solid fa-list"></i><span class="menu-title">메뉴 관리</span></a>
+                </li>
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'document'} ? 'is-current'">
+                    <a th:href="@{/admin/document/form-list}"><i class="fa-solid fa-file-lines"></i><span class="menu-title">문서 양식</span></a>
                 </li>
                 <li class="sidebar-mainmenu" th:classappend="${adminArea == 'board'} ? 'is-current'">
                     <a th:href="@{/admin/board/list}"><i class="fa-solid fa-comments"></i><span class="menu-title">게시판 관리</span></a>
