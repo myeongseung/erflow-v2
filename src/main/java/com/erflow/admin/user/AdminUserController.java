@@ -50,7 +50,19 @@ public class AdminUserController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") int nowPage,
             Model model) {
+        fillList(keyfield, keyword, nowPage, model);
+        return "admin/user/list";
+    }
 
+    /**
+     * 목록 한 쪽과 추가 대화상자가 쓰는 값을 모델에 채운다 (D-148).
+     *
+     * @param keyfield 검색할 칸. 없으면 전체
+     * @param keyword 검색어
+     * @param nowPage 현재 페이지
+     * @param model 뷰 모델
+     */
+    private void fillList(String keyfield, String keyword, int nowPage, Model model) {
         AdminUserSearch search = new AdminUserSearch(
                 keyfield == null ? "" : keyfield, keyword == null ? "" : keyword);
         AdminUserService.UserPage page = adminUserService.list(search, nowPage);
@@ -59,7 +71,7 @@ public class AdminUserController {
         model.addAttribute("page", page.pagination());
         model.addAttribute("keyfield", search.keyfield());
         model.addAttribute("keyword", search.keyword());
-        return "admin/user/list";
+        model.addAttribute("options", adminUserService.registerForm());
     }
 
     /**
@@ -85,15 +97,19 @@ public class AdminUserController {
     }
 
     /**
-     * 사원 추가 화면.
+     * 사원 추가 화면 — 목록을 추가 대화상자가 열린 채로 그린다 (D-148).
+     *
+     * <p>추가 폼은 목록 화면 위의 대화상자가 됐다. 옛 주소로 들어와도 같은 곳에
+     * 닿도록 주소는 남긴다.
      *
      * @param model 뷰 모델
-     * @return 추가 템플릿
+     * @return 사원 관리 템플릿
      */
     @GetMapping("/register")
     public String registerForm(Model model) {
-        model.addAttribute("options", adminUserService.registerForm());
-        return "admin/user/register";
+        fillList(null, null, 1, model);
+        model.addAttribute("openAdd", true);
+        return "admin/user/list";
     }
 
     /**

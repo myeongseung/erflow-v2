@@ -996,14 +996,14 @@
       덮으면 **«삭제»(.btn-danger)가 파랗게** 된다 — 요소+속성 선택자가
       클래스 하나보다 특이도가 높기 때문이다.
     */
-    button[type="submit"]:not(.btn),
+    button[type="submit"]:not(.btn):not(.link-btn),
     input[type="submit"]:not(.btn) {
         border-color: var(--color-accent);
         background: var(--color-accent);
         color: #fff;
     }
 
-    button[type="submit"]:not(.btn):hover,
+    button[type="submit"]:not(.btn):not(.link-btn):hover,
     input[type="submit"]:not(.btn):hover {
         border-color: var(--color-accent-hover);
         background: var(--color-accent-hover);
@@ -1451,6 +1451,165 @@
         padding: 0 0.625rem;
     }
 
+    /* ═══ 관리자 목록 틀(D-148) ═════════════════════════════════════════
+       관리자 화면은 전부 이 틀이다 — 카드 하나에 도구줄(왼쪽 동작, 오른쪽
+       검색) · 표 · 쪽 번호. 만들기·고치기는 그 위의 대화상자(.dialog).    */
+
+    .list-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+    }
+
+    .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.625rem 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .toolbar-actions,
+    .toolbar-search {
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+    }
+
+    .toolbar-search {
+        margin-left: auto;
+    }
+
+    .toolbar-search select {
+        width: auto;
+        min-width: 8rem;
+    }
+
+    .table-scroll {
+        overflow-x: auto;
+    }
+
+    /* 카드가 테두리를 가지므로 안의 표는 제 테두리를 지운다 */
+    .list-card .table {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .list-card > .page-controller {
+        margin: 0;
+        padding: 0.625rem 0.875rem;
+        border-top: 1px solid var(--color-line);
+    }
+
+    /* 표 안의 줄 동작은 글자 링크다 — 채운 단추는 도구줄에만. 요소 기본 모습
+       (button 규칙)을 이기도록 요소+클래스로 적는다 */
+    button.link-btn {
+        height: auto;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--color-accent);
+        font: inherit;
+        cursor: pointer;
+    }
+
+    button.link-btn:hover {
+        background: none;
+        text-decoration: underline;
+    }
+
+    /* ── 대화상자. 44rem 폼 카드(D-137)가 목록 위에 뜬다 */
+
+    /* margin: auto 가 가운데 놓는다 — 기본 재설정(preflight)이 margin 을 0 으로
+       밀어 버리므로 다시 적어야 한다 */
+    .dialog {
+        width: min(44rem, calc(100vw - 2rem));
+        max-height: calc(100vh - 3rem);
+        margin: auto;
+        padding: 0;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-soft);
+        background: var(--color-surface);
+        color: var(--color-ink);
+        box-shadow: 0 1.5rem 3rem rgb(22 25 29 / 0.18);
+    }
+
+    .dialog::backdrop {
+        background: rgb(22 25 29 / 0.45);
+    }
+
+    /* 머리와 발은 고정, 몸통만 구른다 */
+    .dialog > form {
+        display: flex;
+        flex-direction: column;
+        max-height: calc(100vh - 3rem);
+    }
+
+    .dialog > form:has(.form-group) {
+        max-width: none;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+
+    .dialog-head {
+        display: flex;
+        flex: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.875rem 1.125rem;
+        border-bottom: 1px solid var(--color-line);
+    }
+
+    .dialog-title {
+        margin: 0;
+        font-size: 0.9375rem;
+        font-weight: 700;
+    }
+
+    button.dialog-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        min-height: 0;
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-sharp);
+        background: none;
+        color: var(--color-ink-mute);
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    button.dialog-close:hover {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+    }
+
+    .dialog-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: 1.125rem 1.375rem;
+        overflow: auto;
+    }
+
+    .dialog > form:has(.form-group) .btn-group {
+        flex: none;
+        justify-content: flex-end;
+        margin-top: 0;
+        padding: 0.75rem 1.125rem;
+        border-top: 1px solid var(--color-line);
+    }
+
     /* ═══ 판 ═══════════════════════════════════════════════════════════ */
 
     .card {
@@ -1609,7 +1768,8 @@
     .fa-lock,
     .fa-user,
     .fa-user-tie,
-    .fa-gear {
+    .fa-gear,
+    .fa-xmark {
         display: inline-block;
         flex: none;
         width: 1em;
@@ -1628,6 +1788,13 @@
         -webkit-mask-image: var(--icon-search);
         mask-image: var(--icon-search);
         --icon-search: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.2 16.2 21 21'/%3E%3C/svg%3E");
+    }
+
+    /* 대화상자 닫기(D-148) */
+    .fa-xmark {
+        -webkit-mask-image: var(--icon-close);
+        mask-image: var(--icon-close);
+        --icon-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
     }
 
     .fa-plus {

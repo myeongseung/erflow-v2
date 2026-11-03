@@ -63,8 +63,10 @@ class AdminUserScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 사원 &gt; 사원관리")
+        assertThat(html).contains("관리자 &gt; 사원 관리")
                 .contains("주민등록번호").contains("내·외국인")
+                // 추가 폼이 같은 화면의 대화상자다(D-148). 열린 채로 시작하지는 않는다
+                .contains("id=\"user-add\"").doesNotContain("data-open-on-load")
                 // 관리자 사이드메뉴가 함께 그려진다
                 .contains("사원 관리").contains("권한 관리").contains("게시판 관리");
     }
@@ -182,13 +184,13 @@ class AdminUserScreenTest {
     }
 
     @Test
-    @DisplayName("사원 추가 화면이 그려진다")
+    @DisplayName("사원 추가 주소는 목록을 대화상자가 열린 채로 그린다(D-148)")
     void registerFormRenders() throws Exception {
         String html = mockMvc.perform(get("/admin/user/register").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 사원 &gt; 사원추가")
+        assertThat(html).contains("관리자 &gt; 사원 관리").contains("data-open-on-load")
                 .contains("사원 생성").contains("우편번호 찾기");
         // 직급·부서 콤보가 실제로 채워진다.
         String firstJob = jdbc.queryForObject(

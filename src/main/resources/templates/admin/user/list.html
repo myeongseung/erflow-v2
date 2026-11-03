@@ -1,129 +1,192 @@
 <!DOCTYPE html>
 <!--/*
-  사원 리스트.
-  출처: legacy/ERFlow/src/main/webapp/admin/user/userList.jsp
+  사원 관리 — 목록과 추가가 한 화면이다(D-148).
+  출처: admin/user/userList.jsp + admin/user/userRegister.jsp
 
-  관리자 화면의 첫 이관이다. 사용자 쪽 화면과 골격이 다르다 — 헤더·사이드메뉴가
-  관리자 전용 조각이고, 바깥 div 두 겹(content-wrap / admin-main-content)을 화면이
-  직접 감싼다. 레거시 조각이 그 둘을 열고 닫지 않기 때문이다(D-037).
+  관리자 목록 틀의 본보기다: 카드 하나에 도구줄(왼쪽 동작, 오른쪽 검색) · 표 ·
+  쪽 번호가 들어가고, 사원 추가 폼은 그 위에 뜨는 대화상자(#user-add)다.
+  /admin/user/register 로 들어오면 대화상자가 열린 채로 그려진다(openAdd).
 
-  레거시는 주민등록번호를 13자리 그대로 찍었다(O-012). 뒷자리 한 자리만 남기고
-  가린다 — 999999-9****** (D-117). 성별·내외국인 칸은 뷰가 계산해 주므로 흔들리지
-  않는다.
-
-  페이징은 실제로 동작한다. js/admin/userList.js 에 block()/paging() 이 있다 —
-  쪽지함·결재처럼 죽어 있는 화면과 다르다(D-045).
+  검색은 searchFrm 의 값을 readFrm 으로 옮겨 보낸다(js/admin/userList.js).
+  주민등록번호는 뒷자리 한 자리만 남긴다(D-117). 비밀번호 초기화는 D-134.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('유저 리스트 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/userListAddress.js', '/js/admin/userList.js'} })}">
+<head th:replace="~{fragments/head :: page('사원 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/userListAddress.js', '/js/admin/userList.js', '/js/common/dialog.js'} })}">
 </head>
 <body>
 <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
 <div class="content-wrap">
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
-
     <div class="admin-main-content">
-        <div class="table-wrap">
-            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 &gt; 사원관리|)}"></div>
-            <form name="searchFrm">
-                <div class="search-option">
-                    <select name="keyfield">
-                        <option value="" th:selected="${keyfield == ''}">전체 조회</option>
-                        <option value="id" th:selected="${keyfield == 'id'}">사번</option>
-                        <option value="name" th:selected="${keyfield == 'name'}">이름</option>
-                        <option value="dept_name" th:selected="${keyfield == 'dept_name'}">부서</option>
-                        <option value="job_name" th:selected="${keyfield == 'job_name'}">직급</option>
-                    </select>
-                    <div class="main-search-container">
-                        <div class="main-search-border">
-                            <input class="main-search-text" type="search" name="keyword"
-                                   placeholder="검색" aria-label="Search" th:value="${keyword}">
+        <div class="admin-page">
+            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 관리|)}"></div>
+
+            <section class="list-card">
+                <div class="toolbar">
+                    <div class="toolbar-actions">
+                        <button type="button" class="btn btn-primary" data-dialog-open="user-add">사원 추가</button>
+                    </div>
+                    <form name="searchFrm" class="toolbar-search">
+                        <select name="keyfield" aria-label="검색할 칸">
+                            <option value="" th:selected="${keyfield == ''}">전체 조회</option>
+                            <option value="id" th:selected="${keyfield == 'id'}">사번</option>
+                            <option value="name" th:selected="${keyfield == 'name'}">이름</option>
+                            <option value="dept_name" th:selected="${keyfield == 'dept_name'}">부서</option>
+                            <option value="job_name" th:selected="${keyfield == 'job_name'}">직급</option>
+                        </select>
+                        <div class="main-search-container">
+                            <div class="main-search-border">
+                                <input class="main-search-text" type="search" name="keyword"
+                                       placeholder="검색" aria-label="검색어" th:value="${keyword}">
+                            </div>
+                            <div class="main-search-icon">
+                                <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                            </div>
                         </div>
-                        <div class="main-search-icon">
-                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
+                    </form>
+                </div>
+
+                <!--/* 칸이 14개라 좁다. 한 줄로 두고 모자라면 가로로 굴린다(D-143). */-->
+                <div class="table-scroll">
+                    <table class="table table-striped table-nowrap">
+                        <thead>
+                        <tr>
+                            <th scope="col">사번</th>
+                            <th scope="col">이름</th>
+                            <th scope="col">주민등록번호</th>
+                            <th scope="col">성별</th>
+                            <th scope="col">내·외국인</th>
+                            <th scope="col">부서</th>
+                            <th scope="col">직급</th>
+                            <th scope="col">내선 번호</th>
+                            <th scope="col">개인 번호</th>
+                            <th scope="col">이메일</th>
+                            <th scope="col">입사일</th>
+                            <th scope="col">주소</th>
+                            <th scope="col">비밀번호</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="user : ${users}">
+                            <td><a th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
+                            <td th:text="${user.name}">이름</td>
+                            <td th:text="${user.socialNumberMasked}">주민등록번호</td>
+                            <td th:text="${user.gender}">성별</td>
+                            <td th:text="${user.region}">내·외국인</td>
+                            <td th:text="${user.deptName}">부서</td>
+                            <td th:text="${user.jobName}">직급</td>
+                            <td th:text="${user.extensionPhone}">내선 번호</td>
+                            <td th:text="${user.mobilePhone}">개인 번호</td>
+                            <td th:text="${user.email}">이메일</td>
+                            <td th:text="${user.hiredAtLabel}">입사일</td>
+                            <!--/* Thymeleaf 는 문자열을 JS 호출에 끼워 넣는 것을 거부해
+                                   data 속성으로 넘긴다(D-035). */-->
+                            <td><a href="javascript:void(0);" class="a-user-address"
+                                   th:data-id="${user.id}">보기</a></td>
+                            <!--/* 비밀번호 초기화(D-134). 임시 비밀번호는 처리 결과 화면에
+                                   한 번만 보인다. 이벤트 속성에는 동적 값을 못 넣으므로
+                                   (D-035) 확인 문구는 고정이다. */-->
+                            <td>
+                                <form th:action="@{/admin/user/reset-password}" method="post"
+                                      onsubmit="return confirm('이 사원의 비밀번호를 임시 값으로 초기화할까요?\n임시 비밀번호는 다음 화면에 한 번만 보입니다.');">
+                                    <input type="hidden" name="id" th:value="${user.id}">
+                                    <button class="link-btn" type="submit">초기화</button>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <form name="readFrm">
+                    <input type="hidden" name="nowPage" th:value="${page.nowPage}">
+                    <input type="hidden" name="keyfield" th:value="${keyfield}">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+                </form>
+                <div class="page-controller">
+                    <a th:if="${page.hasPreviousBlock()}"
+                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
+                       class="disabled">이전</a>
+                    <ul class="page-numbers">
+                        <li th:each="number : ${page.pageNumbers}">
+                            <a th:href="|javascript:paging('${number}')|"
+                               th:classappend="${number == page.nowPage} ? 'disabled'"
+                               th:text="${number}">1</a>
+                        </li>
+                    </ul>
+                    <a th:if="${page.hasNextBlock()}"
+                       th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+                </div>
+            </section>
+
+            <!--/* 사원 추가. 저장 처리(register-proc)는 결과 화면이 알리고 목록으로 돌아온다. */-->
+            <dialog id="user-add" class="dialog" th:data-open-on-load="${openAdd} ? 'true' : null">
+                <form th:action="@{/admin/user/register-proc}" method="post">
+                    <div class="dialog-head">
+                        <h2 class="dialog-title">사원 추가</h2>
+                        <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                            <i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="dialog-body">
+                        <div class="form-group">
+                            <label for="input1">사원 번호</label>
+                            <input type="text" id="input1" name="id" placeholder="사원 번호" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <label for="input2">이름</label>
+                            <input type="text" id="input2" name="name" placeholder="사원 이름">
+                        </div>
+                        <div class="form-group">
+                            <label for="input8">주민 번호</label>
+                            <!--/* 자리글에 13자리 숫자 예시를 두지 않는다 — 목록 화면은 그 모양이
+                                   없어야 한다(D-117 시험). */-->
+                            <input type="text" id="input8" name="socialNumber" placeholder="주민등록번호 13자리 (- 포함)">
+                        </div>
+                        <div class="form-group">
+                            <label for="input3">Email</label>
+                            <input type="email" id="input3" name="email" placeholder="사원 이메일">
+                        </div>
+                        <div class="form-group">
+                            <label for="sample6_postcode">사원 주소</label>
+                            <div class="address-group">
+                                <div class="address-line">
+                                    <input type="text" id="sample6_postcode" placeholder="우편번호"
+                                           name="postalCode" readonly>
+                                    <button type="button" class="btn btn_execDaumPostcode">우편번호 찾기</button>
+                                </div>
+                                <input type="text" id="sample6_address" placeholder="도로명 주소" name="address1">
+                                <input type="text" id="sample6_extraAddress" placeholder="참고항목 (동/읍/면)" readonly>
+                                <input type="text" id="sample6_detailAddress" placeholder="상세주소" name="address2">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="job">직급</label>
+                            <select name="job" id="job">
+                                <option th:each="job : ${options.jobs}"
+                                        th:value="${job.id}" th:text="${job.name}">직급</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="dept">부서</label>
+                            <select name="dept" id="dept">
+                                <option th:each="dept : ${options.departments}"
+                                        th:value="${dept.id}" th:text="${dept.name}">부서</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="input7">내선 번호</label>
+                            <input type="text" id="input7" name="extensionPhone" placeholder="사원 내선 번호">
+                        </div>
+                        <div class="form-group">
+                            <label for="input9">휴대 전화</label>
+                            <input type="text" id="input9" name="mobilePhone" placeholder="휴대 전화">
                         </div>
                     </div>
-                </div>
-            </form>
-            <!--/* 칸이 14개라 좁다. 줄바꿈을 허용하면 «보기»·직급·주민번호가 두 줄로
-                   꺾여 줄 높이가 들쭉날쭉해진다 — 한 줄로 두고 모자라면 가로로
-                   굴린다(D-143). */-->
-            <table class="table table-striped table-nowrap">
-                <thead>
-                <tr>
-                    <th scope="col">사번</th>
-                    <th scope="col">이름</th>
-                    <th scope="col">주민등록번호</th>
-                    <th scope="col">성별</th>
-                    <th scope="col">내·외국인</th>
-                    <th scope="col">부서</th>
-                    <th scope="col">직급</th>
-                    <th scope="col">내선 번호</th>
-                    <th scope="col">개인 번호</th>
-                    <th scope="col">이메일</th>
-                    <th scope="col">입사일</th>
-                    <th scope="col">주소</th>
-                    <th scope="col">비밀번호</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="user : ${users}">
-                    <td><a th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
-                    <td th:text="${user.name}">이름</td>
-                    <td th:text="${user.socialNumberMasked}">주민등록번호</td>
-                    <td th:text="${user.gender}">성별</td>
-                    <td th:text="${user.region}">내·외국인</td>
-                    <td th:text="${user.deptName}">부서</td>
-                    <td th:text="${user.jobName}">직급</td>
-                    <td th:text="${user.extensionPhone}">내선 번호</td>
-                    <td th:text="${user.mobilePhone}">개인 번호</td>
-                    <td th:text="${user.email}">이메일</td>
-                    <td th:text="${user.hiredAtLabel}">입사일</td>
-                    <!--/* 레거시는 onclick="openNewWindow('사번')" 이었다. Thymeleaf 가
-                           문자열을 JS 호출에 끼워 넣는 것을 거부해 data 속성으로 넘긴다
-                           (은행·제품 찾기 팝업과 같은 방식, D-035). 여는 창은 같다 */-->
-                    <td><a href="javascript:void(0);" class="a-user-address"
-                           th:data-id="${user.id}">보기</a></td>
-                    <!--/* 비밀번호 초기화(D-134). 임시 비밀번호는 처리 결과 화면에
-                           한 번만 보인다. Thymeleaf 3.1 은 이벤트 속성에 동적 값을
-                           허용하지 않으므로(D-035 와 같은 제약) 확인 문구는 고정이다 */-->
-                    <td>
-                        <form th:action="@{/admin/user/reset-password}" method="post"
-                              onsubmit="return confirm('이 사원의 비밀번호를 임시 값으로 초기화할까요?\n임시 비밀번호는 다음 화면에 한 번만 보입니다.');">
-                            <input type="hidden" name="id" th:value="${user.id}">
-                            <button class="btn" type="submit">초기화</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-                <tfoot>
-                <tr>
-                    <td colspan="13"></td>
-                </tr>
-                </tfoot>
-            </table>
-            <form name="readFrm">
-                <input type="hidden" name="nowPage" th:value="${page.nowPage}">
-                <input type="hidden" name="keyfield" th:value="${keyfield}">
-                <input type="hidden" name="keyword" th:value="${keyword}">
-            </form>
-        </div>
-
-        <!--/* 페이징 */-->
-        <div class="page-controller">
-            <a th:if="${page.hasPreviousBlock()}"
-               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock - 1}')|"
-               class="disabled">이전</a>
-            <ul class="page-numbers">
-                <li th:each="number : ${page.pageNumbers}">
-                    <a th:href="|javascript:paging('${number}')|"
-                       th:classappend="${number == page.nowPage} ? 'disabled'"
-                       th:text="${number}">1</a>
-                </li>
-            </ul>
-            <a th:if="${page.hasNextBlock()}"
-               th:href="|javascript:block('${page.pagePerBlock}', '${page.nowBlock + 1}')|">다음</a>
+                    <div class="btn-group dialog-foot">
+                        <button type="button" class="btn" data-dialog-close>취소</button>
+                        <button class="btn btn-primary" type="submit">사원 생성</button>
+                    </div>
+                </form>
+            </dialog>
         </div>
     </div>
 </div>
