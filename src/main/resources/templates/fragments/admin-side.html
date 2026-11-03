@@ -2,53 +2,54 @@
   관리자 사이드메뉴.
   출처: legacy/ERFlow/src/main/webapp/admin/adminSide.jsp
 
-  사용자 쪽 사이드메뉴와 달리 **DB 에서 오지 않는다.** 레거시가 JSP 에 네 갈래를
-  그대로 적어 두었고, menu 테이블에도 screen 테이블에도 이 항목들이 없다. 하드코딩을
-  하드코딩으로 옮긴다 — 데이터로 만들면 정답에 없던 것을 지어내는 셈이다.
+  사용자 쪽 사이드메뉴와 달리 DB 에서 오지 않는다 — 항목이 여기 적혀 있다.
+  바깥 상자(content-wrap)는 껍데기 조각(fragments/admin-shell)이 갖는다.
 
-  레거시 조각은 <div class="content-wrap"> 를 열고 닫지 않는다(뒤따르는 adminHeader 가
-  또 하나를 열고, 화면 끝에서 둘을 한꺼번에 닫는다). Thymeleaf 는 그런 조각을 읽지
-  못하므로 브라우저가 만드는 DOM 을 기준으로 나눴다(D-037). 바깥 상자(content-wrap, D-131 에서 사용자 화면과 이름을 합쳤다)는 화면이
-  갖는다.
+  현재 항목은 adminArea(LayoutModelAdvice)로 밝힌다 — 한 구역의 목록·추가·수정이
+  같은 항목에 속한다. 맨 아래 사람 카드는 me(이름·부서·직급)를 쓴다(D-150).
 */-->
 <div class="aside-bar" th:fragment="side" xmlns:th="http://www.thymeleaf.org">
-    <div class="logo-font">
-
-    </div>
-    <hr>
     <aside class="sidebar">
-        <!--/* 사이드 바 */-->
         <nav class="sidebar-nav">
             <ul class="sidebar-ul">
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'home'} ? 'is-current'">
+                    <a th:href="@{/admin}"><i class="fa-solid fa-house"></i><span class="menu-title">관리자 홈</span></a>
+                </li>
                 <!--/* 사원 리스트와 사원 추가가 한 화면이라 항목도 하나다(D-148). */-->
-                <li class="sidebar-mainmenu">
-                    <a th:href="@{/admin/user/list}"><span class="menu-title">사원 관리</span></a>
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'user'} ? 'is-current'">
+                    <a th:href="@{/admin/user/list}"><i class="fa-solid fa-users"></i><span class="menu-title">사원 관리</span></a>
                 </li>
                 <li class="sidebar-mainmenu">
                     <span class="menu-title">권한 관리</span>
                     <ul class="nav-flyout">
-                        <li>
-                            <a th:href="@{/admin/permission/job-dept-list}">직급·부서 관리</a>
+                        <li th:classappend="${adminArea == 'jobdept'} ? 'is-current'">
+                            <a th:href="@{/admin/permission/job-dept-list}"><i class="fa-solid fa-sitemap"></i>직급·부서 관리</a>
                         </li>
-                        <!--/* 프로그램 리스트를 메뉴 관리로 대체했다(D-135). 프로그램
-                               권한이 곧 메뉴 표시라, 메뉴 모양 그대로 고치는 편이 낫다. */-->
-                        <li>
-                            <a th:href="@{/admin/permission/menu-list}">메뉴 관리</a>
+                        <!--/* 프로그램 리스트를 메뉴 관리로 대체했다(D-135). */-->
+                        <li th:classappend="${adminArea == 'menu'} ? 'is-current'">
+                            <a th:href="@{/admin/permission/menu-list}"><i class="fa-solid fa-list"></i>메뉴 관리</a>
                         </li>
                     </ul>
                 </li>
                 <li class="sidebar-mainmenu">
                     <span class="menu-title">문서 관리</span>
                     <ul class="nav-flyout">
-                        <li>
-                            <a th:href="@{/admin/document/form-list}">문서 양식 리스트</a>
+                        <li th:classappend="${adminArea == 'document'} ? 'is-current'">
+                            <a th:href="@{/admin/document/form-list}"><i class="fa-solid fa-file-lines"></i>문서 양식 리스트</a>
                         </li>
                     </ul>
                 </li>
-                <li class="sidebar-mainmenu">
-                    <a th:href="@{/admin/board/list}"><span class="menu-title">게시판 관리</span></a>
+                <li class="sidebar-mainmenu" th:classappend="${adminArea == 'board'} ? 'is-current'">
+                    <a th:href="@{/admin/board/list}"><i class="fa-solid fa-comments"></i><span class="menu-title">게시판 관리</span></a>
                 </li>
             </ul>
         </nav>
+        <a class="sidebar-user" th:href="@{/profile}" th:if="${me != null}">
+            <span class="avatar" th:text="${#strings.substring(me.name, 0, 1)}">홍</span>
+            <span class="sidebar-user-text">
+                <span class="sidebar-user-name" th:text="${me.name}">홍길동</span>
+                <span class="sidebar-user-role" th:text="|${me.deptName} · ${me.jobName}|">인사관리팀 · 과장</span>
+            </span>
+        </a>
     </aside>
 </div>

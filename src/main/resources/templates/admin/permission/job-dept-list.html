@@ -17,19 +17,14 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('직급·부서 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/permissions.js', '/js/admin/jobDeptList.js', '/js/common/dialog.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
-    <div class="admin-main-content">
-        <div class="admin-page">
-            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 권한 관리 &gt; 직급·부서 관리|)}"></div>
-
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 권한 관리 &gt; 직급·부서 관리', |직급 ${#lists.size(jobs)} · 부서 ${#lists.size(depts)}|, ~{::content})}">
+<th:block th:fragment="content">
             <div class="list-grid">
                 <section class="list-card">
                     <div class="toolbar">
                         <div class="toolbar-actions">
                             <h2 class="card-title">직급</h2>
+                            <span class="count-badge" th:text="${#lists.size(jobs)}">9</span>
                             <button type="button" class="btn btn-primary" data-dialog-open="job-add">직급 추가</button>
                             <button type="submit" class="btn btn-danger" form="jobFrm">삭제</button>
                         </div>
@@ -58,9 +53,12 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${#lists.isEmpty(jobs)}">
+                                <td colspan="3" class="empty-cell">검색 결과가 없습니다.</td>
+                            </tr>
                             <tr th:each="job : ${jobs}">
                                 <td class="check-col"><input type="checkbox" name="jobId" form="jobFrm" th:value="${job.classId}"></td>
-                                <td><a th:href="@{/admin/permission/job-update(jobId=${job.classId})}" th:text="${job.name}">직급명</a></td>
+                                <td><a class="row-link" th:href="@{/admin/permission/job-update(jobId=${job.classId})}" th:text="${job.name}">직급명</a></td>
                                 <td th:text="${jobGrants[job.classId] ?: '-'}">-</td>
                             </tr>
                             </tbody>
@@ -72,6 +70,7 @@
                     <div class="toolbar">
                         <div class="toolbar-actions">
                             <h2 class="card-title">부서</h2>
+                            <span class="count-badge" th:text="${#lists.size(depts)}">8</span>
                             <button type="button" class="btn btn-primary" data-dialog-open="dept-add">부서 추가</button>
                             <button type="submit" class="btn btn-danger" form="deptFrm">삭제</button>
                         </div>
@@ -100,9 +99,12 @@
                             </tr>
                             </thead>
                             <tbody>
+                            <tr th:if="${#lists.isEmpty(depts)}">
+                                <td colspan="3" class="empty-cell">검색 결과가 없습니다.</td>
+                            </tr>
                             <tr th:each="dept : ${depts}">
                                 <td class="check-col"><input type="checkbox" name="deptId" form="deptFrm" th:value="${dept.classId}"></td>
-                                <td><a th:href="@{/admin/permission/dept-update(deptId=${dept.classId})}" th:text="${dept.name}">부서명</a></td>
+                                <td><a class="row-link" th:href="@{/admin/permission/dept-update(deptId=${dept.classId})}" th:text="${dept.name}">부서명</a></td>
                                 <td th:text="${deptGrants[dept.classId] ?: '-'}">-</td>
                             </tr>
                             </tbody>
@@ -254,8 +256,6 @@
                     </div>
                 </form>
             </dialog>
-        </div>
-    </div>
-</div>
+</th:block>
 </body>
 </html>

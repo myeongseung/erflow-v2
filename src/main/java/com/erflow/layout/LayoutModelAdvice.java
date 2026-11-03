@@ -1,6 +1,10 @@
 package com.erflow.layout;
 
 import com.erflow.auth.ErflowUserDetails;
+import com.erflow.message.MessageMapper;
+import com.erflow.user.UserMapper;
+import com.erflow.user.UserRow;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,19 +14,28 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 /**
  * 모든 화면에 레이아웃 데이터를 넣어 준다.
  *
- * <p>레거시는 화면마다 {@code <%@include file="/indexHeader.jsp"%>} 를 적었고, 그 안에서
- * 세션을 직접 뒤졌다. 이제는 화면 컨트롤러가 레이아웃을 알 필요가 없다.
+ * <p>화면 컨트롤러는 레이아웃을 알 필요가 없다 — 사이드 메뉴·헤더 메뉴·로그인한
+ * 사람·안 읽은 쪽지 수·지금 있는 관리자 구역이 전부 여기서 들어간다(D-150).
  */
 @ControllerAdvice
 public class LayoutModelAdvice {
 
     private final MenuService menuService;
 
+    private final MessageMapper messageMapper;
+
+    private final UserMapper userMapper;
+
     /**
      * @param menuService 메뉴 조회 서비스
+     * @param messageMapper 쪽지 조회 (안 읽은 수)
+     * @param userMapper 사원 조회 (사이드바의 사람 카드)
      */
-    public LayoutModelAdvice(MenuService menuService) {
+    public LayoutModelAdvice(
+            MenuService menuService, MessageMapper messageMapper, UserMapper userMapper) {
         this.menuService = menuService;
+        this.messageMapper = messageMapper;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -49,9 +62,7 @@ public class LayoutModelAdvice {
     }
 
     /**
-     * 헤더에 표시할 사용자 문구.
-     *
-     * <p>레거시 {@code indexHeader.jsp} 는 {@code headerUserId + headerUserName} 을 찍었다.
+     * 헤더에 표시할 사용자 문구 ("사번 이름").
      *
      * @return 화면에 보일 사용자 표기
      */
@@ -62,10 +73,65 @@ public class LayoutModelAdvice {
     }
 
     /**
+     * 로그인한 사람 — 이름·부서·직급 (D-150). 사이드바의 사람 카드와 헤더의
+     * 머리글자 단추가 쓴다.
+     *
+     * @return 사원 한 줄. 로그인 전이면 {@code null}
+     */
+    @ModelAttribute("me")
+    public UserRow me() {
+        ErflowUserDetails user = principal();
+        return user == null ? null : userMapper.findUserView(user.id());
+    }
+
+    /**
+     * 안 읽은 쪽지 수 (D-150). 헤더의 종에 배지로 붙는다.
+     *
+     * @return 받은 쪽지 중 아직 안 읽은 건수. 로그인 전이면 0
+     */
+    @ModelAttribute("unreadMessages")
+    public int unreadMessages() {
+        ErflowUserDetails user = principal();
+        return user == null ? 0 : messageMapper.countUnread(user.id());
+    }
+
+    /**
+     * 지금 있는 관리자 구역 (D-150). 관리자 사이드바가 현재 항목을 밝힌다.
+     *
+     * <p>주소의 앞부분으로 가른다 — 한 구역의 목록·추가·수정이 같은 항목에 속한다.
+     *
+     * @param request 현재 요청
+     * @return home · user · jobdept · menu · document · board. 관리자 밖이면 {@code null}
+     */
+    @ModelAttribute("adminArea")
+    public String adminArea(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        if (path.startsWith("/admin/user")) {
+            return "user";
+        }
+        if (path.startsWith("/admin/permission/menu")
+                || path.startsWith("/admin/permission/program")) {
+            return "menu";
+        }
+        if (path.startsWith("/admin/permission")) {
+            return "jobdept";
+        }
+        if (path.startsWith("/admin/document")) {
+            return "document";
+        }
+        if (path.startsWith("/admin/board")) {
+            return "board";
+        }
+        if (path.startsWith("/admin")) {
+            return "home";
+        }
+        return null;
+    }
+
+    /**
      * 관리자 여부.
      *
-     * <p>레거시 {@code PermissionController.isAdmin(session)} 에 대응한다.
-     * 부서·직급 권한 양쪽에 최상위 비트가 켜져 있어야 한다.
+     * <p>부서·직급 권한 양쪽에 최상위 비트가 켜져 있어야 한다.
      *
      * @return 관리자면 {@code true}
      */

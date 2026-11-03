@@ -13,14 +13,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('사원 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/userListAddress.js', '/js/admin/userList.js', '/js/common/dialog.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
-    <div class="admin-main-content">
-        <div class="admin-page">
-            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 사원 관리|)}"></div>
-
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 사원 관리', |전체 ${page.totalRecord}명|, ~{::content})}">
+<th:block th:fragment="content">
             <section class="list-card">
                 <div class="toolbar">
                     <div class="toolbar-actions">
@@ -67,8 +61,11 @@
                         </tr>
                         </thead>
                         <tbody>
+                        <tr th:if="${#lists.isEmpty(users)}">
+                            <td colspan="13" class="empty-cell">검색 결과가 없습니다.</td>
+                        </tr>
                         <tr th:each="user : ${users}">
-                            <td><a th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
+                            <td><a class="row-link" th:href="@{/admin/user/update(id=${user.id})}" th:text="${user.id}">20231001</a></td>
                             <td th:text="${user.name}">이름</td>
                             <td th:text="${user.socialNumberMasked}">주민등록번호</td>
                             <td th:text="${user.gender}">성별</td>
@@ -187,8 +184,6 @@
                     </div>
                 </form>
             </dialog>
-        </div>
-    </div>
-</div>
+</th:block>
 </body>
 </html>

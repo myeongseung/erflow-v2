@@ -255,48 +255,107 @@
        작고 흐리게 두고 자간을 벌린다. */
     .sidebar-mainmenu > .menu-title {
         display: block;
-        padding: 0.625rem 1rem 0.25rem;
+        padding: 0.75rem 1rem 0.25rem;
         color: var(--color-shell-dim);
         font-size: 0.6875rem;
         font-weight: 600;
         letter-spacing: 0.06em;
     }
 
-    /* 최상위인데 바로 이동하는 항목(게시판)은 링크로 감싸여 온다. */
-    .sidebar-mainmenu > a {
-        display: block;
-        padding: 0;
-    }
-
-    /* 항목 한 줄의 높이는 하위 메뉴와 같다 — 세로 여백 0.3125rem(D-145). */
-    .sidebar-mainmenu > a > .menu-title {
-        display: block;
-        padding: 0.3125rem 1rem;
+    /*
+      항목 한 줄 — 아이콘 + 글자 (D-150). 최상위 바로가기와 하위 항목이 같은 모양이다.
+      왼쪽 2px 띠가 현재 항목(.is-current)에서 강조색으로 켜진다.
+      높이는 세로 여백 0.3125rem(D-145).
+    */
+    .sidebar-mainmenu > a,
+    .nav-flyout > li > a {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.3125rem 1rem 0.3125rem calc(1rem - 2px);
         border-left: 2px solid transparent;
         color: var(--color-shell-fg);
         font-size: 0.8125rem;
         font-weight: 500;
+    }
+
+    .sidebar-mainmenu > a > .menu-title {
+        padding: 0;
+        color: inherit;
+        font-size: inherit;
+        font-weight: inherit;
         letter-spacing: 0;
     }
 
-    .sidebar-mainmenu > a:hover > .menu-title {
+    .sidebar-mainmenu > a > i,
+    .nav-flyout > li > a > i {
+        width: 1rem;
+        height: 1rem;
+        color: var(--color-shell-dim);
+    }
+
+    .sidebar-mainmenu > a:hover,
+    .nav-flyout > li > a:hover {
         border-left-color: var(--color-shell-600);
         background: var(--color-shell-850);
         color: var(--color-shell-bright);
     }
 
-    .nav-flyout > li > a {
-        display: block;
-        padding: 0.3125rem 1rem 0.3125rem calc(1rem - 2px);
-        border-left: 2px solid transparent;
-        color: var(--color-shell-fg);
-        font-size: 0.8125rem;
+    .sidebar-mainmenu.is-current > a,
+    .nav-flyout > li.is-current > a {
+        border-left-color: var(--color-accent-line);
+        background: var(--color-shell-800);
+        color: var(--color-shell-bright);
+        font-weight: 600;
     }
 
-    .nav-flyout > li > a:hover {
-        border-left-color: var(--color-accent-line);
+    .sidebar-mainmenu.is-current > a > i,
+    .nav-flyout > li.is-current > a > i,
+    .sidebar-mainmenu > a:hover > i,
+    .nav-flyout > li > a:hover > i {
+        color: var(--color-accent-line);
+    }
+
+    /* 맨 아래 사람 카드 — 누구로 들어와 있는지. 누르면 프로필로 간다(D-150). */
+    .sidebar-user {
+        display: flex;
+        flex: none;
+        align-items: center;
+        gap: 0.625rem;
+        margin-top: auto;
+        padding: 0.875rem 1rem;
+        border-top: 1px solid var(--color-shell-700);
+        color: var(--color-shell-fg);
+    }
+
+    .sidebar-user:hover {
         background: var(--color-shell-850);
         color: var(--color-shell-bright);
+    }
+
+    .sidebar-user > .avatar {
+        background: var(--color-shell-700);
+        color: var(--color-shell-bright);
+    }
+
+    .sidebar-user-text {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        line-height: 1.25;
+    }
+
+    .sidebar-user-name {
+        font-size: 0.8125rem;
+        font-weight: 600;
+    }
+
+    .sidebar-user-role {
+        overflow: hidden;
+        color: var(--color-shell-dim);
+        font-size: 0.6875rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     /* ═══ 상단 바 ═══════════════════════════════════════════════════════ */
@@ -336,6 +395,58 @@
 
     .header-item.dropdown {
         position: relative;
+    }
+
+    /* 머리글자 단추 — 이름의 첫 글자를 동그라미에 넣는다(D-150) */
+    .avatar {
+        display: inline-flex;
+        flex: none;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        border-radius: 999px;
+        background: var(--color-accent-soft);
+        color: var(--color-accent-deep);
+        font-size: 0.75rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .nav-link.dropdown-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .header-user-name {
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+
+    /* 종 위의 안 읽은 쪽지 수(D-150) */
+    .header-bell {
+        position: relative;
+        display: inline-flex;
+    }
+
+    .badge-count {
+        position: absolute;
+        top: 0.125rem;
+        right: 0.125rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1rem;
+        height: 1rem;
+        padding: 0 0.25rem;
+        border: 2px solid var(--color-surface);
+        border-radius: 999px;
+        background: var(--color-bad);
+        color: #fff;
+        font-size: 0.625rem;
+        font-weight: 700;
+        line-height: 1;
     }
 
     /* 오른쪽 끝에 붙는 메뉴는 오른쪽 모서리를 기준으로 펼친다. */
@@ -547,6 +658,20 @@
         gap: 0.125rem;
         align-items: flex-start;
         margin-bottom: 1.125rem;
+        padding-left: 0.75rem;
+        border-left: 3px solid var(--color-accent);
+    }
+
+    /* 제목 옆의 짧은 글 — 개수 같은 것(D-150) */
+    .page-title-row {
+        display: flex;
+        align-items: baseline;
+        gap: 0.625rem;
+    }
+
+    .page-note {
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
     }
 
     .page-title {
@@ -1433,6 +1558,7 @@
         background: var(--color-surface);
     }
 
+    /* 도구줄이 곧 카드 머리다 — 엷은 바탕으로 표와 가른다(D-150) */
     .toolbar {
         display: flex;
         align-items: center;
@@ -1440,6 +1566,34 @@
         gap: 0.75rem;
         padding: 0.625rem 0.875rem;
         border-bottom: 1px solid var(--color-line);
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+    }
+
+    /* 개수 배지 — 카드 이름 옆(D-150) */
+    .count-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.375rem;
+        height: 1.25rem;
+        padding: 0 0.4375rem;
+        border-radius: 999px;
+        background: var(--color-accent-soft);
+        color: var(--color-accent-deep);
+        font-size: 0.6875rem;
+        font-weight: 700;
+    }
+
+    /* 줄의 이름 칸 링크는 굵게 — 어디를 누르면 열리는지 보이게(D-150) */
+    .row-link {
+        font-weight: 600;
+    }
+
+    /* 빈 표 — 한 줄로 말한다(D-150) */
+    .table td.empty-cell {
+        padding: 2.25rem 0.75rem;
+        color: var(--color-ink-mute);
+        text-align: center;
     }
 
     .toolbar-actions,
@@ -1541,6 +1695,7 @@
         margin: auto;
         padding: 0;
         border: 1px solid var(--color-line);
+        border-top: 3px solid var(--color-accent);
         border-radius: var(--radius-soft);
         background: var(--color-surface);
         color: var(--color-ink);
@@ -1776,7 +1931,13 @@
     .fa-user,
     .fa-user-tie,
     .fa-gear,
-    .fa-xmark {
+    .fa-xmark,
+    .fa-house,
+    .fa-users,
+    .fa-sitemap,
+    .fa-list,
+    .fa-file-lines,
+    .fa-comments {
         display: inline-block;
         flex: none;
         width: 1em;
@@ -1874,6 +2035,44 @@
         -webkit-mask-image: var(--icon-gear);
         mask-image: var(--icon-gear);
         --icon-gear: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='6'/%3E%3Ccircle cx='12' cy='12' r='2.4'/%3E%3Cpath d='M18 12h2.6M12 18v2.6M6 12H3.4M12 6V3.4M16.2 16.2l1.8 1.8M7.8 16.2 6 18M7.8 7.8 6 6M16.2 7.8 18 6'/%3E%3C/svg%3E");
+    }
+
+    /* 관리자 사이드바의 여섯 (D-150) */
+
+    .fa-house {
+        -webkit-mask-image: var(--icon-house);
+        mask-image: var(--icon-house);
+        --icon-house: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 11.5 12 4l9 7.5'/%3E%3Cpath d='M5.5 10.5V20h13v-9.5'/%3E%3Cpath d='M10 20v-5h4v5'/%3E%3C/svg%3E");
+    }
+
+    .fa-users {
+        -webkit-mask-image: var(--icon-users);
+        mask-image: var(--icon-users);
+        --icon-users: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.4'/%3E%3Cpath d='M3.2 20a5.8 5.8 0 0 1 11.6 0'/%3E%3Cpath d='M16 4.8a3.4 3.4 0 0 1 0 6.4'/%3E%3Cpath d='M17.4 14.4A5.8 5.8 0 0 1 21 20'/%3E%3C/svg%3E");
+    }
+
+    .fa-sitemap {
+        -webkit-mask-image: var(--icon-sitemap);
+        mask-image: var(--icon-sitemap);
+        --icon-sitemap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='3' width='6' height='5' rx='1'/%3E%3Crect x='2.5' y='16' width='6' height='5' rx='1'/%3E%3Crect x='15.5' y='16' width='6' height='5' rx='1'/%3E%3Cpath d='M12 8v4M5.5 16v-4h13v4'/%3E%3C/svg%3E");
+    }
+
+    .fa-list {
+        -webkit-mask-image: var(--icon-list);
+        mask-image: var(--icon-list);
+        --icon-list: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6h12M9 12h12M9 18h12'/%3E%3Cpath d='M4 6h.01M4 12h.01M4 18h.01' stroke-width='2.6'/%3E%3C/svg%3E");
+    }
+
+    .fa-file-lines {
+        -webkit-mask-image: var(--icon-file-lines);
+        mask-image: var(--icon-file-lines);
+        --icon-file-lines: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3Cpath d='M9 13h6M9 17h6'/%3E%3C/svg%3E");
+    }
+
+    .fa-comments {
+        -webkit-mask-image: var(--icon-comments);
+        mask-image: var(--icon-comments);
+        --icon-comments: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 4.5H4v10.5h5l3 4 3-4h5z'/%3E%3C/svg%3E");
     }
 
     .fa-lg {

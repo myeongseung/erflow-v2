@@ -74,6 +74,15 @@
         <include refid="searchCondition"/>
     </select>
 
+    <!-- 안 읽은 받은 쪽지 수 — 헤더 종 배지(D-150). 받는 쪽에서 지운 것은 세지 않는다 -->
+    <select id="countUnread" resultType="int">
+        SELECT COUNT(*)
+          FROM message_view
+         WHERE receiver_id = #{userId}
+           AND receiver_visible = 1
+           AND read_status = 0
+    </select>
+
     <!-- 레거시: select * from message_view where id = ? (getMessageView) -->
     <select id="findView" resultType="com.erflow.message.MessageDetail">
         SELECT id,

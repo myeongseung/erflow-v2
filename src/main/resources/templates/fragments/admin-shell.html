@@ -1,0 +1,36 @@
+<!--/*
+  관리자 화면의 껍데기 한 벌 (D-150).
+
+  상단 바 · 사이드바 · 본문 상자 · 화면 머리를 여기서 한 번만 그린다. 관리자
+  템플릿은 본문(content)만 들고 있다:
+
+      <body th:insert="~{fragments/admin-shell :: shell('관리자 > 사원 관리', note, ~{::content})}">
+          <th:block th:fragment="content"> ...본문... </th:block>
+      </body>
+
+  trail 은 길 표시이고 마지막 조각이 제목이 된다(fragments/page-head 와 같은 규칙).
+  note 는 제목 옆의 짧은 글(개수 같은 것)이며 없으면 null.
+  trail 이 null 이면 화면 머리 없이 본문을 바로 놓는다 — 관리자 홈이 그렇다.
+*/-->
+<th:block th:fragment="shell(trail, note, content)" xmlns:th="http://www.thymeleaf.org">
+<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
+<div class="content-wrap">
+    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
+    <div class="admin-main-content">
+        <th:block th:if="${trail == null}">
+            <th:block th:replace="${content}"></th:block>
+        </th:block>
+        <div class="admin-page" th:unless="${trail == null}"
+             th:with="parts=${#strings.arraySplit(trail, '>')}">
+            <div class="page-head">
+                <div class="page-title-row">
+                    <h1 class="page-title" th:text="${#strings.trim(parts[parts.length - 1])}">화면 이름</h1>
+                    <span class="page-note" th:if="${note != null}" th:text="${note}">설명</span>
+                </div>
+                <nav class="menu-name" th:text="${trail}">관리자 &gt; 어디 &gt; 화면 이름</nav>
+            </div>
+            <th:block th:replace="${content}"></th:block>
+        </div>
+    </div>
+</div>
+</th:block>

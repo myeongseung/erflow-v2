@@ -210,7 +210,7 @@ class AdminUserScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 사원 &gt; 사원수정")
+        assertThat(html).contains("관리자 &gt; 사원 관리 &gt; 사원 수정")
                 .contains("value=\"" + row.get("id") + "\"")
                 .contains("value=\"" + row.get("name") + "\"");
     }

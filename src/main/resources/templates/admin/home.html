@@ -21,13 +21,8 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('ERFlow Administrator Configuration', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/adminGraph.js', '/js/admin/adminCategory.js', '/js/vendor/d3-7.min.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
-
-    <div class="admin-main-content">
+<body th:insert="~{fragments/admin-shell :: shell(null, null, ~{::content})}">
+<th:block th:fragment="content">
         <div class="dashboard">
 
             <section class="dashboard-panel workstatus">
@@ -158,7 +153,6 @@
 
         </div>
         <th:block th:replace="~{fragments/footer :: footer}"></th:block>
-    </div>
-</div>
+</th:block>
 </body>
 </html>

@@ -48,6 +48,14 @@ public interface MessageMapper {
             @Param("search") MessageSearch search);
 
     /**
+     * 받은 쪽지 중 아직 안 읽은 건수 (D-150). 헤더의 종 배지가 쓴다.
+     *
+     * @param userId 받는 사람 사번
+     * @return 안 읽은 건수. 받는 쪽에서 지운 쪽지는 세지 않는다
+     */
+    int countUnread(@Param("userId") String userId);
+
+    /**
      * 쪽지 한 건을 읽기 화면용으로 조회한다.
      *
      * @param id 쪽지 번호

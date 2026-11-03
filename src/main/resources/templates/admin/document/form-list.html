@@ -10,15 +10,9 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('문서 양식 리스트', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/documentFormList.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
-
-    <div class="admin-main-content">
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 문서 관리 &gt; 문서 양식 리스트', null, ~{::content})}">
+<th:block th:fragment="content">
         <div class="table-wrap">
-            <div th:replace="~{fragments/page-head :: head(|관리자 &gt; 문서 관리 &gt; 문서 양식 리스트|)}"></div>
             <!--/* 삭제만 submit 추가는 새 페이지 */-->
             <form th:action="@{/admin/document/form-delete-proc}" method="post" name="docFrm">
                 <div class="table-header-container">
@@ -82,7 +76,6 @@
                 </table>
             </form>
         </div>
-    </div>
-</div>
+</th:block>
 </body>
 </html>
