@@ -1,81 +1,65 @@
 <!DOCTYPE html>
 <!--/*
-  문서 양식 리스트.
+  문서 양식 — 목록(D-155).
   출처: legacy/ERFlow/src/main/webapp/admin/document/documentFormList.jsp
 
-  «보기» 는 모달을 연다. 모달은 줄마다 하나씩 그려지므로 **id 가 줄마다 달라야
-  한다** — 레거시는 셋 다 `calendar-plus` 였고 그래서 어느 줄을 눌러도 첫 줄이
-  떴다(D-066). 양식 번호를 붙여 갈랐다(D-121).
+  목록 틀(D-148)의 카드 하나. 양식 이름을 누르면 수정 화면으로, «보기» 는 그 줄의
+  미리보기 대화상자를 연다. 대화상자는 줄마다 하나씩 그리므로 id 가 양식 번호로
+  갈린다(D-121). 추가·수정은 편집기가 넓어야 해서 대화상자가 아니라 화면이다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('문서 양식 리스트', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/admin/documentFormList.js'} })}">
+<head th:replace="~{fragments/head :: page('문서 양식', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/common/table.js', '/js/common/dialog.js'} })}">
 </head>
-<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 문서 관리 &gt; 문서 양식 리스트', null, ~{::content})}">
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 문서 관리 &gt; 문서 양식', |양식 ${#lists.size(templates)}|, ~{::content})}">
 <th:block th:fragment="content">
-        <div class="table-wrap">
-            <!--/* 삭제만 submit 추가는 새 페이지 */-->
-            <form th:action="@{/admin/document/form-delete-proc}" method="post" name="docFrm">
-                <div class="table-header-container">
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-danger" name="flag"
-                                value="delete">삭제</button>
-                        <button type="button" class="btn btn-primary" id="btn-register">추가</button>
-                    </div>
-                </div>
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th><input type="checkbox" id="chkAll"></th>
-                        <th scope="col" style="width: 20%">문서 번호</th>
-                        <th scope="col" style="width: 30%">문서 제목</th>
-                        <th scope="col" style="width: 50%">내용 보기</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="template : ${templates}">
-                        <td><input type="checkbox" name="templateId" th:value="${template.id}"></td>
-                        <td><a th:href="@{/admin/document/form-register(flag='update',id=${template.id})}"
-                               th:text="${template.id}">1</a></td>
-                        <td th:text="${template.subject}">문서 제목</td>
-                        <td>
-                            <!--/*
-                              id 는 줄마다 달라야 한다.
-
-                              레거시는 이 자리를 메인 화면의 일정 등록 모달에서
-                              복사해 왔고 이름까지 그대로 `calendar-plus` 였다.
-                              그런데 이 모달은 th:each 안에 있어 **양식 수만큼
-                              그려진다** — 셋이 같은 id 를 갖고 버튼도 전부 그
-                              id 를 가리켰다. 브라우저는 중복 id 에서 첫 번째를
-                              집으므로 **어느 줄의 «보기»를 눌러도 첫 줄 양식이
-                              떴다**(D-066). 양식 번호를 붙여 가른다(D-121).
-                            */-->
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    th:data-bs-target="'#template-preview-' + ${template.id}">보기</button>
-                            <div class="modal fade" th:id="'template-preview-' + ${template.id}"
-                                 data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-                                 th:aria-label="${template.subject}" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <span class="close-button">×</span>
-                                        <!--/* 양식 미리보기. 거른 HTML 이다(D-118, O-010).
-                                               편집 화면은 원본을 받는다 — 거른 값을 편집기에
-                                               넣으면 저장할 때마다 서식이 깎인다. */-->
-                                        <div class="document-content" th:utext="${template.contentSafe}"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td colspan="3"></td>
-                        <td></td>
-                    </tr>
-                    </tfoot>
-                </table>
-            </form>
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <h2 class="card-title">문서 양식</h2>
+                <span class="count-badge" th:text="${#lists.size(templates)}">3</span>
+                <a class="btn btn-primary" th:href="@{/admin/document/form-register}">양식 추가</a>
+                <button type="submit" class="btn btn-danger" form="docFrm">삭제</button>
+            </div>
         </div>
+        <form id="docFrm" th:action="@{/admin/document/form-delete-proc}" method="post"
+              onsubmit="return confirm('선택한 양식을 지울까요?');"></form>
+        <div class="table-scroll">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th class="check-col"><input type="checkbox" data-check-all="templateId" aria-label="양식 전체 선택"></th>
+                    <th scope="col">양식 이름</th>
+                    <th scope="col">미리보기</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(templates)}">
+                    <td colspan="3" class="empty-cell">양식이 없습니다.</td>
+                </tr>
+                <tr th:each="template : ${templates}">
+                    <td class="check-col"><input type="checkbox" name="templateId" form="docFrm" th:value="${template.id}"></td>
+                    <td><a class="row-link" th:href="@{/admin/document/form-register(flag='update',id=${template.id})}"
+                           th:text="${template.subject}">양식 이름</a></td>
+                    <td><button type="button" class="link-btn"
+                                th:data-dialog-open="'template-preview-' + ${template.id}">보기</button></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!--/* 양식 미리보기 — 거른 HTML 이다(D-118). 편집 화면은 원본을 받는다. */-->
+    <dialog th:each="template : ${templates}" class="dialog is-wide"
+            th:id="'template-preview-' + ${template.id}" th:aria-label="${template.subject}">
+        <div class="dialog-head">
+            <h2 class="dialog-title" th:text="${template.subject}">양식 이름</h2>
+            <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                <i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="dialog-body">
+            <div class="document-content" th:utext="${template.contentSafe}"></div>
+        </div>
+    </dialog>
 </th:block>
 </body>
 </html>

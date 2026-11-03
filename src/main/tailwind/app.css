@@ -1779,6 +1779,22 @@
         background: rgb(22 25 29 / 0.45);
     }
 
+    /* 폼이 없는 대화상자(미리보기)도 머리는 고정, 몸통만 구른다 */
+    .dialog[open] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 양식 미리보기처럼 넓어야 하는 것(D-155) */
+    .dialog.is-wide {
+        width: min(64rem, calc(100vw - 2rem));
+    }
+
+    /* 편집기가 드는 폼(문서 양식)은 44rem 이 좁다 — 64rem */
+    form.template-form:has(.form-group) {
+        max-width: 64rem;
+    }
+
     /* 머리와 발은 고정, 몸통만 구른다 */
     .dialog > form {
         display: flex;

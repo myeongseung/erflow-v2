@@ -52,14 +52,16 @@ class AdminTemplateScreenTest {
     }
 
     @Test
-    @DisplayName("문서 양식 리스트가 그려진다")
+    @DisplayName("문서 양식 목록이 목록 틀로 그려진다 (D-155)")
     void listRenders() throws Exception {
         String html = mockMvc.perform(
                         get("/admin/document/form-list").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("문서 번호").contains("문서 제목").contains("내용 보기");
+        assertThat(html).contains("관리자 &gt; 문서 관리 &gt; 문서 양식")
+                .contains("양식 추가").contains("양식 이름").contains("미리보기")
+                .contains("class=\"dialog is-wide\"").doesNotContain("bootstrap.bundle");
     }
 
     @Test
@@ -71,7 +73,8 @@ class AdminTemplateScreenTest {
                 .andReturn().getResponse().getContentAsString();
 
         List<String> ids = matches(html, "id=\"(template-preview-\\d+)\"");
-        List<String> targets = matches(html, "data-bs-target=\"#(template-preview-\\d+)\"");
+        // «보기» 단추는 네이티브 대화상자를 id 로 가리킨다(D-155).
+        List<String> targets = matches(html, "data-dialog-open=\"(template-preview-\\d+)\"");
 
         assumeTrue(!ids.isEmpty(), "양식이 없어 건너뛴다");
 
@@ -134,6 +137,12 @@ class AdminTemplateScreenTest {
         assertThat(filled).contains("value=\"update\"")
                 .contains("value=\"" + any.id() + "\"")
                 .contains(any.subject());
+        // 본문 칸에는 양식 본문이 온다 — 껍데기 조각의 매개변수가 ${content} 를 가리면
+        // 조각 마크업(폼 자신)이 들어간다(D-155).
+        assertThat(filled).doesNotContain("&lt;form class=");
+        if (any.content() != null && any.content().contains("<table")) {
+            assertThat(filled).contains("&lt;table");
+        }
     }
 
     @Test
