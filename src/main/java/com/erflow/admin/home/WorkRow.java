@@ -22,6 +22,8 @@ public record WorkRow(String userName, String startedAt, String endedAt, int sta
     private static final DateTimeFormatter STORED =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
+    private static final DateTimeFormatter CLOCK = DateTimeFormatter.ofPattern("HH:mm");
+
     /** 시간을 찍지 않는 자리에 들어가는 글자. */
     private static final String NO_TIME = "-";
 
@@ -41,6 +43,42 @@ public record WorkRow(String userName, String startedAt, String endedAt, int sta
      */
     public String statusLabel() {
         return WorkStatus.label(status);
+    }
+
+    /**
+     * @return 색을 고르는 클래스 이름(D-125)
+     */
+    public String statusClass() {
+        return WorkStatus.styleClass(status);
+    }
+
+    /**
+     * 화면에 찍히는 출근 시각.
+     *
+     * @return {@code HH:mm}. 시각이 없거나 시각을 찍지 않는 상태면 {@code -}
+     */
+    public String startedTime() {
+        return clock(startedAt);
+    }
+
+    /**
+     * 화면에 찍히는 퇴근 시각.
+     *
+     * @return {@code HH:mm}. 시각이 없거나 시각을 찍지 않는 상태면 {@code -}
+     */
+    public String endedTime() {
+        return clock(endedAt);
+    }
+
+    private String clock(String value) {
+        if (value == null || !WorkStatus.clocked(status)) {
+            return NO_TIME;
+        }
+        try {
+            return LocalDateTime.parse(value, STORED).format(CLOCK);
+        } catch (DateTimeParseException e) {
+            return NO_TIME;
+        }
     }
 
     /**

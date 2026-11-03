@@ -105,6 +105,7 @@
     --spacing-row: 2.125rem;
     --spacing-control: 2rem;
     --spacing-rail: 15rem;
+    --spacing-topbar: 3.25rem;
 
     --radius-sharp: 3px;
     --radius-soft: 6px;
@@ -179,7 +180,7 @@
     .content-wrap {
         display: flex;
         align-items: stretch;
-        min-height: calc(100vh - 3.25rem);
+        min-height: calc(100vh - var(--spacing-topbar));
     }
 
     /* 관리자 화면의 본문 칸. 사이드바 옆에서 세로로 쌓인다 */
@@ -254,7 +255,7 @@
        작고 흐리게 두고 자간을 벌린다. */
     .sidebar-mainmenu > .menu-title {
         display: block;
-        padding: 0.875rem 1rem 0.375rem;
+        padding: 0.625rem 1rem 0.25rem;
         color: var(--color-shell-dim);
         font-size: 0.6875rem;
         font-weight: 600;
@@ -267,9 +268,10 @@
         padding: 0;
     }
 
+    /* 항목 한 줄의 높이는 하위 메뉴와 같다 — 세로 여백 0.3125rem(D-145). */
     .sidebar-mainmenu > a > .menu-title {
         display: block;
-        padding: 0.5rem 1rem;
+        padding: 0.3125rem 1rem;
         border-left: 2px solid transparent;
         color: var(--color-shell-fg);
         font-size: 0.8125rem;
@@ -285,7 +287,7 @@
 
     .nav-flyout > li > a {
         display: block;
-        padding: 0.4375rem 1rem 0.4375rem calc(1rem - 2px);
+        padding: 0.3125rem 1rem 0.3125rem calc(1rem - 2px);
         border-left: 2px solid transparent;
         color: var(--color-shell-fg);
         font-size: 0.8125rem;
@@ -310,7 +312,7 @@
         flex: none;
         align-items: center;
         gap: 1rem;
-        height: 3.25rem;
+        height: var(--spacing-topbar);
         padding: 0 1.25rem;
         border-bottom: 1px solid var(--color-line);
         background: var(--color-surface);
@@ -489,10 +491,11 @@
       무한정 늘어났다 — 화면마다 제멋대로로 보이던 절반이 이것이다. 최대 80rem,
       남는 공간은 margin 이 양쪽으로 나눠 가져 본문이 가운데 온다.
 
-      메인 화면(main-column)은 제외 목록에 있어 안 걸린다 — 위젯 판은 자기
-      격자가 폭을 나눈다.
+      메인 화면(main-column)과 관리자 홈의 격자(dashboard)는 제외 목록에 있어
+      안 걸린다 — 격자가 제 폭을 나눈다(D-145). 꼬리말(index-footer)도 본문이
+      아니라 뺀다.
     */
-    .admin-main-content > *:not(.admin-header),
+    .admin-main-content > *:not(.admin-header):not(.dashboard):not(.index-footer),
     .content-wrap > *:not(.app):not(.sidebar):not(.main-column):not(.aside-bar):not(.admin-main-content) {
         flex: 1 1 auto;
         width: 100%;
@@ -591,32 +594,41 @@
         min-width: 0;
     }
 
+    /* 메인 화면도 화면 높이에 맞춘다 — 관리자 홈과 같은 규칙이다(D-146). */
+    .main-column:has(> .main-content-wrap) {
+        height: calc(100vh - var(--spacing-topbar));
+    }
+
+    /* 위젯 사이는 1.5rem — 관리자 홈의 판 사이와 같다(D-145). */
+    /* 달력 36rem — 한 달 칸이 읽히는 폭이다. 24rem 은 있으나 마나 했다(D-147). */
     .main-content-wrap {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
-        gap: 1rem;
-        align-items: start;
-        padding: 1.25rem 1.5rem 2rem;
+        flex: 1 1 auto;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 36rem);
+        grid-template-rows: minmax(0, 1fr);
+        gap: 1.5rem;
+        min-height: 0;
+        padding: 1.25rem 1.5rem 1rem;
+    }
+
+    .calendar-column {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
     }
 
     .main-wrap {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1rem;
+        gap: 1.5rem;
         min-width: 0;
     }
 
     .widget-column {
         display: flex;
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.5rem;
         min-width: 0;
-    }
-
-    @media (max-width: 1400px) {
-        .main-content-wrap {
-            grid-template-columns: minmax(0, 1fr);
-        }
     }
 
     @media (max-width: 900px) {
@@ -670,19 +682,49 @@
         background: var(--color-surface);
     }
 
-    /* 위젯 높이를 못 박는다. 내용에 맡기면 두 열의 아래가 어긋나 판이 흔들린다 —
-       레거시도 350px 로 고정했다. 넘치는 줄은 위젯 안에서 굴린다. */
+    /* 위젯 높이는 칸이 정한다(D-146). 한 열의 위젯 둘이 높이를 반씩 나누므로 두
+       열의 아래가 맞고, 넘치는 줄은 위젯 안에서 굴린다. */
     .main-table-container {
-        height: 21rem;
-    }
-
-    .main-calendar-container {
+        flex: 1 1 0;
         min-height: 0;
     }
 
-    /* 달력 몸통. FullCalendar 가 여기에 자기 DOM 을 심는다(height: 600). */
+    .main-calendar-container {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    /* 달력 몸통. FullCalendar 가 여기에 자기 DOM 을 심고 높이를 100% 로 받는다. */
     .main-calendar-container > #calendar {
+        flex: 1 1 auto;
+        min-height: 0;
         padding: 0.75rem;
+    }
+
+    /* 달력을 옆에 못 두는 폭이면 아래로 내리고 페이지가 구른다. 위젯과 달력은
+       다시 제 높이를 갖는다. 위의 기본 규칙과 특이도가 같으므로 뒤에 둬야 이긴다.
+       경계 1600px: 그 아래서는 위젯 두 열이 달력 36rem 옆에서 각 22rem 도 못 받는다. */
+    @media (max-width: 1600px) {
+        .main-column:has(> .main-content-wrap) {
+            height: auto;
+        }
+
+        .main-content-wrap {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: none;
+        }
+
+        .main-table-container {
+            flex: none;
+            height: 21rem;
+        }
+
+        /* FullCalendar 가 #calendar 에 height:100% 를 인라인으로 박으므로 높이는
+           바깥 상자에 준다 — #calendar 에 주면 인라인에 진다 */
+        .main-calendar-container {
+            flex: none;
+            height: 40rem;
+        }
     }
 
     .main-calendar-container .fc {
@@ -779,30 +821,30 @@
         white-space: nowrap;
     }
 
-    /* ── 화면 아래 회사 정보. 메인 화면 하나만 부른다. */
+    /* ── 화면 아래 회사 정보 — 한 줄(D-146). 메인 화면과 관리자 홈이 부른다(D-145).
+       세로 flex 안의 마지막 자식이라 margin-top: auto 가 바닥으로 민다. */
 
     .index-footer {
         display: flex;
+        flex: none;
+        flex-wrap: wrap;
         align-items: center;
         justify-content: center;
-        gap: 2rem;
-        margin: 0 1.5rem 1.5rem;
-        padding: 1.5rem;
+        gap: 0.25rem 1.5rem;
+        margin: auto 1.5rem 0;
+        padding: 0.625rem 0 0.75rem;
         border-top: 1px solid var(--color-line);
         color: var(--color-ink-mute);
-        font-size: 0.75rem;
+        font-size: 0.6875rem;
+        line-height: 1.4;
     }
 
     /* 로고 PNG 는 원본이 크다. 헤더와 같은 이유로 묶어 둔다. */
     .index-footer img {
         display: block;
         width: auto;
-        max-height: 3.5rem;
+        height: 1.5rem;
         opacity: 0.55;
-    }
-
-    .index-footer table td {
-        padding: 0.0625rem 0;
     }
 
     /* ═══ 표 — ERP 의 본체 ══════════════════════════════════════════════
@@ -2437,43 +2479,76 @@
        왼쪽에 근무 현황 그래프와 결재, 오른쪽에 수/발주·공지사항·출퇴근.
        레거시는 폭을 픽셀로 잡았고 그 CSS 는 내려갔다 — 격자로 다시 짠다(D-123). */
 
-    .admin-body-wrap {
+    /*
+      화면에 꽉 차는 격자(D-146). 판이 화면 높이를 정하지 않는다 — 격자가 화면
+      높이(상단 바 제외)를 받아 3×2 칸으로 나누고, 판은 자기 칸을 채우며 넘치는
+      줄은 판 안에서 굴린다. 출/퇴근관리는 그날 기록 전부라 제일 길어 두 줄을
+      받는다. 본문 폭 제한(80rem)은 안 받는다 — 격자가 사이드바 옆을 다 쓴다.
+    */
+    .admin-main-content:has(> .dashboard) {
+        height: calc(100vh - var(--spacing-topbar));
+    }
+
+    .dashboard {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 1rem;
-        align-items: start;
-        padding: 1.25rem 1.5rem 2rem;
+        flex: 1 1 auto;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        grid-template-areas:
+            "work approval attendance"
+            "task notice   attendance";
+        gap: 1.5rem;
+        min-height: 0;
+        padding: 1.25rem 1.5rem 1rem;
     }
 
-    @media (max-width: 1200px) {
-        .admin-body-wrap {
-            grid-template-columns: minmax(0, 1fr);
-        }
-    }
-
-    .admin-body-left,
-    .admin-body-right,
-    .admin-right-group,
-    .right-group-element {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        min-width: 0;
-    }
+    .workstatus            { grid-area: work; }
+    .approval              { grid-area: approval; }
+    .attendance-management { grid-area: attendance; }
+    .basic-info            { grid-area: task; }
+    .notification          { grid-area: notice; }
 
     /* 판 하나 = 머리글 + 몸통. 위젯과 같은 규칙을 쓴다. */
-    .workstatus,
-    .approval,
-    .basic-info,
-    .notification,
-    .attendance-management {
+    .dashboard-panel {
         display: flex;
         flex-direction: column;
         min-width: 0;
+        min-height: 0;
         overflow: hidden;
         border: 1px solid var(--color-line);
         border-radius: var(--radius-soft);
         background: var(--color-surface);
+    }
+
+    .panel-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    /* 격자를 못 펼 폭이면 두 열로 돌아가고 페이지가 구른다. 판 몸통은 다시
+       제 높이를 갖는다. */
+    @media (max-width: 1200px) {
+        .admin-main-content:has(> .dashboard) {
+            height: auto;
+        }
+
+        .dashboard {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: none;
+            grid-template-areas:
+                "work       approval"
+                "task       notice"
+                "attendance attendance";
+        }
+
+        .panel-body {
+            max-height: 20rem;
+        }
+
+        #graph {
+            height: 20rem;
+        }
     }
 
     .graph-header,
@@ -2509,8 +2584,10 @@
         flex: 1 1 auto;
         align-items: center;
         justify-content: center;
-        min-height: 20rem;
+        min-height: 0;
         padding: 0.875rem;
+        /* 도넛이 칸 높이(cqh)를 읽을 수 있게 크기 컨테이너로 둔다(D-146) */
+        container-type: size;
     }
 
     .graph-body {
@@ -2522,10 +2599,10 @@
         width: 100%;
     }
 
+    /* 15rem 이 기본이되 칸이 낮으면 칸 높이(여백 뺀)에 맞춰 줄어든다 */
     .graph-donut {
         flex: 0 0 auto;
-        width: 15rem;
-        max-width: 100%;
+        width: min(15rem, 100%, calc(100cqh - 1.75rem));
         height: auto;
     }
 
@@ -2597,27 +2674,14 @@
         font-size: 0.8125rem;
     }
 
-    .approval-content-div,
-    .temporary-div,
-    .notification-table-div,
-    .attendance-management-content-div {
-        max-height: 17rem;
-        overflow: auto;
-    }
-
     /* 판 안의 표는 카드가 이미 테두리를 가지므로 자기 테두리를 지운다. */
-    .approval-content-div > .table,
-    .temporary-div > .table,
-    .notification-table-div > .table,
-    .attendance-management-content-div > .table {
+    .panel-body > .table {
         border: 0;
         border-radius: 0;
         font-size: 0.75rem;
     }
 
-    .approval-content-div > .table > thead > tr > th,
-    .temporary-div > .table > tr > th,
-    .notification-table-div > .table > thead > tr > th {
+    .panel-body > .table > thead > tr > th {
         position: sticky;
         top: 0;
         z-index: 1;
@@ -2625,10 +2689,7 @@
         padding: 0 0.5rem;
     }
 
-    .approval-content-div > .table > tbody > tr > td,
-    .temporary-div > .table > tr > td,
-    .notification-table-div > .table > tbody > tr > td,
-    .attendance-management-content-div > .table > tbody > tr > td {
+    .panel-body > .table > tbody > tr > td {
         height: 1.875rem;
         padding: 0 0.5rem;
         white-space: nowrap;
@@ -2639,10 +2700,16 @@
         width: 40%;
     }
 
+    /* 출/퇴근관리 다섯 칸의 폭. 칸이 좁아져도 비율로 따라온다(D-147). */
+    .att-name   { width: 26%; }
+    .att-status { width: 20%; }
+    .att-clock  { width: 16%; }
+
     .coworker {
         font-weight: 600;
     }
 
+    .clock-cell,
     .time-cell {
         color: var(--color-ink-soft);
         font-variant-numeric: tabular-nums;
@@ -2687,21 +2754,28 @@
         color: var(--color-warn);
     }
 
+    /* 근무 상태 알약 — 달력·근태표와 같은 색 토큰을 쓴다(D-125 · D-147) */
+    .status-badge.is-working,
+    .status-badge.is-done,
+    .status-badge.is-early,
+    .status-badge.is-late,
+    .status-badge.is-half,
+    .status-badge.is-off,
+    .status-badge.is-absent {
+        border-color: transparent;
+    }
+
+    .status-badge.is-working { background: var(--color-status-working); color: var(--color-ok); }
+    .status-badge.is-done    { background: var(--color-status-done);    color: var(--color-ink-soft); }
+    .status-badge.is-early   { background: var(--color-status-early);   color: var(--color-status-early-ink); }
+    .status-badge.is-late    { background: var(--color-status-late);    color: var(--color-status-late-ink); }
+    .status-badge.is-half    { background: var(--color-status-half);    color: var(--color-status-half-ink); }
+    .status-badge.is-off     { background: var(--color-status-off);     color: var(--color-status-half-ink); }
+    .status-badge.is-absent  { background: var(--color-status-absent);  color: var(--color-status-absent-ink); }
+
     /* 상태 0 — 알약의 기본색 그대로 둔다 */
     .status-badge.is-pending {
         color: var(--color-ink-soft);
-    }
-
-    /* 관리자 꼬리말. 메인 화면 꼬리말과 같은 결로 둔다. */
-    .web-info {
-        padding: 0.875rem 0 0;
-        border-top: 1px solid var(--color-line);
-        color: var(--color-ink-mute);
-        font-size: 0.6875rem;
-    }
-
-    .web-info table td {
-        padding: 0.0625rem 0;
     }
 
     /* ═══ 프로필 ═══════════════════════════════════════════════════════

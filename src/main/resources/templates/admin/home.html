@@ -3,17 +3,20 @@
   관리자 홈(대시보드).
   출처: legacy/ERFlow/src/main/webapp/admin/admin.jsp
 
-  한 화면에 다섯 칸이다 — 근무 현황(원 그래프)·결재·수/발주 내역·공지사항·출퇴근관리.
-  그래프만 값을 따로 받아 온다(js/admin/adminGraph.js -> /admin/graph/view).
+  판 다섯 — 근무 현황(원 그래프)·결재·출/퇴근관리·수/발주 내역·공지사항 — 이 화면
+  높이에 맞춘 격자(dashboard)에 놓인다(D-146). 판은 자기 칸을 채우고, 넘치는 줄은
+  판 안에서 굴린다. 그래프만 값을 따로 받아 온다(js/admin/adminGraph.js ->
+  /admin/graph/view).
 
   칸마다 페이징이 없다. 결재는 recent_proposal_view 를 그대로 다 찍고, 수·발주와
-  공지사항은 15건에서 끊는다. 레거시 그대로다.
+  공지사항은 15건에서 끊는다. 출/퇴근관리는 그날 기록 전부다.
 
   결재 제목은 10글자, 이름은 6글자에서 잘라 «...» 을 붙인다. 근무 시간은 한 시간을
   뺀 값이고(점심으로 보인다) 아직 퇴근하지 않은 사람은 «지금» 까지로 센다 — 화면을
   열 때마다 늘어난다.
 
-  꼬리말(adminFooter)은 관리자 화면 중 여기에만 있다.
+  꼬리말은 메인 화면과 같은 조각(fragments/footer)이며 격자 밖, 본문 맨 아래에
+  둔다(D-145).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: page('ERFlow Administrator Configuration', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/adminGraph.js', '/js/admin/adminCategory.js', '/js/vendor/d3-7.min.js'} })}">
@@ -25,141 +28,136 @@
     <th:block th:replace="~{fragments/admin-side :: side}"></th:block>
 
     <div class="admin-main-content">
-        <div class="admin-body-wrap">
-            <div class="admin-body-left">
-                <div class="workstatus">
-                    <div class="graph-header">
-                        <div class="graph-header-name">근무 현황</div>
-                        <div>&nbsp;</div>
-                    </div>
-                    <!--/*
-                      레거시는 여기가 <svg> 였고 스크립트가 그 안에 <svg> 를 또
-                      넣었다. 심는 자리일 뿐이니 <div> 로 둔다(D-069).
-                    */-->
-                    <div id="graph"></div>
+        <div class="dashboard">
 
-                </div> <!--/* 근무현황 */-->
-                <div class="approval">
-
-                    <div class="body-header">
-                        <div class="body-header-name">결재</div>
-                        <div>&nbsp;</div>
-                    </div>
-                    <!--/*
-                      레거시는 머리글을 넷으로 두고 몸통은 «사번 + colspan=3» 둘로
-                      두었다. 그 한 칸 안에 input-group 을 넣어 제목·시각·상태 세
-                      값을 담았고, 값들이 **읽기 전용 입력칸**으로 나왔다 —
-                      머리글과 값이 어긋나 표가 표로 읽히지 않았다.
-
-                      표로 편다(D-123). 머리글 넷에 셀 넷이다.
-                    */-->
-                    <div class="approval-content-div">
-                        <table class="table approval-content">
-                            <thead>
-                            <tr>
-                                <th>사번</th>
-                                <th class="approval-subject">문서제목</th>
-                                <th class="approval-date">결재요청시각</th>
-                                <th class="approval-status">진행상황</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="proposal : ${proposals}">
-                                <td th:text="${proposal.userId}">사번</td>
-                                <td>
-                                    <a th:href="@{/proposal/document(proposalId=${proposal.id})}"
-                                       th:text="${proposal.shortSubject()}">문서제목</a>
-                                </td>
-                                <td th:text="${proposal.receivedAt}">결재요청시각</td>
-                                <td>
-                                    <!--/* 서버는 «무슨 상태» 만 말하고 색은 app.css 가 정한다(D-125). */-->
-                                    <span class="status-badge"
-                                          th:classappend="${proposal.statusClass()}"
-                                          th:text="${proposal.statusLabel()}">진행상황</span>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div> <!--/* 결재 */-->
+            <section class="dashboard-panel workstatus">
+                <div class="graph-header">
+                    <div class="graph-header-name">근무 현황</div>
                 </div>
-            </div>
-            <div class="admin-body-right">
-                <div class="admin-right-group">
-                    <div class="right-group-element">
-                        <div class="basic-info">
-                            <div class="body-header">
-                                <div class="body-header-name">수/발주 내역</div>
-                                <div>&nbsp;</div>
-                            </div>
-                            <div class="temporary-div">
-                                <table class="temporary table">
-                                    <tr>
-                                        <th>등록인</th>
-                                        <th>수주/발주</th>
-                                        <th>요청일</th>
-                                        <th>상태</th>
-                                    </tr>
-                                    <tr th:each="task : ${tasks}">
-                                        <td th:text="${task.userName}">등록인</td>
-                                        <td th:text="${task.typeLabel()}">수주</td>
-                                        <td th:text="${task.createdAtLabel}">요청일</td>
-                                        <td th:text="${task.statusLabel()}">상태</td>
-                                    </tr>
-                                </table>
-                            </div>
+                <!--/* d3 가 그래프를 심는 자리(D-069). */-->
+                <div id="graph"></div>
+            </section>
 
-                        </div> <!--/* 기본정보 */-->
-                        <div class="notification">
-                            <div class="body-header">
-                                <div class="body-header-name">공지사항</div>
-                                <div>&nbsp;</div>
-                            </div>
-                            <div class="notification-table-div">
-                                <table class="table table-bordered table-hover notification-table">
-                                    <thead>
-                                    <tr>
-                                        <th scope="col" class="notification-subject">제목</th>
-                                        <th scope="col" class="notification-date">작성일</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr th:each="row : ${notices}">
-                                        <td><a th:href="@{/post/view(boardId=1,id=${row.post.id})}"
-                                               style="text-decoration: none;"
-                                               th:text="${row.post.subject}">제목</a></td>
-                                        <td class="notification-date"
-                                            th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">작성일</td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div> <!--/* 공지사항 */-->
-                    </div>
-                    <div class="attendance-management">
-                        <div class="body-header">
-                            <div class="body-header-name"><i class="fa-regular fa-clock fa-lg"></i> 출/퇴근관리</div>
-                            <div>&nbsp;</div>
-                        </div>
-                        <div class="attendance-management-content-div">
-                            <!--/* 결재 표와 같은 이유로 폈다(D-123). */-->
-                            <table class="table attendance-management-content">
-                                <tbody>
-                                <tr th:each="work : ${works}">
-                                    <td class="coworker" th:text="${work.shortName()}">이름</td>
-                                    <td>
-                                        <span class="status-badge"
-                                              th:text="${work.statusLabel()}">근무 중</span>
-                                    </td>
-                                    <td class="time-cell" th:text="${work.workedTime()}">근무 시간</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div> <!--/* 출퇴근 관리 */-->
+            <section class="dashboard-panel approval">
+                <div class="body-header">
+                    <div class="body-header-name">결재</div>
                 </div>
-                <th:block th:replace="~{fragments/admin-footer :: footer}"></th:block>
-            </div>
+                <!--/* 머리글 넷에 셀 넷(D-123). */-->
+                <div class="panel-body">
+                    <table class="table approval-content">
+                        <thead>
+                        <tr>
+                            <th>사번</th>
+                            <th class="approval-subject">문서제목</th>
+                            <th class="approval-date">결재요청시각</th>
+                            <th class="approval-status">진행상황</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="proposal : ${proposals}">
+                            <td th:text="${proposal.userId}">사번</td>
+                            <td>
+                                <a th:href="@{/proposal/document(proposalId=${proposal.id})}"
+                                   th:text="${proposal.shortSubject()}">문서제목</a>
+                            </td>
+                            <td th:text="${proposal.receivedAt}">결재요청시각</td>
+                            <td>
+                                <!--/* 서버는 «무슨 상태» 만 말하고 색은 app.css 가 정한다(D-125). */-->
+                                <span class="status-badge"
+                                      th:classappend="${proposal.statusClass()}"
+                                      th:text="${proposal.statusLabel()}">진행상황</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-panel attendance-management">
+                <div class="body-header">
+                    <div class="body-header-name"><i class="fa-regular fa-clock fa-lg"></i> 출/퇴근관리</div>
+                </div>
+                <div class="panel-body">
+                    <table class="table attendance-management-content">
+                        <thead>
+                        <tr>
+                            <th class="att-name">이름</th>
+                            <th class="att-status">상태</th>
+                            <th class="att-clock">출근</th>
+                            <th class="att-clock">퇴근</th>
+                            <th>근무 시간</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="work : ${works}">
+                            <td class="coworker" th:text="${work.shortName()}">이름</td>
+                            <td>
+                                <!--/* 색은 달력·근태표와 같은 토큰을 쓴다(D-125). */-->
+                                <span class="status-badge"
+                                      th:classappend="${work.statusClass()}"
+                                      th:text="${work.statusLabel()}">근무 중</span>
+                            </td>
+                            <td class="clock-cell" th:text="${work.startedTime()}">출근</td>
+                            <td class="clock-cell" th:text="${work.endedTime()}">퇴근</td>
+                            <td class="time-cell" th:text="${work.workedTime()}">근무 시간</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-panel basic-info">
+                <div class="body-header">
+                    <div class="body-header-name">수/발주 내역</div>
+                </div>
+                <div class="panel-body">
+                    <table class="table temporary">
+                        <thead>
+                        <tr>
+                            <th>등록인</th>
+                            <th>수주/발주</th>
+                            <th>요청일</th>
+                            <th>상태</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="task : ${tasks}">
+                            <td th:text="${task.userName}">등록인</td>
+                            <td th:text="${task.typeLabel()}">수주</td>
+                            <td th:text="${task.createdAtLabel}">요청일</td>
+                            <td th:text="${task.statusLabel()}">상태</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="dashboard-panel notification">
+                <div class="body-header">
+                    <div class="body-header-name">공지사항</div>
+                </div>
+                <div class="panel-body">
+                    <table class="table notification-table">
+                        <thead>
+                        <tr>
+                            <th scope="col" class="notification-subject">제목</th>
+                            <th scope="col" class="notification-date">작성일</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${notices}">
+                            <td><a th:href="@{/post/view(boardId=1,id=${row.post.id})}"
+                                   th:text="${row.post.subject}">제목</a></td>
+                            <td class="notification-date"
+                                th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">작성일</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
         </div>
+        <th:block th:replace="~{fragments/footer :: footer}"></th:block>
     </div>
 </div>
 </body>

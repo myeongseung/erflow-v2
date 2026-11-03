@@ -86,6 +86,18 @@ public final class WorkStatus {
     }
 
     /**
+     * 출근·퇴근 시각을 찍는 상태인지.
+     *
+     * <p>결근(0)과 연차(6)는 그날 자정이 자리만 채우고 있어 시각이 아니다.
+     *
+     * @param code 상태 코드
+     * @return 시각을 찍어야 하면 {@code true}
+     */
+    public static boolean clocked(int code) {
+        return code != 0 && code != 6;
+    }
+
+    /**
      * 범례에 쓰는 전체 목록.
      *
      * <p>범례를 손으로 적어 두면 색을 고칠 때 같이 안 고쳐진다. 실제로 레거시 범례는

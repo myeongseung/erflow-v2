@@ -64,7 +64,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	var calendar = new FullCalendar.Calendar(calendarEl, {
 		initialView: 'dayGridMonth',
-		height: 600,
+		// 달력 칸의 높이를 그대로 받는다 — 칸은 app.css 가 화면 높이에 맞춘다(D-146)
+		height: '100%',
 		// 한국어 표기(D-144). 싣고 있는 FullCalendar 번들에는 로케일 데이터가
 		// 없다 — locale: 'ko' 는 조용히 무시된다. 화면에 보이는 세 가지(제목·
 		// 오늘 버튼·요일 머리)만 손으로 적는다. FullCalendar 의 날짜는 시간대
