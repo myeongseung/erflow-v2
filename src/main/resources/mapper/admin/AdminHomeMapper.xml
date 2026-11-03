@@ -58,4 +58,27 @@
          ORDER BY user_id
     </select>
 
+    <!-- 숫자 타일 셋(D-151). 오늘 출근은 위 findWorks 결과를 Java 에서 센다. -->
+
+    <!-- 사원 관리 목록의 countBy 와 같은 셈 — 관리자 계정은 뺀다 -->
+    <select id="countUsers" resultType="int">
+        SELECT COUNT(*)
+          FROM user_view
+         WHERE id != 'admin'
+    </select>
+
+    <!-- 진행 중(result 3)인 단계를 가진 문서 — 한 문서는 한 번만 센다 -->
+    <select id="countRunningDocuments" resultType="int">
+        SELECT COUNT(DISTINCT document_id)
+          FROM proposal_view
+         WHERE result = 3
+    </select>
+
+    <select id="countPostsSince" resultType="int">
+        SELECT COUNT(*)
+          FROM post_tbl
+         WHERE `delete` = 0
+           AND created_at >= NOW() - INTERVAL #{days} DAY
+    </select>
+
 </mapper>

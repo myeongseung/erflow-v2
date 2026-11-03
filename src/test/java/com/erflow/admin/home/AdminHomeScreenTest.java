@@ -96,6 +96,34 @@ class AdminHomeScreenTest {
     }
 
     @Test
+    @DisplayName("숫자 타일 넷이 실제 수와 같다 (D-151)")
+    void statTilesMatchTheCounts() throws Exception {
+        var dashboard = homeService.dashboard();
+        var stats = dashboard.stats();
+
+        // 사원 관리 목록의 «전체 N명» 과 같은 셈이어야 한다 — 관리자 계정은 뺀다.
+        assertThat(stats.headcount()).isEqualTo(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM user_view WHERE id != 'admin'", Integer.class));
+        assertThat(stats.runningDocuments()).isEqualTo(jdbc.queryForObject(
+                "SELECT COUNT(DISTINCT document_id) FROM proposal_view WHERE result = 3",
+                Integer.class));
+        assertThat(stats.newPosts()).isEqualTo(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM post_tbl WHERE `delete` = 0 "
+                        + "AND created_at >= NOW() - INTERVAL 7 DAY", Integer.class));
+        // 오늘 출근은 그날 기록 중 결근·연차가 아닌 것 — 출/퇴근관리 표에서 시각이 찍히는 줄이다.
+        long clocked = dashboard.works().stream()
+                .filter(work -> WorkStatus.clocked(work.status())).count();
+        assertThat(stats.clockedIn()).isEqualTo((int) clocked);
+        assertThat(stats.clockedIn()).isLessThanOrEqualTo(dashboard.works().size());
+
+        String html = mockMvc.perform(get("/admin").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(html).contains("class=\"stat-tiles\"").contains("오늘 출근")
+                .contains("미결 결재").contains("새 글").contains("사원 수");
+    }
+
+    @Test
     @DisplayName("결재 제목은 10글자에서, 이름은 6글자에서 잘린다")
     void longTextIsTruncated() {
         assertThat(new RecentProposal(1, "admin", "1234567890123", "2023-11-10", 1)

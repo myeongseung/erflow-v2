@@ -25,6 +25,42 @@
 <th:block th:fragment="content">
         <div class="dashboard">
 
+            <!--/* 숫자 타일 넷(D-151). 누르면 그 화면으로 간다. */-->
+            <div class="stat-tiles">
+                <a class="stat-tile" th:href="@{/work}">
+                    <span class="stat-icon"><i class="fa-regular fa-clock"></i></span>
+                    <span class="stat-text">
+                        <span class="stat-label">오늘 출근</span>
+                        <span class="stat-value">[[${stats.clockedIn}]]<small>명</small></span>
+                        <span class="stat-note" th:text="|사원 ${stats.headcount}명 중|">사원 54명 중</span>
+                    </span>
+                </a>
+                <a class="stat-tile" th:href="@{/proposal/list}">
+                    <span class="stat-icon"><i class="fa-solid fa-file-lines"></i></span>
+                    <span class="stat-text">
+                        <span class="stat-label">미결 결재</span>
+                        <span class="stat-value">[[${stats.runningDocuments}]]<small>건</small></span>
+                        <span class="stat-note">결재가 돌고 있는 문서</span>
+                    </span>
+                </a>
+                <a class="stat-tile" th:href="@{/post/board-list}">
+                    <span class="stat-icon"><i class="fa-solid fa-comments"></i></span>
+                    <span class="stat-text">
+                        <span class="stat-label">새 글</span>
+                        <span class="stat-value">[[${stats.newPosts}]]<small>건</small></span>
+                        <span class="stat-note">최근 7일 · 모든 게시판</span>
+                    </span>
+                </a>
+                <a class="stat-tile" th:href="@{/admin/user/list}">
+                    <span class="stat-icon"><i class="fa-solid fa-users"></i></span>
+                    <span class="stat-text">
+                        <span class="stat-label">사원 수</span>
+                        <span class="stat-value">[[${stats.headcount}]]<small>명</small></span>
+                        <span class="stat-note">사원 관리 열기</span>
+                    </span>
+                </a>
+            </div>
+
             <section class="dashboard-panel workstatus">
                 <div class="graph-header">
                     <div class="graph-header-name">근무 현황</div>

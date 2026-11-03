@@ -33,4 +33,26 @@ public interface AdminHomeMapper {
      * @return 근무 목록. 사번순
      */
     List<WorkRow> findWorks(@Param("date") String date);
+
+    /**
+     * 사원 수 — 사원 관리 목록의 «전체 N명» 과 같은 셈이다 (D-151). 관리자 계정은 뺀다.
+     *
+     * @return user_view 의 행 수 (관리자 제외)
+     */
+    int countUsers();
+
+    /**
+     * 결재가 돌고 있는 문서 수 (D-151). 진행 중(result 3)인 단계를 가진 문서를 센다.
+     *
+     * @return 미결 문서 수
+     */
+    int countRunningDocuments();
+
+    /**
+     * 최근 며칠 동안 올라온 글 수 (D-151). 지운 글은 빼고, 모든 게시판을 합친다.
+     *
+     * @param days 거슬러 올라갈 날수
+     * @return 글 수
+     */
+    int countPostsSince(@Param("days") int days);
 }

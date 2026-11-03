@@ -43,6 +43,7 @@ public class AdminHomeController {
         model.addAttribute("tasks", dashboard.tasks());
         model.addAttribute("notices", dashboard.notices());
         model.addAttribute("works", dashboard.works());
+        model.addAttribute("stats", dashboard.stats());
         return "admin/home";
     }
 

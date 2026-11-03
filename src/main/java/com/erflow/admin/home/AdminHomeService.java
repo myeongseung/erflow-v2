@@ -1,5 +1,6 @@
 package com.erflow.admin.home;
 
+import com.erflow.common.WorkStatus;
 import com.erflow.post.PostListRow;
 import com.erflow.post.PostSearch;
 import com.erflow.post.PostService;
@@ -22,6 +23,9 @@ public class AdminHomeService {
 
     /** 공지사항 게시판 번호. 레거시가 1 을 박아 두었다. */
     private static final int NOTICE_BOARD = 1;
+
+    /** «새 글» 타일이 거슬러 올라가는 날수 (D-151). */
+    private static final int NEW_POST_DAYS = 7;
 
     private final AdminHomeMapper mapper;
 
@@ -47,11 +51,28 @@ public class AdminHomeService {
      */
     @Transactional(readOnly = true)
     public Dashboard dashboard() {
+        List<WorkRow> works = mapper.findWorks(today());
         return new Dashboard(
                 mapper.findRecentProposals(),
                 mapper.findRecentTasks(),
                 postService.list(NOTICE_BOARD, PostSearch.none(), 1).rows(),
-                mapper.findWorks(today()));
+                works,
+                stats(works));
+    }
+
+    /**
+     * 숫자 타일 넷 (D-151). 오늘 출근은 그날 기록 중 결근·연차가 아닌 것을 센다 —
+     * 출/퇴근관리 표의 시각이 찍히는 줄과 같은 판정({@link WorkStatus#clocked})이다.
+     */
+    private Stats stats(List<WorkRow> works) {
+        int clockedIn = 0;
+        for (WorkRow work : works) {
+            if (WorkStatus.clocked(work.status())) {
+                clockedIn++;
+            }
+        }
+        return new Stats(clockedIn, mapper.countUsers(), mapper.countRunningDocuments(),
+                mapper.countPostsSince(NEW_POST_DAYS));
     }
 
     /**
@@ -91,11 +112,24 @@ public class AdminHomeService {
      * @param tasks 최근 수·발주
      * @param notices 공지사항
      * @param works 오늘의 근무 기록
+     * @param stats 숫자 타일 넷
      */
     public record Dashboard(
             List<RecentProposal> proposals,
             List<RecentTask> tasks,
             List<PostListRow> notices,
-            List<WorkRow> works) {
+            List<WorkRow> works,
+            Stats stats) {
+    }
+
+    /**
+     * 숫자 타일 넷 (D-151).
+     *
+     * @param clockedIn 오늘 출근한 사람 수 — 결근·연차가 아닌 근무 기록
+     * @param headcount 사원 수
+     * @param runningDocuments 결재가 돌고 있는 문서 수
+     * @param newPosts 최근 7일 동안 올라온 글 수
+     */
+    public record Stats(int clockedIn, int headcount, int runningDocuments, int newPosts) {
     }
 }
