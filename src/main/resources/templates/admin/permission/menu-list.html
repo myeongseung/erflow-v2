@@ -1,23 +1,31 @@
 <!DOCTYPE html>
 <!--/*
-  메뉴 관리 (D-135). 레거시 프로그램 리스트(programList.jsp)를 대체한다.
+  메뉴 관리 (D-135, D-156). 레거시 프로그램 리스트(programList.jsp)를 대체한다.
 
   프로그램 하나가 메뉴 하나로 들어가는 문이므로, 권한을 프로그램 이름이 아니라
   «메뉴가 보이는 모양» 그대로 늘어놓고 고친다. 여기서 권한을 바꾸면 그 사람의
   사이드바·헤더에서 메뉴가 나타나고 사라진다 — 표시와 접근이 같은 값 하나다.
 
-  어느 메뉴도 가리키지 않는 프로그램(부서 일정 등록)은 아래에 따로 붙는다.
+  목록 틀(D-148)의 카드 둘이 세로로 — 메뉴, 그리고 어느 메뉴도 가리키지 않는
+  프로그램(부서 일정 등록). 권한 고치기는 대화상자(#program-permission)이고
+  /program-dept-update?id= · /program-job-update?id= 로 들어오면 열린 채로 그린다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('메뉴 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js'} })}">
+<head th:replace="~{fragments/head :: page('메뉴 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/permissions.js', '/js/common/dialog.js'} })}">
 </head>
-<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 권한 관리 &gt; 메뉴 관리', null, ~{::content})}">
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 권한 관리 &gt; 메뉴 관리', |메뉴 ${#lists.size(menus)}|, ~{::content})}">
 <th:block th:fragment="content">
-        <div class="table-wrap">
+    <p class="page-lead">권한을 바꾸면 그 부서·직급 사람의 화면에서 메뉴가 나타나거나 사라집니다.
+        관리자는 언제나 모든 메뉴를 봅니다.</p>
 
-            <p>권한을 바꾸면 그 부서·직급 사람의 화면에서 메뉴가 나타나거나 사라집니다.
-                관리자는 언제나 모든 메뉴를 봅니다.</p>
-
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <h2 class="card-title">메뉴</h2>
+                <span class="count-badge" th:text="${#lists.size(menus)}">21</span>
+            </div>
+        </div>
+        <div class="table-scroll">
             <table class="table table-striped">
                 <thead>
                 <tr>
@@ -26,59 +34,99 @@
                     <th scope="col">메뉴</th>
                     <th scope="col">들어갈 수 있는 부서</th>
                     <th scope="col">들어갈 수 있는 직급</th>
-                    <th scope="col">부서 권한</th>
-                    <th scope="col">직급 권한</th>
+                    <th scope="col">권한</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="entry : ${menus}">
-                    <td th:text="${entry.placement}">사이드바</td>
-                    <td th:text="${entry.groupLabel}">그룹</td>
-                    <td th:text="${entry.menuLabel}">메뉴</td>
+                    <td class="nowrap-cell" th:text="${entry.placement}">사이드바</td>
+                    <td class="nowrap-cell" th:text="${entry.groupLabel}">그룹</td>
+                    <td class="row-link nowrap-cell" th:text="${entry.menuLabel}">메뉴</td>
                     <th:block th:if="${entry.programRowId != null}">
                         <td th:text="${entry.deptNames}">부서들</td>
                         <td th:text="${entry.jobNames}">직급들</td>
-                        <td><a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">수정</a></td>
-                        <td><a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">수정</a></td>
+                        <td class="perm-cell"><span class="perm-group">
+                            <a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">부서</a> ·
+                            <a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">직급</a></span>
+                        </td>
                     </th:block>
-                    <th:block th:if="${entry.programRowId == null}">
-                        <td colspan="4" th:text="${entry.note}">권한 대상 아님</td>
-                    </th:block>
+                    <td th:if="${entry.programRowId == null}" colspan="3" class="muted-cell" th:text="${entry.note}">권한 대상 아님</td>
                 </tr>
                 </tbody>
-                <tfoot>
-                <tr>
-                    <td colspan="7"></td>
-                </tr>
-                </tfoot>
             </table>
         </div>
+    </section>
 
-        <div class="table-wrap" th:if="${!orphans.isEmpty()}">
-            <h3 class="page-title">메뉴에 없는 프로그램</h3>
-            <p>메뉴가 아니라 화면 안의 동작에 걸린 권한입니다. 예를 들어 «부서 일정 등록»은
-                일정 화면에서 부서 일정을 만들 수 있는지를 정합니다.</p>
+    <section class="list-card" th:if="${!orphans.isEmpty()}">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <h2 class="card-title">메뉴에 없는 프로그램</h2>
+                <span class="count-badge" th:text="${#lists.size(orphans)}">1</span>
+                <span class="toolbar-note">메뉴가 아니라 화면 안의 동작에 걸린 권한입니다. «부서 일정 등록» 은 일정 화면에서 부서 일정을 만들 수 있는지를 정합니다.</span>
+            </div>
+        </div>
+        <div class="table-scroll">
             <table class="table table-striped">
                 <thead>
                 <tr>
                     <th scope="col">프로그램</th>
                     <th scope="col">들어갈 수 있는 부서</th>
                     <th scope="col">들어갈 수 있는 직급</th>
-                    <th scope="col">부서 권한</th>
-                    <th scope="col">직급 권한</th>
+                    <th scope="col">권한</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="entry : ${orphans}">
-                    <td th:text="${entry.programName}">프로그램</td>
+                    <td class="row-link nowrap-cell" th:text="${entry.programName}">프로그램</td>
                     <td th:text="${entry.deptNames}">부서들</td>
                     <td th:text="${entry.jobNames}">직급들</td>
-                    <td><a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">수정</a></td>
-                    <td><a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">수정</a></td>
+                    <td class="perm-cell"><span class="perm-group">
+                        <a th:href="@{/admin/permission/program-dept-update(id=${entry.programRowId})}">부서</a> ·
+                        <a th:href="@{/admin/permission/program-job-update(id=${entry.programRowId})}">직급</a></span>
+                    </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+    </section>
+
+    <!--/*
+      권한 — 부서·직급 둘을 대화상자 하나가 맡는다. 모든 부서(직급)가 체크박스로 나온다.
+      저장값은 «관리자 비트 + 체크된 비트» 라 체크를 다 지워도 관리자는 남는다.
+      전체 선택은 js/admin/permissions.js.
+    */-->
+    <dialog id="program-permission" class="dialog" th:if="${programForm != null}" data-open-on-load="true">
+        <form th:action="${programJob} ? @{/admin/permission/program-job-update-proc} : @{/admin/permission/program-dept-update-proc}" method="post">
+            <div class="dialog-head">
+                <h2 class="dialog-title"
+                    th:text="|${programForm.program.programName} · ${programJob ? '직급' : '부서'} 권한|">기안 작성 · 부서 권한</h2>
+                <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                    <i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="dialog-body">
+                <input type="hidden" name="programId" th:value="${programForm.program.id}">
+                <p class="form-note"
+                   th:text="|체크한 ${programJob ? '직급' : '부서'}이 이 메뉴에 들어갈 수 있습니다. 관리자는 늘 됩니다.|">설명</p>
+                <div class="checkbox-container">
+                    <label th:text="${programJob} ? '직급' : '부서'">부서</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="chkAll" autofocus>
+                        <label for="chkAll">전체 선택</label>
+                    </div>
+                    <div class="input-group" th:each="choice, i : ${programForm.choices}">
+                        <input type="checkbox" th:id="|permission${i.count}|"
+                               name="permissions" th:value="${choice.classId}"
+                               th:checked="${choice.checked}">
+                        <label th:for="|permission${i.count}|" th:text="${choice.name}">이름</label>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-group dialog-foot">
+                <button type="button" class="btn" data-dialog-close>취소</button>
+                <button class="btn btn-primary" type="submit">저장</button>
+            </div>
+        </form>
+    </dialog>
 </th:block>
 </body>
 </html>

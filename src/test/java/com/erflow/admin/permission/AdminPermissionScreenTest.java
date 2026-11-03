@@ -467,6 +467,30 @@ class AdminPermissionScreenTest {
     }
 
     @Test
+    @DisplayName("프로그램 권한 주소는 메뉴 관리를 대화상자가 열린 채로 그린다 (D-156)")
+    void programAddressOpensTheDialogOnMenuList() throws Exception {
+        ProgramRow program = permissionMapper.findPrograms().get(0);
+
+        String dept = mockMvc.perform(get("/admin/permission/program-dept-update")
+                        .param("id", String.valueOf(program.id()))
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(dept).contains("메뉴 관리").contains("id=\"program-permission\"")
+                .contains("data-open-on-load").contains(program.programName() + " · 부서 권한")
+                .contains("/admin/permission/program-dept-update-proc")
+                .contains("name=\"permissions\"");
+
+        String job = mockMvc.perform(get("/admin/permission/program-job-update")
+                        .param("id", String.valueOf(program.id()))
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(job).contains(program.programName() + " · 직급 권한")
+                .contains("/admin/permission/program-job-update-proc");
+    }
+
+    @Test
     @DisplayName("프로그램 수정 화면은 번호가 없으면 잘못된 접근으로 보낸다")
     void programFormWithoutIdRedirects() throws Exception {
         mockMvc.perform(get("/admin/permission/program-dept-update")

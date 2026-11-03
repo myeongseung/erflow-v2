@@ -39,6 +39,8 @@ public class AdminPermissionController {
 
     private static final String LIST_VIEW = "admin/permission/job-dept-list";
 
+    private static final String MENU_VIEW = "admin/permission/menu-list";
+
     private static final String RESULT = "admin/permission/result";
 
     private final AdminPermissionService permissionService;
@@ -297,18 +299,23 @@ public class AdminPermissionController {
      */
     @GetMapping("/menu-list")
     public String menuList(Model model) {
+        fillMenus(model);
+        return MENU_VIEW;
+    }
+
+    /** 메뉴 관리 화면이 쓰는 두 목록을 모델에 채운다 (D-156). */
+    private void fillMenus(Model model) {
         AdminPermissionService.MenuOverview overview = permissionService.menuOverview();
         model.addAttribute("menus", overview.menus());
         model.addAttribute("orphans", overview.orphans());
-        return "admin/permission/menu-list";
     }
 
     /**
-     * 프로그램 부서 권한 수정 화면.
+     * 프로그램 부서 권한 — 메뉴 관리를 권한 대화상자가 열린 채로 그린다 (D-156).
      *
      * @param id 프로그램 행 번호
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 메뉴 관리 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/program-dept-update")
     public String programDeptForm(@RequestParam(required = false) Integer id, Model model) {
@@ -317,8 +324,15 @@ public class AdminPermissionController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("form", form);
-        return "admin/permission/program-dept-update";
+        return programDialog(form, false, model);
+    }
+
+    private String programDialog(
+            AdminPermissionService.ProgramForm form, boolean job, Model model) {
+        fillMenus(model);
+        model.addAttribute("programForm", form);
+        model.addAttribute("programJob", job);
+        return MENU_VIEW;
     }
 
     /**
@@ -347,11 +361,11 @@ public class AdminPermissionController {
     }
 
     /**
-     * 프로그램 직급 권한 수정 화면.
+     * 프로그램 직급 권한 — 메뉴 관리를 권한 대화상자가 열린 채로 그린다 (D-156).
      *
      * @param id 프로그램 행 번호
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 메뉴 관리 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/program-job-update")
     public String programJobForm(@RequestParam(required = false) Integer id, Model model) {
@@ -360,8 +374,7 @@ public class AdminPermissionController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("form", form);
-        return "admin/permission/program-job-update";
+        return programDialog(form, true, model);
     }
 
     /**
