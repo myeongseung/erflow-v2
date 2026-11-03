@@ -16,7 +16,7 @@ JSP/Servlet 89화면을 Spring Boot 로 **1:1 정합 이관**하고(발명·누�
 
 | | 버전 |
 |---|---|
-| Spring Boot | 4.0.6 |
+| Spring Boot | 4.0.9 |
 | Java | 21 (Temurin) |
 | MyBatis Starter | 4.0.1 |
 | MariaDB Driver | 3.5.x |
