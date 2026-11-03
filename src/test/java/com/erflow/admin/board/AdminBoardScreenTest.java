@@ -53,15 +53,54 @@ class AdminBoardScreenTest {
     }
 
     @Test
-    @DisplayName("게시판 관리 화면이 표 둘로 그려진다")
+    @DisplayName("게시판 관리 화면이 카드 둘과 추가 대화상자로 그려진다 (D-153)")
     void listRenders() throws Exception {
         String html = mockMvc.perform(get("/admin/board/list").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("게시판 목록").contains("게시글 목록")
-                .contains("최초 생성시각").contains("부서 읽기").contains("직급 쓰기")
-                .contains("조회수").contains("댓글수");
+        assertThat(html).contains("관리자 &gt; 게시판 관리").contains("게시판 추가")
+                .contains("게시판 이름").contains("조회").contains("댓글")
+                // 권한 넷은 줄마다 글자 링크 넷이다.
+                .contains("/admin/board/dept-update?id=1&amp;flag=read")
+                .contains("/admin/board/job-update?id=1&amp;flag=write")
+                .contains("id=\"board-add\"").doesNotContain("data-open-on-load");
+        // 공지사항(1)이 기본으로 골라져 오른쪽 카드 제목이 된다.
+        assertThat(html).contains("class=\"card-title\">" + boardService.get(1).subject() + "<");
+    }
+
+    @Test
+    @DisplayName("추가·이름 고치기·권한 주소는 목록을 그 대화상자가 열린 채로 그린다 (D-153)")
+    void dialogAddressesOpenOnTheList() throws Exception {
+        String add = render("/admin/board/register", null, null);
+        assertThat(add).contains("data-open-on-load").contains("게시판 생성");
+
+        String edit = render("/admin/board/update", "boardId", "1");
+        assertThat(edit).contains("id=\"board-edit\"").contains("data-open-on-load")
+                .contains("value=\"" + boardService.get(1).subject() + "\"");
+
+        String dept = mockMvc.perform(get("/admin/board/dept-update")
+                        .param("id", "1").param("flag", "write").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(dept).contains("id=\"board-permission\"").contains("부서 쓰기 권한")
+                .contains("/admin/board/dept-update-proc").contains("name=\"permissions\"");
+
+        String job = mockMvc.perform(get("/admin/board/job-update")
+                        .param("id", "1").param("flag", "read").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(job).contains("직급 읽기 권한").contains("/admin/board/job-update-proc");
+    }
+
+    private String render(String path, String name, String value) throws Exception {
+        var request = get(path).with(user(TestUsers.admin()));
+        if (name != null) {
+            request = request.param(name, value);
+        }
+        return mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
     }
 
     @Test

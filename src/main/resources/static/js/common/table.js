@@ -1,8 +1,8 @@
-// 직급·부서 관리 스크립트 (D-149).
-// 출처: legacy/ERFlow/src/main/webapp/js/admin/jobDeptList.js
+// 목록 틀(D-148) 공용 스크립트. 직급·부서 관리와 게시판 관리가 쓴다(D-153).
 //
-// 검색은 도구줄의 GET 폼이 직접 보내고(Enter), 추가·수정은 대화상자다
-// (js/common/dialog.js). 여기 남는 것은 돋보기 클릭과 «전체 선택» 뿐이다.
+// - 도구줄의 돋보기를 누르면 그 검색 폼을 보낸다. Enter 는 폼이 알아서 보낸다.
+// - 머리글 체크박스(data-check-all="이름")가 같은 이름의 줄 체크박스를 한꺼번에
+//   켜고 끈다. 줄 하나를 끄면 머리글도 꺼진다.
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.toolbar-search .main-search-icon').forEach(function(icon) {
     icon.addEventListener('click', function() {
@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   })
 
-  // 머리글의 체크박스가 같은 이름의 줄 체크박스를 한꺼번에 켜고 끈다.
   document.querySelectorAll('[data-check-all]').forEach(function(all) {
     const rows = document.querySelectorAll('input[name="' + all.dataset.checkAll + '"]')
     all.addEventListener('change', function() {

@@ -1,6 +1,6 @@
 package com.erflow.admin.board;
 
-import com.erflow.common.Pagination;
+import com.erflow.post.Board;
 import com.erflow.post.PostSearch;
 import com.erflow.post.PostService;
 import java.util.List;
@@ -16,26 +16,29 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <pre>
  * adminBoardList.jsp     GET  /admin/board/list
- * boardRegister.jsp      GET  /admin/board/register        (팝업)
+ * boardRegister.jsp      GET  /admin/board/register              (목록 + 추가 대화상자)
  * boardRegisterProc      POST /admin/board/register-proc
- * boardUpdate.jsp        GET  /admin/board/update?boardId= (팝업)
+ * boardUpdate.jsp        GET  /admin/board/update?boardId=       (목록 + 이름 고치기 대화상자)
  * boardUpdateProc        POST /admin/board/update-proc
  * boardDeleteProc        POST /admin/board/delete-proc
- * boardDeptUpdate.jsp    GET  /admin/board/dept-update?id=&amp;flag=
+ * boardDeptUpdate.jsp    GET  /admin/board/dept-update?id=&amp;flag= (목록 + 권한 대화상자)
  * boardDeptUpdateProc    POST /admin/board/dept-update-proc
- * boardJobUpdate.jsp     GET  /admin/board/job-update?id=&amp;flag=
+ * boardJobUpdate.jsp     GET  /admin/board/job-update?id=&amp;flag=  (목록 + 권한 대화상자)
  * boardJobUpdateProc     POST /admin/board/job-update-proc
  * postDeleteProc         POST /admin/board/post-delete-proc
  * </pre>
  *
- * <p>목록 화면 하나에 표가 둘이다 — 왼쪽이 게시판, 오른쪽이 <b>고른 게시판의 글</b>.
- * 페이징도 검색도 두 벌이며 숨은 {@code readFrm} 하나가 그 값을 모두 들고 다닌다.
+ * <p>목록 화면 하나에 카드가 둘이다 — 왼쪽이 게시판, 오른쪽이 <b>고른 게시판의 글</b>.
+ * 추가·이름 고치기·권한은 목록 위의 대화상자이고(D-153), 옛 주소로 들어오면 목록을 그
+ * 대화상자가 열린 채로 그린다. 처리 결과는 전부 목록으로 돌아간다.
  */
 @Controller
 @RequestMapping("/admin/board")
 public class AdminBoardController {
 
     private static final String LIST = "/admin/board/list";
+
+    private static final String LIST_VIEW = "admin/board/list";
 
     private static final String RESULT = "admin/board/result";
 
@@ -45,7 +48,7 @@ public class AdminBoardController {
 
     /**
      * @param boardService 게시판 관리 업무
-     * @param postService 게시글 업무. 오른쪽 표가 그대로 쓴다
+     * @param postService 게시글 업무. 오른쪽 카드가 그대로 쓴다
      */
     public AdminBoardController(AdminBoardService boardService, PostService postService) {
         this.boardService = boardService;
@@ -56,7 +59,7 @@ public class AdminBoardController {
      * 게시판 관리 목록.
      *
      * @param board 게시판 이름 검색어
-     * @param boardId 오른쪽 표에 띄울 게시판. 없으면 공지사항(1)
+     * @param boardId 오른쪽 카드에 띄울 게시판. 없으면 공지사항(1)
      * @param keyfield 글 검색 대상
      * @param keyword 글 검색어
      * @param nowBoard 게시판 목록 페이지
@@ -73,6 +76,19 @@ public class AdminBoardController {
             @RequestParam(defaultValue = "1") int nowBoard,
             @RequestParam(defaultValue = "1") int nowPage,
             Model model) {
+        fillList(board, boardId, keyfield, keyword, nowBoard, nowPage, model);
+        return LIST_VIEW;
+    }
+
+    /**
+     * 카드 둘이 쓰는 값을 모델에 채운다 (D-153).
+     *
+     * <p>게시글 쪽 쪽 번호는 게시글 페이지로 센다. 전에는 게시판 페이지로 세어 왼쪽을
+     * 넘기면 오른쪽 번호가 같이 밀렸다(D-067) — 더는 그렇지 않다.
+     */
+    private void fillList(
+            String board, int boardId, String keyfield, String keyword,
+            int nowBoard, int nowPage, Model model) {
 
         String boardName = board == null ? "" : board;
         PostSearch search = new PostSearch(
@@ -85,25 +101,24 @@ public class AdminBoardController {
         model.addAttribute("boardPage", boards.pagination());
         model.addAttribute("posts", posts.rows());
         model.addAttribute("postPage", posts.pagination());
-        // 게시글 쪽 페이징 «블록» 은 레거시가 nowPage 가 아니라 nowBoard 로 계산한다.
-        // 왼쪽 목록을 2페이지로 넘기면 오른쪽 페이지 번호가 함께 밀린다(D-067).
-        model.addAttribute("postBlock",
-                Pagination.of(posts.pagination().totalRecord(), nowBoard));
+        model.addAttribute("currentBoard", boardService.get(boardId));
         model.addAttribute("boardName", boardName);
         model.addAttribute("boardId", boardId);
         model.addAttribute("keyfield", search.keyfield());
         model.addAttribute("keyword", search.keyword());
-        return "admin/board/list";
     }
 
     /**
-     * 게시판 생성 팝업.
+     * 게시판 추가 — 목록을 추가 대화상자가 열린 채로 그린다 (D-153).
      *
-     * @return 등록 템플릿
+     * @param model 뷰 모델
+     * @return 목록 템플릿
      */
     @GetMapping("/register")
-    public String registerForm() {
-        return "admin/board/register";
+    public String registerForm(Model model) {
+        fillList(null, 1, null, null, 1, 1, model);
+        model.addAttribute("openAdd", true);
+        return LIST_VIEW;
     }
 
     /**
@@ -111,33 +126,33 @@ public class AdminBoardController {
      *
      * @param subject 게시판 이름
      * @param model 뷰 모델
-     * @return 팝업 결과 템플릿
+     * @return 결과 템플릿
      */
     @PostMapping("/register-proc")
     public String register(@RequestParam(required = false) String subject, Model model) {
         if (subject == null) {
             return "redirect:/access-error";
         }
-        return popup(model, boardService.create(subject)
-                ? "게시판을 등록하였습니다." : "게시판을 등록하지 못했습니다.");
+        return result(model, boardService.create(subject)
+                ? "게시판을 등록하였습니다." : "게시판을 등록하지 못했습니다.", LIST);
     }
 
     /**
-     * 게시판 수정 팝업.
+     * 게시판 이름 고치기 — 목록을 그 게시판의 대화상자가 열린 채로 그린다 (D-153).
      *
      * @param boardId 게시판 번호
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 목록 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/update")
     public String updateForm(@RequestParam(required = false) Integer boardId, Model model) {
-        var board = boardId == null ? null : boardService.get(boardId);
+        Board board = boardId == null ? null : boardService.get(boardId);
         if (board == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("boardId", board.id());
-        model.addAttribute("subject", board.subject());
-        return "admin/board/update";
+        fillList(null, board.id(), null, null, 1, 1, model);
+        model.addAttribute("editBoard", board);
+        return LIST_VIEW;
     }
 
     /**
@@ -146,7 +161,7 @@ public class AdminBoardController {
      * @param id 게시판 번호
      * @param subject 새 이름
      * @param model 뷰 모델
-     * @return 팝업 결과 템플릿
+     * @return 결과 템플릿
      */
     @PostMapping("/update-proc")
     public String update(
@@ -157,8 +172,8 @@ public class AdminBoardController {
         if (id == null || subject == null || subject.trim().isEmpty()) {
             return "redirect:/access-error";
         }
-        return popup(model, boardService.update(id, subject)
-                ? "게시판을 수정하였습니다." : "게시판을 수정하지 못했습니다.");
+        return result(model, boardService.update(id, subject)
+                ? "게시판을 수정하였습니다." : "게시판을 수정하지 못했습니다.", LIST);
     }
 
     /**
@@ -205,19 +220,19 @@ public class AdminBoardController {
     }
 
     /**
-     * 게시판 부서 권한 수정 화면.
+     * 게시판 부서 권한 — 목록을 권한 대화상자가 열린 채로 그린다 (D-153).
      *
      * @param id 게시판 번호
      * @param flag {@code read} 또는 {@code write}
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 목록 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/dept-update")
     public String deptForm(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String flag,
             Model model) {
-        return permissionForm(id, flag, false, model, "admin/board/dept-update");
+        return permissionForm(id, flag, false, model);
     }
 
     /**
@@ -239,19 +254,19 @@ public class AdminBoardController {
     }
 
     /**
-     * 게시판 직급 권한 수정 화면.
+     * 게시판 직급 권한 — 목록을 권한 대화상자가 열린 채로 그린다 (D-153).
      *
      * @param id 게시판 번호
      * @param flag {@code read} 또는 {@code write}
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 목록 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/job-update")
     public String jobForm(
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) String flag,
             Model model) {
-        return permissionForm(id, flag, true, model, "admin/board/job-update");
+        return permissionForm(id, flag, true, model);
     }
 
     /**
@@ -272,9 +287,7 @@ public class AdminBoardController {
         return permissionUpdate(boardId, flag, true, permissions, model, "직급");
     }
 
-    private String permissionForm(
-            Integer id, String flag, boolean job, Model model, String view) {
-
+    private String permissionForm(Integer id, String flag, boolean job, Model model) {
         if (id == null || !isFlag(flag)) {
             return "redirect:/access-error";
         }
@@ -283,9 +296,12 @@ public class AdminBoardController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("form", form);
+        fillList(null, id, null, null, 1, 1, model);
+        model.addAttribute("permissionForm", form);
+        model.addAttribute("permissionJob", job);
+        model.addAttribute("permissionBoard", boardService.get(id));
         model.addAttribute("flag", flag);
-        return view;
+        return LIST_VIEW;
     }
 
     private String permissionUpdate(
@@ -299,7 +315,7 @@ public class AdminBoardController {
                 boardId, "write".equals(flag), job, permissions);
         return result(model, updated
                         ? label + " 권한 정보를 수정했습니다." : label + " 권한 정보를 수정하지 못했습니다.",
-                LIST);
+                LIST + "?boardId=" + boardId);
     }
 
     private static boolean isFlag(String flag) {
@@ -309,14 +325,6 @@ public class AdminBoardController {
     private String result(Model model, String message, String nextPage) {
         model.addAttribute("message", message);
         model.addAttribute("nextPage", nextPage);
-        model.addAttribute("closePopup", false);
-        return RESULT;
-    }
-
-    private String popup(Model model, String message) {
-        model.addAttribute("message", message);
-        model.addAttribute("nextPage", LIST);
-        model.addAttribute("closePopup", true);
         return RESULT;
     }
 }

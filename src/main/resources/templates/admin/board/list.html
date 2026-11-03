@@ -1,212 +1,259 @@
 <!DOCTYPE html>
 <!--/*
-  게시판 관리.
-  출처: legacy/ERFlow/src/main/webapp/admin/board/adminBoardList.jsp
+  게시판 관리 — 게시판과 그 안의 글을 한 화면에서 본다(D-153).
+  출처: admin/board/adminBoardList.jsp + boardRegister.jsp + boardUpdate.jsp
+        + boardDeptUpdate.jsp + boardJobUpdate.jsp
 
-  표가 둘이다. 왼쪽이 게시판, 오른쪽이 «고른 게시판의 글» 이고 페이징도 검색도 두
-  벌이다. 숨은 readFrm 하나가 그 값을 모두 들고 다니며, 검색·페이징·돋보기가 전부
-  그 폼에 값을 옮겨 담아 제출한다(js/admin/adminBoardList.js).
+  목록 틀(D-148)의 카드 둘 — 왼쪽 게시판, 오른쪽 고른 게시판의 글. 검색과 쪽 번호는
+  보통의 GET 폼·링크이고, 다른 쪽의 조건은 숨은 입력으로 같이 실린다.
+  추가(#board-add) · 이름 고치기(#board-edit) · 권한(#board-permission)은 대화상자다.
+  /register · /update?boardId= · /dept-update?id=&flag= · /job-update?id=&flag= 로
+  들어오면 목록을 그 대화상자가 열린 채로 그린다.
 
-  공지사항(1)과 자유게시판(2)에는 체크박스가 없다 — 지우지 못하게 막아 둔 것이다.
-
-  **오른쪽 페이징이 왼쪽 페이지 번호를 따라간다.** 레거시가 게시글 쪽 블록을
-  nowPage 가 아니라 nowBoard 로 계산한다(D-067). 그대로 옮긴다.
+  공지사항(1)과 자유게시판(2)은 지울 수 없어 체크박스가 없다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('게시판 관리 페이지', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/adminBoardList.js', '/js/bootjs/bootstrap.bundle.js'} })}">
+<head th:replace="~{fragments/head :: page('게시판 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/admin/admin.js', '/js/admin/permissions.js', '/js/common/table.js', '/js/common/dialog.js'} })}">
 </head>
-<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 게시판 관리', null, ~{::content})}">
+<body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 게시판 관리', |게시판 ${boardPage.totalRecord} · 글 ${postPage.totalRecord}|, ~{::content})}">
 <th:block th:fragment="content">
-        <div class="board-admin">
-            <div class="main-notice main-wrap">
-
-            <div class="left">
-                <div class="empty-space"></div>
-                <div class="left-subject">게시판 목록</div>
-                <div class="empty-space"></div>
-
-                <div class="empty-space"></div>
-                <form name="boardFrm" th:action="@{/admin/board/delete-proc}" method="post">
-                    <div class="left-group">
-                        <div class="admin-menu">
-                            <button type="button" class="btn btn-secondary register-board">생성</button>
-                            <button type="button" class="btn btn-secondary update-board">수정</button>
-                            <button type="submit" class="btn btn-danger">삭제</button>
+    <div class="list-grid is-wide-right">
+        <section class="list-card">
+            <div class="toolbar">
+                <div class="toolbar-actions">
+                    <h2 class="card-title">게시판</h2>
+                    <span class="count-badge" th:text="${boardPage.totalRecord}">4</span>
+                    <button type="button" class="btn btn-primary" data-dialog-open="board-add">게시판 추가</button>
+                    <button type="submit" class="btn btn-danger" form="boardFrm">삭제</button>
+                </div>
+                <form class="toolbar-search" th:action="@{/admin/board/list}" method="get">
+                    <input type="hidden" name="boardId" th:value="${boardId}">
+                    <input type="hidden" name="keyfield" th:value="${keyfield}">
+                    <input type="hidden" name="keyword" th:value="${keyword}">
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" name="board"
+                                   placeholder="게시판 검색" aria-label="게시판 검색어" th:value="${boardName}">
                         </div>
-                        <div class="left-group">
-                            <div class="main-search-container">
-                                <div class="main-search-icon">
-                                    <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
-                                </div>
-                                <div class="main-search-border">
-                                    <input class="main-search-text" name="board" type="search"
-                                           placeholder="검색하기" aria-label="Search" th:value="${boardName}">
-                                </div>
-                            </div>
-                            <button type="button" id="boardSearch" class="btn btn-primary">검색</button>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
                         </div>
                     </div>
-                    <div class="empty-space"></div>
-                    <!--/* 각 box안에 체크박스에 name태그로 변화를 둠 */-->
-                    <div class="box">
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th style="width: 5%;"><input type="checkbox" id="chkAllBoard"></th>
-                                <th style="width: 30%;">게시판 이름</th>
-                                <th style="width: 20%;">최초 생성시각</th>
-                                <th style="width: 15%;">부서 읽기</th>
-                                <th style="width: 15%;">부서 쓰기</th>
-                                <th style="width: 15%;">직급 읽기</th>
-                                <th style="width: 15%;">직급 쓰기</th>
-                                <th style="width: 5%;"></th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="board : ${boards}">
-                                <td>
-                                    <input th:if="${board.deletable()}" type="checkbox"
-                                           name="boardId" th:value="${board.id}">
-                                </td>
-                                <td><a th:href="@{/post/list(boardId=${board.id})}"
-                                       th:text="${board.subject}">게시판 이름</a></td>
-                                <td th:text="${board.createdAt}">최초 생성시각</td>
-                                <td><a th:href="@{/admin/board/dept-update(id=${board.id},flag='read')}">수정</a></td>
-                                <td><a th:href="@{/admin/board/dept-update(id=${board.id},flag='write')}">수정</a></td>
-                                <td><a th:href="@{/admin/board/job-update(id=${board.id},flag='read')}">수정</a></td>
-                                <td><a th:href="@{/admin/board/job-update(id=${board.id},flag='write')}">수정</a></td>
-                                <td><i class="board-view fa-solid fa-magnifying-glass fa-lg"
-                                       th:data-id="${board.id}" title="보기"></i></td>
-                            </tr>
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <td colspan="8"></td>
-                            </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <!--/* --box */-->
                 </form>
-
-            <!--/* 페이징 */-->
-            <div class="page-controller">
+            </div>
+            <form id="boardFrm" th:action="@{/admin/board/delete-proc}" method="post"
+                  onsubmit="return confirm('선택한 게시판을 지울까요?\n그 안의 글·댓글·첨부도 함께 지워집니다.');"></form>
+            <div class="table-scroll">
+                <table class="table table-striped table-nowrap">
+                    <thead>
+                    <tr>
+                        <th class="check-col"><input type="checkbox" data-check-all="boardId" aria-label="게시판 전체 선택"></th>
+                        <th scope="col">게시판 이름</th>
+                        <th scope="col">만든 날</th>
+                        <th scope="col">권한</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(boards)}">
+                        <td colspan="4" class="empty-cell">검색 결과가 없습니다.</td>
+                    </tr>
+                    <!--/* 이름을 누르면 오른쪽에 그 게시판의 글이 온다. 이름 고치기는 그 옆 작은 링크. */-->
+                    <tr th:each="b : ${boards}" th:classappend="${b.id == boardId} ? 'is-selected'">
+                        <td class="check-col">
+                            <input th:if="${b.deletable()}" type="checkbox" name="boardId" form="boardFrm" th:value="${b.id}">
+                        </td>
+                        <td>
+                            <a class="row-link" th:href="@{/admin/board/list(boardId=${b.id},board=${boardName},nowBoard=${boardPage.nowPage})}"
+                               th:text="${b.subject}">게시판 이름</a>
+                            <a class="cell-action" th:href="@{/admin/board/update(boardId=${b.id})}">이름 고치기</a>
+                        </td>
+                        <!--/* 만든 날은 날짜까지만 — 시각은 여기서 아무 뜻이 없다 */-->
+                        <td th:text="${b.createdAt != null and #strings.length(b.createdAt) >= 10} ? ${#strings.substring(b.createdAt, 0, 10)} : ${b.createdAt}">만든 날</td>
+                        <td class="perm-cell">
+                            <span class="perm-group"><span class="perm-label">부서</span>
+                                <a th:href="@{/admin/board/dept-update(id=${b.id},flag='read')}">읽기</a> ·
+                                <a th:href="@{/admin/board/dept-update(id=${b.id},flag='write')}">쓰기</a></span>
+                            <span class="perm-group"><span class="perm-label">직급</span>
+                                <a th:href="@{/admin/board/job-update(id=${b.id},flag='read')}">읽기</a> ·
+                                <a th:href="@{/admin/board/job-update(id=${b.id},flag='write')}">쓰기</a></span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-controller" th:if="${boardPage.totalPage > 1}">
                 <a th:if="${boardPage.hasPreviousBlock()}"
-                   th:href="|javascript:blockBoard('${boardPage.pagePerBlock}', '${boardPage.nowBlock - 1}')|"
-                   class="disabled">이전</a>
+                   th:href="@{/admin/board/list(nowBoard=${boardPage.pagePerBlock * (boardPage.nowBlock - 2) + 1},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowPage=${postPage.nowPage})}">이전</a>
                 <ul class="page-numbers">
-                    <li th:each="number : ${boardPage.pageNumbers}">
-                        <a th:href="|javascript:pagingBoard('${number}')|"
-                           th:classappend="${number == boardPage.nowPage} ? 'disabled'"
-                           th:text="${number}">1</a>
+                    <li th:each="n : ${boardPage.pageNumbers}">
+                        <a th:href="@{/admin/board/list(nowBoard=${n},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowPage=${postPage.nowPage})}"
+                           th:classappend="${n == boardPage.nowPage} ? 'disabled'" th:text="${n}">1</a>
                     </li>
                 </ul>
                 <a th:if="${boardPage.hasNextBlock()}"
-                   th:href="|javascript:blockBoard('${boardPage.pagePerBlock}', '${boardPage.nowBlock + 1}')|">다음</a>
+                   th:href="@{/admin/board/list(nowBoard=${boardPage.pagePerBlock * boardPage.nowBlock + 1},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowPage=${postPage.nowPage})}">다음</a>
             </div>
-        </div>
-        <!--/* --left */-->
-        <div class="right">
-            <div class="empty-space"></div>
-            <div class="right-subject">게시글 목록</div>
-            <div class="empty-space"></div>
-            <div class="right-group">
-                <form name="postFrm" th:action="@{/admin/board/post-delete-proc}" method="post">
+        </section>
+
+        <section class="list-card">
+            <div class="toolbar">
+                <div class="toolbar-actions">
+                    <h2 class="card-title" th:text="${currentBoard != null} ? ${currentBoard.subject} : '게시글'">공지사항</h2>
+                    <span class="count-badge" th:text="${postPage.totalRecord}">16</span>
+                    <button type="submit" class="btn btn-danger" form="postFrm">삭제</button>
+                </div>
+                <form class="toolbar-search" th:action="@{/admin/board/list}" method="get">
+                    <input type="hidden" name="board" th:value="${boardName}">
                     <input type="hidden" name="boardId" th:value="${boardId}">
-                    <div class="right-group-left">
-                        <div class="admin-menu">
-                            <button type="submit" class="btn btn-danger">삭제</button>
+                    <input type="hidden" name="nowBoard" th:value="${boardPage.nowPage}">
+                    <select name="keyfield" aria-label="검색할 칸">
+                        <option value="" th:selected="${keyfield == ''}">전체 조회</option>
+                        <option value="subject" th:selected="${keyfield == 'subject'}">제목</option>
+                        <option value="author" th:selected="${keyfield == 'author'}">작성자</option>
+                    </select>
+                    <div class="main-search-container">
+                        <div class="main-search-border">
+                            <input class="main-search-text" type="search" name="keyword"
+                                   placeholder="글 검색" aria-label="글 검색어" th:value="${keyword}">
                         </div>
-                        <div class="main-leftgroup">
-                            <div class="main-search-select">
-                                <select name="keyfield">
-                                    <option value="" th:selected="${keyfield == ''}">전체조회</option>
-                                    <option value="subject" th:selected="${keyfield == 'subject'}">제목</option>
-                                    <option value="author" th:selected="${keyfield == 'author'}">작성자</option>
-                                </select>
-                            </div>
-                            <div class="main-search-container">
-                                <div class="main-search-icon">
-                                    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
-                                </div>
-                                <div class="main-search-border">
-                                    <!--/* 레거시는 여기에 class 를 두 번 적었다
-                                           (main-search-text 와 button). 브라우저는 앞의
-                                           것만 쓰고 뒤의 것을 버린다 — 그 DOM 을 기준으로
-                                           옮긴다(D-037). Thymeleaf 는 중복 속성을 아예
-                                           읽지 못한다 */-->
-                                    <input class="main-search-text" id="keyword" name="keyword" type="search"
-                                           placeholder="검색하기" aria-label="Search"
-                                           th:value="${keyword}">
-                                </div>
-                            </div>
-                            <button type="button" id="postSearch" class="btn btn-primary">검색</button>
+                        <div class="main-search-icon">
+                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
                         </div>
-                    </div>
-                    <div class="empty-space"></div>
-                    <div>
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th style="width: 5%;"><input type="checkbox" id="chkAllPost"></th>
-                                <th style="width: 10%;">글번호</th>
-                                <th style="width: 30%;">제목</th>
-                                <th style="width: 15%;">작성자</th>
-                                <th style="width: 30%;">작성날짜</th>
-                                <th style="width: 5%;">조회수</th>
-                                <th style="width: 5%;">댓글수</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="row : ${posts}">
-                                <td><input type="checkbox" name="postId" th:value="${row.post.id}"></td>
-                                <td th:text="${row.post.id}">1</td>
-                                <td><a th:href="@{/post/view(boardId=${boardId},id=${row.post.id})}"
-                                       th:text="${row.post.subject}">제목</a></td>
-                                <td><a th:href="@{/profile(id=${row.post.userId})}"
-                                       th:text="${row.post.name}">작성자</a></td>
-                                <td th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm:ss')}">작성날짜</td>
-                                <td th:text="${row.post.count}">0</td>
-                                <td th:text="${row.commentCount}">0</td>
-                            </tr>
-                            </tbody>
-                            <tfoot>
-                            <tr>
-                                <td colspan="6"></td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                            </tr>
-                            </tfoot>
-                        </table>
                     </div>
                 </form>
             </div>
-            <!--/* 페이징 */-->
-            <div class="page-controller">
-                <a th:if="${postBlock.hasPreviousBlock()}"
-                   th:href="|javascript:blockPost('${postBlock.pagePerBlock}', '${postBlock.nowBlock - 1}')|"
-                   class="disabled">이전</a>
+            <form id="postFrm" th:action="@{/admin/board/post-delete-proc}" method="post"
+                  onsubmit="return confirm('선택한 글을 지울까요?');">
+                <input type="hidden" name="boardId" th:value="${boardId}">
+            </form>
+            <div class="table-scroll">
+                <table class="table table-striped table-nowrap">
+                    <thead>
+                    <tr>
+                        <th class="check-col"><input type="checkbox" data-check-all="postId" aria-label="글 전체 선택"></th>
+                        <th scope="col">번호</th>
+                        <th scope="col">제목</th>
+                        <th scope="col">작성자</th>
+                        <th scope="col">작성일</th>
+                        <th scope="col">조회</th>
+                        <th scope="col">댓글</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(posts)}">
+                        <td colspan="7" class="empty-cell">글이 없습니다.</td>
+                    </tr>
+                    <tr th:each="row : ${posts}">
+                        <td class="check-col"><input type="checkbox" name="postId" form="postFrm" th:value="${row.post.id}"></td>
+                        <td th:text="${row.post.id}">1</td>
+                        <td class="ellipsis-cell">
+                            <a class="row-link" th:href="@{/post/view(boardId=${boardId},id=${row.post.id})}"
+                               th:text="${row.post.subject}" th:title="${row.post.subject}">제목</a>
+                        </td>
+                        <td><a th:href="@{/profile(id=${row.post.userId})}" th:text="${row.post.name}">작성자</a></td>
+                        <td th:text="${#temporals.format(row.post.createdAt, 'yyyy-MM-dd HH:mm')}">작성일</td>
+                        <td th:text="${row.post.count}">0</td>
+                        <td th:text="${row.commentCount}">0</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-controller" th:if="${postPage.totalPage > 1}">
+                <a th:if="${postPage.hasPreviousBlock()}"
+                   th:href="@{/admin/board/list(nowPage=${postPage.pagePerBlock * (postPage.nowBlock - 2) + 1},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowBoard=${boardPage.nowPage})}">이전</a>
                 <ul class="page-numbers">
-                    <li th:each="number : ${postBlock.pageNumbers}">
-                        <a th:href="|javascript:pagingPost('${number}')|"
-                           th:classappend="${number == postPage.nowPage} ? 'disabled'"
-                           th:text="${number}">1</a>
+                    <li th:each="n : ${postPage.pageNumbers}">
+                        <a th:href="@{/admin/board/list(nowPage=${n},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowBoard=${boardPage.nowPage})}"
+                           th:classappend="${n == postPage.nowPage} ? 'disabled'" th:text="${n}">1</a>
                     </li>
                 </ul>
-                <a th:if="${postBlock.hasNextBlock()}"
-                   th:href="|javascript:blockPost('${postBlock.pagePerBlock}', '${postBlock.nowBlock + 1}')|">다음</a>
+                <a th:if="${postPage.hasNextBlock()}"
+                   th:href="@{/admin/board/list(nowPage=${postPage.pagePerBlock * postPage.nowBlock + 1},board=${boardName},boardId=${boardId},keyfield=${keyfield},keyword=${keyword},nowBoard=${boardPage.nowPage})}">다음</a>
             </div>
-            <form name="readFrm" th:action="@{/admin/board/list}" method="get">
-                <input type="hidden" name="nowBoard" th:value="${boardPage.nowPage}">
-                <input type="hidden" name="nowPage" th:value="${postPage.nowPage}">
-                <input type="hidden" name="board" th:value="${boardName}">
-                <input type="hidden" name="boardId" th:value="${boardId}">
-                <input type="hidden" name="keyfield" th:value="${keyfield}">
-                <input type="hidden" name="keyword" th:value="${keyword}">
-            </form>
-        </div>
-        </div>
+        </section>
+    </div>
+
+    <!--/* 게시판 추가. 새 게시판은 권한 네 칸이 관리자 비트로 시작한다 — 만든 뒤 권한을 열어 준다. */-->
+    <dialog id="board-add" class="dialog" th:data-open-on-load="${openAdd} ? 'true' : null">
+        <form th:action="@{/admin/board/register-proc}" method="post">
+            <div class="dialog-head">
+                <h2 class="dialog-title">게시판 추가</h2>
+                <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                    <i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="dialog-body">
+                <div class="form-group">
+                    <label for="board-add-subject">게시판 이름</label>
+                    <input type="text" id="board-add-subject" name="subject" placeholder="예: 인사 게시판" autofocus>
+                </div>
+                <p class="form-note">새 게시판은 처음엔 관리자만 읽고 쓸 수 있습니다. 만든 뒤 «권한» 에서 열어 주세요.</p>
+            </div>
+            <div class="btn-group dialog-foot">
+                <button type="button" class="btn" data-dialog-close>취소</button>
+                <button class="btn btn-primary" type="submit">게시판 생성</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="board-edit" class="dialog" th:if="${editBoard != null}" data-open-on-load="true">
+        <form th:action="@{/admin/board/update-proc}" method="post">
+            <div class="dialog-head">
+                <h2 class="dialog-title">게시판 이름 고치기</h2>
+                <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                    <i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="dialog-body">
+                <input type="hidden" name="id" th:value="${editBoard.id}">
+                <div class="form-group">
+                    <label for="board-edit-subject">게시판 이름</label>
+                    <input type="text" id="board-edit-subject" name="subject" th:value="${editBoard.subject}" autofocus>
+                </div>
+            </div>
+            <div class="btn-group dialog-foot">
+                <button type="button" class="btn" data-dialog-close>취소</button>
+                <button class="btn btn-primary" type="submit">저장</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!--/*
+      권한 — 부서·직급 × 읽기·쓰기 넷을 대화상자 하나가 맡는다. 저장값은 «관리자 비트 +
+      체크된 비트» 이고, 고치지 않는 쪽은 읽어 온 값을 그대로 되돌려 놓는다. 전체 선택은
+      js/admin/permissions.js.
+    */-->
+    <dialog id="board-permission" class="dialog" th:if="${permissionForm != null}" data-open-on-load="true">
+        <form th:action="${permissionJob} ? @{/admin/board/job-update-proc} : @{/admin/board/dept-update-proc}" method="post">
+            <div class="dialog-head">
+                <h2 class="dialog-title"
+                    th:text="|${permissionBoard.subject} · ${permissionJob ? '직급' : '부서'} ${flag == 'write' ? '쓰기' : '읽기'} 권한|">공지사항 · 부서 읽기 권한</h2>
+                <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                    <i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="dialog-body">
+                <input type="hidden" name="boardId" th:value="${permissionForm.boardId}">
+                <input type="hidden" name="flag" th:value="${flag}">
+                <p class="form-note"
+                   th:text="|체크한 ${permissionJob ? '직급' : '부서'}이 이 게시판의 글을 ${flag == 'write' ? '쓸' : '읽을'} 수 있습니다. 관리자는 늘 됩니다.|">설명</p>
+                <div class="checkbox-container">
+                    <label th:text="${permissionJob} ? '직급' : '부서'">부서</label>
+                    <div class="input-group">
+                        <input type="checkbox" id="chkAll" autofocus>
+                        <label for="chkAll">전체 선택</label>
+                    </div>
+                    <div class="input-group" th:each="choice, i : ${permissionForm.choices}">
+                        <input type="checkbox" th:id="|permission${i.count}|"
+                               name="permissions" th:value="${choice.classId}"
+                               th:checked="${choice.checked}">
+                        <label th:for="|permission${i.count}|" th:text="${choice.name}">이름</label>
+                    </div>
+                </div>
+            </div>
+            <div class="btn-group dialog-foot">
+                <button type="button" class="btn" data-dialog-close>취소</button>
+                <button class="btn btn-primary" type="submit">저장</button>
+            </div>
+        </form>
+    </dialog>
 </th:block>
 </body>
 </html>

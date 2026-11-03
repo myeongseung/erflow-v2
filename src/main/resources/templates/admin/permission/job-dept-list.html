@@ -15,7 +15,7 @@
   «겸하는 권한» 칸은 수정 대화상자의 체크와 같은 값이다(D-149).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('직급·부서 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/permissions.js', '/js/admin/jobDeptList.js', '/js/common/dialog.js'} })}">
+<head th:replace="~{fragments/head :: page('직급·부서 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/permissions.js', '/js/common/table.js', '/js/common/dialog.js'} })}">
 </head>
 <body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 권한 관리 &gt; 직급·부서 관리', |직급 ${#lists.size(jobs)} · 부서 ${#lists.size(depts)}|, ~{::content})}">
 <th:block th:fragment="content">
