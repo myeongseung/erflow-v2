@@ -60,15 +60,70 @@ class AdminPermissionScreenTest {
     }
 
     @Test
-    @DisplayName("직급·부서 리스트가 그려진다")
+    @DisplayName("직급·부서 관리가 그려진다 — 카드 둘과 추가 대화상자 둘(D-149)")
     void listRenders() throws Exception {
         String html = mockMvc.perform(
                         get("/admin/permission/job-dept-list").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("직급 리스트").contains("부서 리스트")
-                .contains("직급 권한 및 정보").contains("부서 권한 및 정보");
+        assertThat(html).contains("관리자 &gt; 권한 관리 &gt; 직급·부서 관리")
+                .contains("직급 추가").contains("부서 추가").contains("겸하는 권한")
+                .contains("id=\"job-add\"").contains("id=\"dept-add\"")
+                .doesNotContain("data-open-on-load");
+    }
+
+    @Test
+    @DisplayName("추가 주소는 목록을 추가 대화상자가 열린 채로 그린다(D-149)")
+    void registerAddressOpensTheDialog() throws Exception {
+        String job = mockMvc.perform(
+                        get("/admin/permission/job-register").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(job).contains("data-open-on-load").contains("직급 생성");
+
+        String dept = mockMvc.perform(
+                        get("/admin/permission/dept-register").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(dept).contains("data-open-on-load").contains("부서 생성")
+                .contains("우편번호 찾기");
+    }
+
+    @Test
+    @DisplayName("수정 주소는 목록을 그 줄의 수정 대화상자가 열린 채로 그린다(D-149)")
+    void updateAddressOpensTheDialog() throws Exception {
+        int jobId = permissionService.list(null, null).jobs().get(0).classId();
+
+        String html = mockMvc.perform(get("/admin/permission/job-update")
+                        .param("jobId", String.valueOf(jobId))
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // 목록도 함께 그려지고, 그 위에 수정 대화상자가 열린다.
+        assertThat(html).contains("직급 추가")
+                .contains("id=\"job-edit\"").contains("data-open-on-load")
+                .contains("직급 수정").contains("name=\"permissions\"");
+    }
+
+    @Test
+    @DisplayName("목록의 «겸하는 권한» 은 수정 대화상자의 체크와 같다(D-149)")
+    void listGrantsMatchTheUpdateForm() {
+        var page = permissionService.list(null, null);
+        PermissionRow granted = page.jobs().stream()
+                .filter(row -> row.permission() != row.level())
+                .findFirst().orElse(null);
+        assumeTrue(granted != null, "겸직 권한을 가진 직급이 없어 건너뛴다");
+
+        String names = page.jobGrants().get(granted.classId());
+        List<String> checked = permissionService.jobForm(granted.classId()).choices().stream()
+                .filter(PermissionChoice::checked).map(PermissionChoice::name).toList();
+
+        assertThat(names).isNotNull();
+        for (String name : checked) {
+            assertThat(names).contains(name);
+        }
     }
 
     @Test
@@ -171,7 +226,8 @@ class AdminPermissionScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("48058").contains("부산").contains("3층");
+        assertThat(html).contains("48058").contains("부산").contains("3층")
+                .contains("id=\"dept-edit\"").contains("data-open-on-load");
 
         // 화면이 채워 준 값을 그대로 제출하면 주소가 보존된다.
         permissionService.updateDept(

@@ -34,14 +34,43 @@ public class AdminPermissionService {
     /**
      * 직급·부서 목록 화면 한 벌.
      *
+     * <p>«겸하는 권한» 의 이름을 찾으려면 검색어로 좁히지 않은 전체 목록이 있어야 한다 —
+     * 비트의 주인이 검색 결과 밖에 있을 수 있다(D-149).
+     *
      * @param jobKeyword 직급명 검색어
      * @param deptKeyword 부서명 검색어
-     * @return 직급 목록과 부서 목록
+     * @return 직급 목록과 부서 목록, 줄마다 겸하는 권한 이름
      */
     @Transactional(readOnly = true)
     public JobDeptList list(String jobKeyword, String deptKeyword) {
-        return new JobDeptList(
-                mapper.findJobPermissions(jobKeyword), mapper.findDeptPermissions(deptKeyword));
+        List<PermissionRow> jobs = mapper.findJobPermissions(jobKeyword);
+        List<PermissionRow> depts = mapper.findDeptPermissions(deptKeyword);
+        List<PermissionRow> allJobs = isBlank(jobKeyword) ? jobs : mapper.findJobPermissions(null);
+        List<PermissionRow> allDepts =
+                isBlank(deptKeyword) ? depts : mapper.findDeptPermissions(null);
+        return new JobDeptList(jobs, depts, grants(jobs, allJobs), grants(depts, allDepts));
+    }
+
+    private static boolean isBlank(String keyword) {
+        return keyword == null || keyword.isBlank();
+    }
+
+    /**
+     * 줄마다 «겸하는 권한» 의 이름을 쉼표로 잇는다. 자기 비트는 빼고, 없으면 {@code null}.
+     * 수정 대화상자의 체크({@link #choices})와 같은 판정이다.
+     */
+    private static Map<Integer, String> grants(List<PermissionRow> rows, List<PermissionRow> all) {
+        Map<Integer, String> grants = new HashMap<>();
+        for (PermissionRow row : rows) {
+            List<String> names = new ArrayList<>();
+            for (PermissionRow other : all) {
+                if (other.classId() != row.classId() && Levels.has(row.permission(), other.level())) {
+                    names.add(other.name());
+                }
+            }
+            grants.put(row.classId(), names.isEmpty() ? null : String.join(", ", names));
+        }
+        return grants;
     }
 
     /**
@@ -486,8 +515,14 @@ public class AdminPermissionService {
      *
      * @param jobs 직급 목록
      * @param depts 부서 목록
+     * @param jobGrants 직급 번호 → 겸하는 직급 이름들(쉼표). 없으면 {@code null}
+     * @param deptGrants 부서 번호 → 겸하는 부서 이름들(쉼표). 없으면 {@code null}
      */
-    public record JobDeptList(List<PermissionRow> jobs, List<PermissionRow> depts) {
+    public record JobDeptList(
+            List<PermissionRow> jobs,
+            List<PermissionRow> depts,
+            Map<Integer, String> jobGrants,
+            Map<Integer, String> deptGrants) {
     }
 
     /**

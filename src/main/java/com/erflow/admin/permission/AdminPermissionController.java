@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <pre>
  * jobDeptList.jsp      GET  /admin/permission/job-dept-list
- * jobRegister.jsp      GET  /admin/permission/job-register        (팝업)
+ * jobRegister.jsp      GET  /admin/permission/job-register        (목록 + 추가 대화상자)
  * jobRegisterProc      POST /admin/permission/job-register-proc
- * deptRegister.jsp     GET  /admin/permission/dept-register       (팝업)
+ * deptRegister.jsp     GET  /admin/permission/dept-register       (목록 + 추가 대화상자)
  * deptRegisterProc     POST /admin/permission/dept-register-proc
- * jobUpdate.jsp        GET  /admin/permission/job-update?jobId=
+ * jobUpdate.jsp        GET  /admin/permission/job-update?jobId=   (목록 + 수정 대화상자)
  * jobUpdateProc        POST /admin/permission/job-update-proc
- * deptUpdate.jsp       GET  /admin/permission/dept-update?deptId=
+ * deptUpdate.jsp       GET  /admin/permission/dept-update?deptId= (목록 + 수정 대화상자)
  * deptUpdateProc       POST /admin/permission/dept-update-proc
  * jobDeleteProc        POST /admin/permission/job-delete-proc
  * deptDeleteProc       POST /admin/permission/dept-delete-proc
@@ -27,14 +27,17 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <p>권한 검사는 여기서 하지 않는다. {@code /admin/**} 을 통째로 막는다(D-053).
  *
- * <p>등록은 목록에서 {@code window.open} 으로 여는 팝업이라, 처리 결과도 레거시 그대로
- * 부모를 새로 고친 뒤 창을 닫는다. 수정·삭제는 목록으로 돌아간다.
+ * <p>추가·수정 폼은 목록 위의 대화상자다(D-149). 옛 주소로 들어와도 같은 곳에 닿도록
+ * 주소는 남기고, 목록을 그 대화상자가 열린 채로 그린다. 처리 결과는 전부 목록으로
+ * 돌아간다.
  */
 @Controller
 @RequestMapping("/admin/permission")
 public class AdminPermissionController {
 
     private static final String LIST = "/admin/permission/job-dept-list";
+
+    private static final String LIST_VIEW = "admin/permission/job-dept-list";
 
     private static final String RESULT = "admin/permission/result";
 
@@ -60,24 +63,39 @@ public class AdminPermissionController {
             @RequestParam(required = false) String jobKeyword,
             @RequestParam(required = false) String deptKeyword,
             Model model) {
+        fillList(jobKeyword, deptKeyword, model);
+        return LIST_VIEW;
+    }
 
+    /**
+     * 목록 두 벌과 «겸하는 권한» 을 모델에 채운다 (D-149).
+     *
+     * @param jobKeyword 직급명 검색어. 없으면 전체
+     * @param deptKeyword 부서명 검색어. 없으면 전체
+     * @param model 뷰 모델
+     */
+    private void fillList(String jobKeyword, String deptKeyword, Model model) {
         AdminPermissionService.JobDeptList page =
                 permissionService.list(jobKeyword, deptKeyword);
         model.addAttribute("jobs", page.jobs());
         model.addAttribute("depts", page.depts());
+        model.addAttribute("jobGrants", page.jobGrants());
+        model.addAttribute("deptGrants", page.deptGrants());
         model.addAttribute("jobKeyword", jobKeyword == null ? "" : jobKeyword);
         model.addAttribute("deptKeyword", deptKeyword == null ? "" : deptKeyword);
-        return "admin/permission/job-dept-list";
     }
 
     /**
-     * 직급 생성 팝업.
+     * 직급 추가 — 목록을 추가 대화상자가 열린 채로 그린다 (D-149).
      *
-     * @return 등록 템플릿
+     * @param model 뷰 모델
+     * @return 목록 템플릿
      */
     @GetMapping("/job-register")
-    public String jobRegisterForm() {
-        return "admin/permission/job-register";
+    public String jobRegisterForm(Model model) {
+        fillList(null, null, model);
+        model.addAttribute("openAdd", "job");
+        return LIST_VIEW;
     }
 
     /**
@@ -85,25 +103,28 @@ public class AdminPermissionController {
      *
      * @param jobName 직급명
      * @param model 뷰 모델
-     * @return 팝업 결과 템플릿
+     * @return 결과 템플릿
      */
     @PostMapping("/job-register-proc")
     public String jobRegister(@RequestParam(required = false) String jobName, Model model) {
         if (jobName == null) {
-            return popup(model, "잘못된 접근입니다.");
+            return result(model, "잘못된 접근입니다.");
         }
-        return popup(model, permissionService.createJob(jobName)
+        return result(model, permissionService.createJob(jobName)
                 ? "등록에 성공했습니다." : "등록에 실패하였습니다.");
     }
 
     /**
-     * 부서 생성 팝업.
+     * 부서 추가 — 목록을 추가 대화상자가 열린 채로 그린다 (D-149).
      *
-     * @return 등록 템플릿
+     * @param model 뷰 모델
+     * @return 목록 템플릿
      */
     @GetMapping("/dept-register")
-    public String deptRegisterForm() {
-        return "admin/permission/dept-register";
+    public String deptRegisterForm(Model model) {
+        fillList(null, null, model);
+        model.addAttribute("openAdd", "dept");
+        return LIST_VIEW;
     }
 
     /**
@@ -117,7 +138,7 @@ public class AdminPermissionController {
      * @param address1 도로명 주소
      * @param address2 상세 주소
      * @param model 뷰 모델
-     * @return 팝업 결과 템플릿
+     * @return 결과 템플릿
      */
     @PostMapping("/dept-register-proc")
     public String deptRegister(
@@ -128,20 +149,20 @@ public class AdminPermissionController {
             Model model) {
 
         if (deptName == null || postalCode == null || address1 == null || address2 == null) {
-            return popup(model, "올바르지 않은 접근입니다.");
+            return result(model, "올바르지 않은 접근입니다.");
         }
         boolean created = permissionService.createDept(
                 blankToNull(deptName), blankToNull(postalCode),
                 blankToNull(address1), blankToNull(address2));
-        return popup(model, created ? "등록에 성공하였습니다." : "등록에 실패했습니다.");
+        return result(model, created ? "등록에 성공하였습니다." : "등록에 실패했습니다.");
     }
 
     /**
-     * 직급 수정 화면.
+     * 직급 수정 — 목록을 수정 대화상자가 열린 채로 그린다 (D-149).
      *
      * @param jobId 직급 번호
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 목록 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/job-update")
     public String jobUpdateForm(@RequestParam(required = false) Integer jobId, Model model) {
@@ -150,8 +171,9 @@ public class AdminPermissionController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("form", form);
-        return "admin/permission/job-update";
+        fillList(null, null, model);
+        model.addAttribute("jobForm", form);
+        return LIST_VIEW;
     }
 
     /**
@@ -178,11 +200,11 @@ public class AdminPermissionController {
     }
 
     /**
-     * 부서 수정 화면.
+     * 부서 수정 — 목록을 수정 대화상자가 열린 채로 그린다 (D-149).
      *
      * @param deptId 부서 번호
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 목록 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/dept-update")
     public String deptUpdateForm(@RequestParam(required = false) Integer deptId, Model model) {
@@ -191,15 +213,15 @@ public class AdminPermissionController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("form", form);
-        return "admin/permission/dept-update";
+        fillList(null, null, model);
+        model.addAttribute("deptForm", form);
+        return LIST_VIEW;
     }
 
     /**
      * 부서 수정 처리.
      *
-     * <p><b>주소가 지워진다.</b> 화면이 주소칸을 채워 주지 않는데 처리는 그 빈 값을
-     * 그대로 저장한다. 레거시 그대로다(D-059).
+     * <p>주소는 화면이 현재 값을 채워 보낸다(D-105). 빈 값이 오면 그대로 저장된다.
      *
      * @param deptId 부서 번호
      * @param deptName 부서명
@@ -373,21 +395,12 @@ public class AdminPermissionController {
     private String result(Model model, String message) {
         model.addAttribute("message", message);
         model.addAttribute("nextPage", LIST);
-        model.addAttribute("closePopup", false);
-        return RESULT;
-    }
-
-    private String popup(Model model, String message) {
-        model.addAttribute("message", message);
-        model.addAttribute("nextPage", LIST);
-        model.addAttribute("closePopup", true);
         return RESULT;
     }
 
     private String programResult(Model model, String message) {
         model.addAttribute("message", message);
         model.addAttribute("nextPage", "/admin/permission/menu-list");
-        model.addAttribute("closePopup", false);
         return RESULT;
     }
 }
