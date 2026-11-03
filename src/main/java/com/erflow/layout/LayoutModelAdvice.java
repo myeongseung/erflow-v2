@@ -2,7 +2,6 @@ package com.erflow.layout;
 
 import com.erflow.auth.ErflowUserDetails;
 import com.erflow.message.MessageMapper;
-import com.erflow.user.UserMapper;
 import com.erflow.user.UserRow;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -24,18 +23,13 @@ public class LayoutModelAdvice {
 
     private final MessageMapper messageMapper;
 
-    private final UserMapper userMapper;
-
     /**
      * @param menuService 메뉴 조회 서비스
      * @param messageMapper 쪽지 조회 (안 읽은 수)
-     * @param userMapper 사원 조회 (사이드바의 사람 카드)
      */
-    public LayoutModelAdvice(
-            MenuService menuService, MessageMapper messageMapper, UserMapper userMapper) {
+    public LayoutModelAdvice(MenuService menuService, MessageMapper messageMapper) {
         this.menuService = menuService;
         this.messageMapper = messageMapper;
-        this.userMapper = userMapper;
     }
 
     /**
@@ -76,12 +70,15 @@ public class LayoutModelAdvice {
      * 로그인한 사람 — 이름·부서·직급 (D-150). 사이드바의 사람 카드와 헤더의
      * 머리글자 단추가 쓴다.
      *
+     * <p>DB 에 가지 않는다 — 로그인 때 읽어 세션에 둔 값이다(D-152).
+     *
      * @return 사원 한 줄. 로그인 전이면 {@code null}
      */
     @ModelAttribute("me")
     public UserRow me() {
         ErflowUserDetails user = principal();
-        return user == null ? null : userMapper.findUserView(user.id());
+        return user == null ? null
+                : new UserRow(user.deptName(), user.jobName(), user.id(), user.name());
     }
 
     /**

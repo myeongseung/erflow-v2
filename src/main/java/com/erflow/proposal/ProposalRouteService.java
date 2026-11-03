@@ -39,7 +39,6 @@ public class ProposalRouteService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public RoutePage list(String userId, ProposalRouteSearch search, int requestedPage) {
         int total = proposalRouteMapper.countBy(userId, search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -88,7 +87,6 @@ public class ProposalRouteService {
      * @param receiver Base64(URL 인코딩)로 감싼 {@code ;} 이은 사번. 없으면 {@code null}
      * @return 결재자 목록. 이름을 이은 문자열도 함께
      */
-    @Transactional(readOnly = true)
     public RouteForm registerForm(String receiver) {
         if (receiver == null || receiver.isBlank()) {
             return new RouteForm("", List.of());
@@ -112,7 +110,6 @@ public class ProposalRouteService {
      * @param id 결재관리번호
      * @return 결재라인명과 결재자 목록. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public RouteEditForm updateForm(int id) {
         ProposalRouteEdit edit = proposalRouteMapper.findForUpdate(id);
         if (edit == null) {

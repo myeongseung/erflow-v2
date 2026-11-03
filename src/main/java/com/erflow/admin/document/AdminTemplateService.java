@@ -27,7 +27,6 @@ public class AdminTemplateService {
      *
      * @return 양식 목록
      */
-    @Transactional(readOnly = true)
     public List<TemplateRow> list() {
         return mapper.findAll();
     }
@@ -38,7 +37,6 @@ public class AdminTemplateService {
      * @param id 문서 번호
      * @return 양식. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public TemplateRow find(int id) {
         return mapper.findById(id);
     }

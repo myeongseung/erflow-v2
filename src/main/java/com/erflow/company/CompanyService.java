@@ -52,7 +52,6 @@ public class CompanyService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public CompanyPage list(int subcontract, CompanySearch search, int requestedPage) {
         int total = companyMapper.countBy(subcontract, search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -67,7 +66,6 @@ public class CompanyService {
      * @param id 번호
      * @return 협력업체. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public Company get(int id) {
         return companyMapper.findById(id);
     }

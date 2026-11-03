@@ -19,16 +19,21 @@
       결과가 없으면 0 이었다. INNER JOIN 으로 바꾸면 그런 사용자가 통째로 사라져
       "없는 사용자" 가 되어 버린다.
     -->
+    <!-- 부서명·직급명은 사이드바 사람 카드가 쓴다. 로그인 때 한 번 읽어 세션에 둔다(D-152) -->
     <select id="findAuthUser" resultType="com.erflow.auth.AuthUser">
         SELECT u.id,
                u.name,
                u.password,
                COALESCE(d.permission, 0) AS deptPermission,
                COALESCE(j.permission, 0) AS jobPermission,
-               u.password_change_required AS passwordChangeRequired
+               u.password_change_required AS passwordChangeRequired,
+               dt.name AS deptName,
+               jt.name AS jobName
           FROM user_tbl u
           LEFT JOIN permission_dept_tbl d ON u.dept_tbl_id = d.dept_tbl_id
           LEFT JOIN permission_job_tbl  j ON u.job_tbl_id  = j.job_tbl_id
+          LEFT JOIN dept_tbl dt ON u.dept_tbl_id = dt.id
+          LEFT JOIN job_tbl  jt ON u.job_tbl_id  = jt.id
          WHERE u.id = #{id}
     </select>
 

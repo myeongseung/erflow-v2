@@ -3,7 +3,6 @@ package com.erflow.product;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 제품 찾기 팝업이 쓰는 조회.
@@ -35,7 +34,6 @@ public class ProductFinder {
      * @param search 검색어. {@code null} 이면 빈 문자열로 본다
      * @return 이름 순으로 정렬한 제품 목록
      */
-    @Transactional(readOnly = true)
     public List<ProductRow> search(String search) {
         String needle = search == null ? "" : search;
 

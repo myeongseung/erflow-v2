@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 관리자 대시보드 업무.
@@ -49,7 +48,6 @@ public class AdminHomeService {
      *
      * @return 화면이 쓰는 네 목록
      */
-    @Transactional(readOnly = true)
     public Dashboard dashboard() {
         List<WorkRow> works = mapper.findWorks(today());
         return new Dashboard(
@@ -86,7 +84,6 @@ public class AdminHomeService {
      *
      * @return 상태 코드별 인원. 코드 오름차순
      */
-    @Transactional(readOnly = true)
     public Map<Integer, Integer> workCounts() {
         Map<Integer, Integer> counts = new LinkedHashMap<>();
         for (WorkRow work : mapper.findWorks(today())) {

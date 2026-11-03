@@ -11,7 +11,6 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 근태 확인 업무.
@@ -70,7 +69,6 @@ public class WorkService {
      * @param nowPage 현재 페이지
      * @return 사람별 두 줄과 페이징
      */
-    @Transactional(readOnly = true)
     public WorkPage page(YearMonth month, String dept, String name, int nowPage) {
         Pagination pagination =
                 Pagination.of(workMapper.countUsers(dept, name), nowPage, USERS_PER_PAGE);

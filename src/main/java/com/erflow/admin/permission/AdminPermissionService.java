@@ -1,6 +1,7 @@
 package com.erflow.admin.permission;
 
 import com.erflow.auth.Permissions;
+import com.erflow.layout.MenuService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,11 +25,15 @@ public class AdminPermissionService {
 
     private final AdminPermissionMapper mapper;
 
+    private final MenuService menuService;
+
     /**
      * @param mapper 권한 관리 매퍼
+     * @param menuService 메뉴 트리. 권한을 바꾸면 메모리의 메뉴 한 벌을 버린다(D-152)
      */
-    public AdminPermissionService(AdminPermissionMapper mapper) {
+    public AdminPermissionService(AdminPermissionMapper mapper, MenuService menuService) {
         this.mapper = mapper;
+        this.menuService = menuService;
     }
 
     /**
@@ -41,7 +46,6 @@ public class AdminPermissionService {
      * @param deptKeyword 부서명 검색어
      * @return 직급 목록과 부서 목록, 줄마다 겸하는 권한 이름
      */
-    @Transactional(readOnly = true)
     public JobDeptList list(String jobKeyword, String deptKeyword) {
         List<PermissionRow> jobs = mapper.findJobPermissions(jobKeyword);
         List<PermissionRow> depts = mapper.findDeptPermissions(deptKeyword);
@@ -81,7 +85,6 @@ public class AdminPermissionService {
      * @param deptId 부서 번호
      * @return 화면 한 벌. 부서가 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public DeptForm deptForm(int deptId) {
         DeptRow dept = mapper.findDept(deptId);
         if (dept == null) {
@@ -96,7 +99,6 @@ public class AdminPermissionService {
      * @param jobId 직급 번호
      * @return 화면 한 벌. 직급이 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public JobForm jobForm(int jobId) {
         String name = mapper.findJobName(jobId);
         if (name == null) {
@@ -230,6 +232,7 @@ public class AdminPermissionService {
                 }
             }
         }
+        menuService.refresh();
         return result;
     }
 
@@ -263,6 +266,7 @@ public class AdminPermissionService {
                 }
             }
         }
+        menuService.refresh();
         return result;
     }
 
@@ -278,7 +282,6 @@ public class AdminPermissionService {
      *
      * @return 메뉴 줄들과, 메뉴에 없는 프로그램 줄들
      */
-    @Transactional(readOnly = true)
     public MenuOverview menuOverview() {
         List<PermissionRow> depts = mapper.findDeptPermissions(null);
         List<PermissionRow> jobs = mapper.findJobPermissions(null);
@@ -331,7 +334,6 @@ public class AdminPermissionService {
      * @param id 프로그램 행 번호
      * @return 화면 한 벌. 프로그램이 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public ProgramForm programDeptForm(int id) {
         ProgramRow program = mapper.findProgram(id);
         if (program == null) {
@@ -347,7 +349,6 @@ public class AdminPermissionService {
      * @param id 프로그램 행 번호
      * @return 화면 한 벌. 프로그램이 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public ProgramForm programJobForm(int id) {
         ProgramRow program = mapper.findProgram(id);
         if (program == null) {
@@ -374,7 +375,9 @@ public class AdminPermissionService {
             return false;
         }
         long level = levelsOf(mapper.findDeptPermissions(null), checked);
-        return mapper.updateProgramDeptLevel(program.programId(), level) == 1;
+        boolean updated = mapper.updateProgramDeptLevel(program.programId(), level) == 1;
+        menuService.refresh();
+        return updated;
     }
 
     /**
@@ -391,7 +394,9 @@ public class AdminPermissionService {
             return false;
         }
         long level = levelsOf(mapper.findJobPermissions(null), checked);
-        return mapper.updateProgramJobLevel(program.programId(), level) == 1;
+        boolean updated = mapper.updateProgramJobLevel(program.programId(), level) == 1;
+        menuService.refresh();
+        return updated;
     }
 
     /**

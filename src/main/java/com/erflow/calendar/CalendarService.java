@@ -53,7 +53,6 @@ public class CalendarService {
      * @param userId 사번
      * @return 일정 목록
      */
-    @Transactional(readOnly = true)
     public List<CalendarEvent> visible(String userId) {
         return calendarMapper.findVisible(userId);
     }

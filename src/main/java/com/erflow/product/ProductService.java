@@ -32,7 +32,6 @@ public class ProductService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public ProductPage list(ProductType type, ProductSearch search, int requestedPage) {
         int total = productMapper.countBy(type.code(), search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -48,7 +47,6 @@ public class ProductService {
      * @param id 제품 ID
      * @return 제품. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public ProductListRow get(String id) {
         return productMapper.findById(id);
     }

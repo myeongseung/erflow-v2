@@ -37,7 +37,6 @@ public class BoundService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public BoundPage list(int type, BoundSearch search, int requestedPage) {
         int total = boundMapper.countBy(type, search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -64,7 +63,6 @@ public class BoundService {
      * @param type 0 입고 / 1 출고
      * @return 입·출고. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public BoundDetail get(int id, int type) {
         return boundMapper.findForUpdate(id, type);
     }

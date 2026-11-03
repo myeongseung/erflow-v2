@@ -64,22 +64,18 @@
     </select>
 
     <!-- 레거시 getTotalCommentCount: select count(*) from comment_tbl where post_tbl_id = ? -->
-    <select id="countComments" resultType="int">
-        SELECT COUNT(*)
-          FROM comment_tbl
-         WHERE post_tbl_id = #{postId}
-    </select>
-
     <!--
-      레거시 getFileByPostId 는 한 건만 읽어 첨부 아이콘 표시에 쓴다.
-      목록은 "첨부가 있는가"만 필요하므로 이름 하나만 가져온다.
+      한 페이지 글들의 댓글 수와 첫 첨부 이름 (D-152). 목록은 «첨부가 있는가» 만
+      필요하므로 이름 하나만 가져온다. 글마다 따로 묻지 않고 페이지당 한 번이다.
     -->
-    <select id="findFirstAttachmentName" resultType="string">
-        SELECT original_name
-          FROM post_file_tbl
-         WHERE post_tbl_id = #{postId}
-         ORDER BY id
-         LIMIT 1
+    <select id="findListExtras" resultType="com.erflow.post.PostExtra">
+        SELECT p.id AS postId,
+               (SELECT COUNT(*) FROM comment_tbl c WHERE c.post_tbl_id = p.id) AS commentCount,
+               (SELECT f.original_name FROM post_file_tbl f
+                 WHERE f.post_tbl_id = p.id ORDER BY f.id LIMIT 1) AS attachmentName
+          FROM post_tbl p
+         WHERE p.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
     </select>
 
     <!-- 레거시 createPost: select max(depth) from post_tbl where board_tbl_id = ? -->

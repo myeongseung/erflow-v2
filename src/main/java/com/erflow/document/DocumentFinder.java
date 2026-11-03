@@ -2,7 +2,6 @@ package com.erflow.document;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 문서 찾기 팝업이 쓰는 조회.
@@ -44,7 +43,6 @@ public class DocumentFinder {
      * @param search 검색어. {@code null} 이면 빈 문자열로 본다
      * @return 걸리는 문서 목록
      */
-    @Transactional(readOnly = true)
     public List<DocumentRow> search(String userId, String search) {
         String needle = search == null ? "" : search;
         long wanted = asId(needle);

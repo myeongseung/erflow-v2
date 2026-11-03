@@ -11,8 +11,9 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
 
   thymeleaf:
-    # 레거시 화면을 1:1 로 옮기는 중에는 캐시가 켜져 있으면 확인이 느려진다.
-    cache: false
+    # 캐시는 켠다. 끄면 화면마다 템플릿을 다시 읽어 수백 ms 가 든다 — 화면을 고치는
+    # 동안에만 로컬 프로필(application-local.yml)에서 끈다(D-152).
+    cache: true
 
   servlet:
     multipart:
@@ -38,7 +39,8 @@ server:
 
 logging:
   level:
-    com.erflow: DEBUG
+    # DEBUG 면 SQL 이 전부 로그에 찍힌다. 필요할 때 로컬 프로필에서 켠다(D-152).
+    com.erflow: INFO
 
 erflow:
   upload:

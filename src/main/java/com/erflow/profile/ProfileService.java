@@ -44,7 +44,6 @@ public class ProfileService {
      * @param id 사번
      * @return 사용자. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public ProfileUser get(String id) {
         return id == null ? null : profileMapper.findProfile(id);
     }
@@ -60,7 +59,6 @@ public class ProfileService {
      * @param month 그릴 달
      * @return 두 줄짜리 표
      */
-    @Transactional(readOnly = true)
     public WorkCalendar calendar(String viewerId, String ownerId, YearMonth month) {
         List<ProfileWork> works = viewerId.equals(ownerId)
                 ? profileMapper.findWorks(ownerId, month.toString())
@@ -97,7 +95,6 @@ public class ProfileService {
      * @param password 입력한 비밀번호
      * @return 맞으면 {@code true}
      */
-    @Transactional(readOnly = true)
     public boolean passwordMatches(String id, String password) {
         if (password == null) {
             return false;

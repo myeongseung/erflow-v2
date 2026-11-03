@@ -41,20 +41,12 @@ public interface PostMapper {
     PostRow findById(@Param("id") int id);
 
     /**
-     * 게시글별 댓글 수.
+     * 한 페이지 글들의 댓글 수와 첫 첨부 이름을 한 번에 읽는다 (D-152).
      *
-     * @param postId 글번호
-     * @return 댓글 수
+     * @param ids 글번호들. 비어 있으면 안 된다
+     * @return 글마다 한 줄. 댓글도 첨부도 없는 글도 들어 있다
      */
-    int countComments(@Param("postId") int postId);
-
-    /**
-     * 게시글에 붙은 첨부파일의 원본 이름. 목록의 첨부 아이콘 표시에만 쓴다.
-     *
-     * @param postId 글번호
-     * @return 첨부 원본 이름. 없으면 {@code null}
-     */
-    String findFirstAttachmentName(@Param("postId") int postId);
+    List<PostExtra> findListExtras(@Param("ids") List<Integer> ids);
 
     /**
      * 게시판에서 가장 큰 스레드 그룹 번호. 새 글의 {@code depth} 를 정하는 데 쓴다.

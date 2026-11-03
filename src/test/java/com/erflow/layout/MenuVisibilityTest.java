@@ -7,6 +7,7 @@ import com.erflow.admin.permission.AdminPermissionService;
 import com.erflow.auth.Permissions;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,12 @@ class MenuVisibilityTest {
         assumeTrue(
                 new ClassPathResource("application-local.yml").exists(),
                 "application-local.yml 이 없어 건너뛴다");
+    }
+
+    /** 메뉴 한 벌은 메모리에 남는다(D-152). 시험이 바꾼 권한이 다음 시험으로 새지 않게 비운다. */
+    @AfterEach
+    void forgetMenus() {
+        menuService.refresh();
     }
 
     @Test

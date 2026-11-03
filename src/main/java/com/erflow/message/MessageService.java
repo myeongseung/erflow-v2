@@ -38,7 +38,6 @@ public class MessageService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public MessagePage list(String className, String classId, MessageSearch search, int requestedPage) {
         int total = messageMapper.countBy(className, classId, search);
         Pagination pagination = Pagination.of(total, requestedPage);

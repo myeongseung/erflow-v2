@@ -20,7 +20,8 @@ public final class TestUsers {
      */
     public static ErflowUserDetails admin() {
         return new ErflowUserDetails(
-                new AuthUser("admin", "관리자", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false),
+                new AuthUser("admin", "관리자", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false,
+                        "관리자", "전산관리자"),
                 false);
     }
 
@@ -31,7 +32,7 @@ public final class TestUsers {
      */
     public static ErflowUserDetails noPermission() {
         return new ErflowUserDetails(
-                new AuthUser("nobody", "무권한", "(시험용)", 0L, 0L, false), false);
+                new AuthUser("nobody", "무권한", "(시험용)", 0L, 0L, false, null, null), false);
     }
 
     /**
@@ -44,7 +45,8 @@ public final class TestUsers {
      */
     public static ErflowUserDetails everyProgramButNotAdmin() {
         return new ErflowUserDetails(
-                new AuthUser("worker", "전권", "(시험용)", Long.MAX_VALUE, Long.MAX_VALUE, false),
+                new AuthUser("worker", "전권", "(시험용)", Long.MAX_VALUE, Long.MAX_VALUE, false,
+                        "생산관리팀", "사원"),
                 false);
     }
 
@@ -57,7 +59,8 @@ public final class TestUsers {
      */
     public static ErflowUserDetails passwordChangeRequired() {
         return new ErflowUserDetails(
-                new AuthUser("newbie", "신규", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false),
+                new AuthUser("newbie", "신규", "(시험용)", Long.MIN_VALUE, Long.MIN_VALUE, false,
+                        "생산관리팀", "사원"),
                 true);
     }
 }

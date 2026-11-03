@@ -58,7 +58,6 @@ public class PostFileService {
      * @param postId 글번호
      * @return 첨부 목록
      */
-    @Transactional(readOnly = true)
     public List<PostAttachment> list(int postId) {
         return postFileMapper.findByPost(postId);
     }
@@ -69,7 +68,6 @@ public class PostFileService {
      * @param name 저장 파일명
      * @return 첨부. 등록되지 않은 이름이면 {@code null}
      */
-    @Transactional(readOnly = true)
     public PostAttachment find(String name) {
         return name == null || name.isBlank() ? null : postFileMapper.findByStoredName(name);
     }

@@ -42,6 +42,8 @@ public class ErflowUserDetails implements UserDetails {
     private final long deptPermission;
     private final long jobPermission;
     private final boolean passwordChangeRequired;
+    private final String deptName;
+    private final String jobName;
 
     /**
      * @param user 조회된 사용자
@@ -54,6 +56,8 @@ public class ErflowUserDetails implements UserDetails {
         this.deptPermission = user.deptPermission();
         this.jobPermission = user.jobPermission();
         this.passwordChangeRequired = passwordChangeRequired;
+        this.deptName = user.deptName();
+        this.jobName = user.jobName();
     }
 
     /**
@@ -61,6 +65,24 @@ public class ErflowUserDetails implements UserDetails {
      */
     public String id() {
         return id;
+    }
+
+    /**
+     * 부서명 — 로그인 때 읽은 값이다. 사이드바 사람 카드가 쓴다(D-152).
+     *
+     * @return 부서명. 부서가 없으면 {@code null}
+     */
+    public String deptName() {
+        return deptName;
+    }
+
+    /**
+     * 직급명 — 로그인 때 읽은 값이다(D-152).
+     *
+     * @return 직급명. 직급이 없으면 {@code null}
+     */
+    public String jobName() {
+        return jobName;
     }
 
     /**

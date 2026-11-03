@@ -40,7 +40,6 @@ public class ErflowUserDetailsService implements UserDetailsService, UserDetails
      * 플래그({@code password_change_required})로 판정한다(D-134).
      */
     @Override
-    @Transactional(readOnly = true)
     public ErflowUserDetails loadUserByUsername(String username) {
         AuthUser user = authMapper.findAuthUser(username);
         if (user == null || user.password() == null) {
@@ -69,7 +68,7 @@ public class ErflowUserDetailsService implements UserDetailsService, UserDetails
         authMapper.updatePassword(details.id(), newPassword);
         AuthUser updated = new AuthUser(details.id(), details.name(), newPassword,
                 details.deptPermission(), details.jobPermission(),
-                details.passwordChangeRequired());
+                details.passwordChangeRequired(), details.deptName(), details.jobName());
         return new ErflowUserDetails(updated, details.passwordChangeRequired());
     }
 }

@@ -32,7 +32,6 @@ public class ProcessService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public ProcessPage list(ProcessSearch search, int requestedPage) {
         Pagination pagination = Pagination.of(processMapper.countBy(search), requestedPage);
         return new ProcessPage(

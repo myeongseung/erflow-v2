@@ -3,7 +3,6 @@ package com.erflow.company;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 협력업체 찾기 팝업이 쓰는 조회.
@@ -41,7 +40,6 @@ public class CompanyFinder {
      * @param search 검색어. {@code null} 이면 빈 문자열로 본다
      * @return 이름 순으로 정렬한 협력업체 목록
      */
-    @Transactional(readOnly = true)
     public List<CompanyRow> search(String search) {
         String needle = search == null ? "" : search;
 

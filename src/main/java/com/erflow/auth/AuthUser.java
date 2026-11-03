@@ -15,6 +15,8 @@ package com.erflow.auth;
  * @param passwordChangeRequired 관리자가 초기화해 변경이 강제된 상태면 {@code true} (D-134).
  *     저장된 플래그 그대로다 — «비밀번호가 사번과 같다» 는 판정과 합치는 곳은
  *     {@link ErflowUserDetailsService} 다
+ * @param deptName 부서명. 부서가 없으면 {@code null} (D-152)
+ * @param jobName 직급명. 직급이 없으면 {@code null} (D-152)
  */
 public record AuthUser(
         String id,
@@ -22,5 +24,7 @@ public record AuthUser(
         String password,
         long deptPermission,
         long jobPermission,
-        boolean passwordChangeRequired) {
+        boolean passwordChangeRequired,
+        String deptName,
+        String jobName) {
 }

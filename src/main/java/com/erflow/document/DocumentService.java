@@ -41,7 +41,6 @@ public class DocumentService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public DocumentPage list(DocumentSearch search, String userId, int requestedPage) {
         Pagination pagination =
                 Pagination.of(documentMapper.countBy(search, userId), requestedPage);
@@ -57,7 +56,6 @@ public class DocumentService {
      * @param id 문서번호
      * @return 문서. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public DocumentDetail get(long id) {
         return documentMapper.findDetail(id);
     }
@@ -67,7 +65,6 @@ public class DocumentService {
      *
      * @return 양식 목록
      */
-    @Transactional(readOnly = true)
     public List<TemplateRow> templates() {
         return templateMapper.findAll();
     }
@@ -78,7 +75,6 @@ public class DocumentService {
      * @param templateId 양식 번호
      * @return 양식 내용. 빈 문서이거나 없는 양식이면 빈 문자열
      */
-    @Transactional(readOnly = true)
     public String templateContent(int templateId) {
         if (templateId == BLANK_TEMPLATE) {
             return "";

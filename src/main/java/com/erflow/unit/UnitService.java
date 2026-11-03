@@ -31,7 +31,6 @@ public class UnitService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public UnitPage list(UnitSearch search, int requestedPage) {
         int total = unitMapper.countBy(search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -46,7 +45,6 @@ public class UnitService {
      * @param id 장비ID
      * @return 설비. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public Unit get(String id) {
         return id == null ? null : unitMapper.findById(id);
     }

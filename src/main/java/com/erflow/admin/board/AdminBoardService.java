@@ -68,7 +68,6 @@ public class AdminBoardService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public BoardPage list(String keyword, int requestedPage) {
         Pagination pagination = Pagination.of(adminBoardMapper.countBy(keyword), requestedPage);
         return new BoardPage(
@@ -82,7 +81,6 @@ public class AdminBoardService {
      * @param id 게시판 번호
      * @return 게시판. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public Board get(int id) {
         return boardMapper.findById(id);
     }
@@ -168,7 +166,6 @@ public class AdminBoardService {
      * @param job 직급 권한이면 {@code true}, 부서면 {@code false}
      * @return 화면 한 벌. 게시판이 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public PermissionForm permissionForm(int boardId, boolean write, boolean job) {
         Board board = boardMapper.findById(boardId);
         if (board == null) {

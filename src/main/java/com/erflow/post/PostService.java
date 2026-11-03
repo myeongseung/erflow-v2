@@ -2,7 +2,9 @@ package com.erflow.post;
 
 import com.erflow.common.Pagination;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,21 +38,31 @@ public class PostService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public PostPage list(int boardId, PostSearch search, int requestedPage) {
         int total = postMapper.countBy(boardId, search);
         Pagination pagination = Pagination.of(total, requestedPage);
         List<PostRow> posts = postMapper.findPage(
                 boardId, search, pagination.start(), pagination.numPerPage());
 
+        // 댓글 수와 첨부 이름은 페이지당 한 번에 읽는다 — 글마다 물으면 DB 왕복이
+        // 줄 수의 두 배로 는다(D-152).
+        Map<Integer, PostExtra> extras = new HashMap<>();
+        if (!posts.isEmpty()) {
+            for (PostExtra extra : postMapper.findListExtras(
+                    posts.stream().map(PostRow::id).toList())) {
+                extras.put(extra.postId(), extra);
+            }
+        }
+
         List<PostListRow> rows = new ArrayList<>();
         for (int i = 0; i < posts.size(); ++i) {
             PostRow post = posts.get(i);
+            PostExtra extra = extras.get(post.id());
             rows.add(new PostListRow(
                     post,
                     total - (pagination.start() + i),
-                    postMapper.countComments(post.id()),
-                    postMapper.findFirstAttachmentName(post.id())));
+                    extra == null ? 0 : extra.commentCount(),
+                    extra == null ? null : extra.attachmentName()));
         }
         return new PostPage(rows, pagination);
     }
@@ -61,7 +73,6 @@ public class PostService {
      * @param id 글번호
      * @return 게시글. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public PostRow get(int id) {
         return postMapper.findById(id);
     }

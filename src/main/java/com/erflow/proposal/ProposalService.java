@@ -72,7 +72,6 @@ public class ProposalService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public ProposalPage list(String userId, int result, int requestedPage) {
         int total = proposalMapper.countBy(userId, result);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -114,7 +113,6 @@ public class ProposalService {
      * @param proposalId 결재번호
      * @return 화면 한 벌. 결재가 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public ProposalDocument document(long proposalId) {
         ProposalView proposal = proposalMapper.findView(proposalId);
         if (proposal == null) {

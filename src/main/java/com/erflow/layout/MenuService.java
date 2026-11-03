@@ -1,69 +1,71 @@
 package com.erflow.layout;
 
 import com.erflow.auth.Permissions;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 메뉴 트리를 조립한다.
+ * 메뉴 트리 — 사이드바와 헤더.
  *
- * <p>레거시는 메뉴가 {@code indexSide.jsp} 에 하드코딩돼 145개 화면에 include 됐다.
- * 이제는 테이블 한 벌에서 읽으므로 화면 템플릿이 메뉴를 알 필요가 없다.
- * 설계는 {@code migration/design/01-menu-layout.md}.
+ * <p>들어갈 수 없는 항목은 그리지 않는다(D-135). 표시와 접근이 같은 값 하나다.
  *
- * <p><b>들어갈 수 없는 메뉴는 그리지 않는다 (D-135).</b> 레거시는 전부 보여주고
- * 클릭한 뒤에야 권한 오류를 냈다. 이제 메뉴가 화면 접근 판정과 같은 값
- * ({@code permission_program_tbl})을 보므로, 보이는 메뉴는 반드시 들어갈 수 있고
- * 못 들어가는 메뉴는 애초에 없다. 하위가 전부 숨은 그룹은 제목도 숨는다.
+ * <p>메뉴 행과 프로그램 권한은 <b>메모리에 한 벌</b> 둔다(D-152). 화면마다 DB 에 네 번씩
+ * 가던 것을 없앤다. 권한을 바꾸는 쪽({@code AdminPermissionService})이
+ * {@link #refresh()} 를 부르고, 부르지 않은 경로가 있어도 {@link #MAX_AGE} 뒤에는
+ * 다시 읽는다.
  */
 @Service
 public class MenuService {
 
-    /** 사이드바 위치 값. */
+    /** 사이드바 메뉴의 placement 값. */
     public static final String SIDE = "SIDE";
 
-    /** 헤더 위치 값. */
+    /** 헤더 메뉴의 placement 값. */
     public static final String HEADER = "HEADER";
+
+    /** 다시 읽지 않고 쓰는 최대 시간. */
+    static final Duration MAX_AGE = Duration.ofSeconds(30);
 
     private final MenuMapper menuMapper;
 
+    private volatile Snapshot snapshot;
+
     /**
-     * @param menuMapper 메뉴 조회 매퍼
+     * @param menuMapper 메뉴 매퍼
      */
     public MenuService(MenuMapper menuMapper) {
         this.menuMapper = menuMapper;
     }
 
     /**
-     * 지정한 위치의 메뉴를 계층으로 돌려준다.
+     * 메모리의 메뉴 한 벌을 버린다. 다음 화면이 DB 에서 다시 읽는다.
      *
-     * <p>표시 순서는 레거시 마크업의 순서를 그대로 따른다. 정렬을 바꾸면 사용자가 보던
-     * 화면이 달라지므로 {@code sort_order} 를 신뢰하고 재정렬하지 않는다.
-     *
-     * <p>화면을 가리키는 항목은 그 화면의 요구 권한을 통과해야 보인다(D-135). 관리자를
-     * 따로 우대하지 않는다 — 프로그램 권한 값에 관리자 비트가 늘 들어 있어 관리자는
-     * 어차피 통과하고, 권한 행이 없는 화면은 관리자도 못 들어가므로 메뉴도 숨는 것이
-     * 옳다. 화면 접근 판정({@code ScreenAuthorizationManager})과 정확히 같은 규칙이다.
+     * <p>프로그램 권한이나 부서·직급을 바꾼 뒤에 부른다.
+     */
+    public void refresh() {
+        snapshot = null;
+    }
+
+    /**
+     * 한 자리(사이드바 또는 헤더)의 메뉴 트리.
      *
      * @param placement {@link #SIDE} 또는 {@link #HEADER}
-     * @param admin 관리자 여부. {@code false} 면 관리자 전용 항목을 제외한다
-     * @param deptPermission 보는 사람의 부서 권한 비트마스크
-     * @param jobPermission 보는 사람의 직급 권한 비트마스크
-     * @return 최상위 메뉴 목록. 각 항목이 하위 메뉴를 갖는다
+     * @param admin 관리자면 {@code true} — 관리자 전용 항목이 보인다
+     * @param deptPermission 부서 권한 비트
+     * @param jobPermission 직급 권한 비트
+     * @return 들어갈 수 있는 항목만 남긴 트리
      */
-    @Transactional(readOnly = true)
     public List<MenuNode> tree(
             String placement, boolean admin, long deptPermission, long jobPermission) {
-        List<MenuNode> rows = menuMapper.findByPlacement(placement);
-        Map<Integer, MenuAccess> accessByScreen = new HashMap<>();
-        for (MenuAccess access : menuMapper.findMenuAccess()) {
-            accessByScreen.put(access.screenId(), access);
-        }
+        Snapshot current = snapshot();
+        List<MenuNode> rows = SIDE.equals(placement) ? current.side() : current.header();
+        Map<Integer, MenuAccess> accessByScreen = current.access();
 
         Map<Integer, List<MenuNode>> byParent = new LinkedHashMap<>();
         List<MenuNode> roots = new ArrayList<>();
@@ -94,37 +96,51 @@ public class MenuService {
     }
 
     /**
-     * 사이드바 메뉴를 돌려준다.
+     * 사이드바 메뉴.
      *
      * @param admin 관리자 여부
-     * @param deptPermission 보는 사람의 부서 권한
-     * @param jobPermission 보는 사람의 직급 권한
-     * @return 사이드바 메뉴 트리
+     * @param deptPermission 부서 권한 비트
+     * @param jobPermission 직급 권한 비트
+     * @return 사이드바 트리
      */
-    @Transactional(readOnly = true)
     public List<MenuNode> sideMenu(boolean admin, long deptPermission, long jobPermission) {
         return tree(SIDE, admin, deptPermission, jobPermission);
     }
 
     /**
-     * 헤더 메뉴를 돌려준다.
+     * 헤더 메뉴.
      *
      * @param admin 관리자 여부
-     * @param deptPermission 보는 사람의 부서 권한
-     * @param jobPermission 보는 사람의 직급 권한
-     * @return 헤더 메뉴 트리
+     * @param deptPermission 부서 권한 비트
+     * @param jobPermission 직급 권한 비트
+     * @return 헤더 트리
      */
-    @Transactional(readOnly = true)
     public List<MenuNode> headerMenu(boolean admin, long deptPermission, long jobPermission) {
         return tree(HEADER, admin, deptPermission, jobPermission);
     }
 
-    /**
-     * 이 항목이 가리키는 화면에 들어갈 수 있는가.
-     *
-     * <p>화면을 가리키지 않는 항목(그룹, 로그아웃, 설정)은 권한 대상이 아니라 통과한다 —
-     * 그룹은 하위로, 설정은 {@code visibility=ADMIN} 으로 따로 걸러진다.
-     */
+    /** 메모리의 한 벌. 없거나 오래됐으면 DB 에서 읽는다 — 둘이 동시에 읽어도 같은 값이다. */
+    private Snapshot snapshot() {
+        Snapshot current = snapshot;
+        if (current == null || current.stale()) {
+            current = load();
+            snapshot = current;
+        }
+        return current;
+    }
+
+    private Snapshot load() {
+        Map<Integer, MenuAccess> access = new HashMap<>();
+        for (MenuAccess row : menuMapper.findMenuAccess()) {
+            access.put(row.screenId(), row);
+        }
+        return new Snapshot(
+                List.copyOf(menuMapper.findByPlacement(SIDE)),
+                List.copyOf(menuMapper.findByPlacement(HEADER)),
+                Map.copyOf(access),
+                Instant.now());
+    }
+
     private static boolean enterable(
             MenuNode row, Map<Integer, MenuAccess> accessByScreen, long dept, long job) {
         if (row.screenId() == null) {
@@ -134,5 +150,24 @@ public class MenuService {
         long deptLevel = access == null ? 0L : access.deptLevel();
         long jobLevel = access == null ? 0L : access.jobLevel();
         return Permissions.hasProgramPermission(dept, job, deptLevel, jobLevel);
+    }
+
+    /**
+     * 메뉴 한 벌 — 읽은 시각과 함께.
+     *
+     * @param side 사이드바 행들
+     * @param header 헤더 행들
+     * @param access 화면 번호 → 요구 권한
+     * @param readAt 읽은 시각
+     */
+    private record Snapshot(
+            List<MenuNode> side,
+            List<MenuNode> header,
+            Map<Integer, MenuAccess> access,
+            Instant readAt) {
+
+        boolean stale() {
+            return readAt.plus(MAX_AGE).isBefore(Instant.now());
+        }
     }
 }

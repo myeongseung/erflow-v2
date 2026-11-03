@@ -28,7 +28,6 @@ public class CommentService {
      * @param postId 글번호
      * @return 레거시 정렬({@code order by ref_id}) 그대로의 목록
      */
-    @Transactional(readOnly = true)
     public List<CommentRow> list(int postId) {
         return commentMapper.findByPost(postId);
     }
@@ -39,7 +38,6 @@ public class CommentService {
      * @param id 댓글 번호
      * @return 댓글. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public CommentRow get(int id) {
         return commentMapper.findById(id);
     }

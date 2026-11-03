@@ -7,7 +7,6 @@ import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 요청 경로로 화면 권한을 판정한다.
@@ -48,7 +47,6 @@ public class ScreenAuthorizationManager
      * @return 허용 여부
      */
     @Override
-    @Transactional(readOnly = true)
     public AuthorizationDecision authorize(
             Supplier<? extends Authentication> authentication,
             RequestAuthorizationContext context) {

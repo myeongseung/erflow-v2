@@ -38,7 +38,6 @@ public class TaskService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public TaskPage list(int type, TaskSearch search, int requestedPage) {
         // 레거시는 status 검색어가 정수가 아니면 예외를 삼켜 빈 목록을 냈다. 매퍼까지
         // 가기 전에 걸러 같은 결과(빈 목록)를 낸다 — TaskSearch.isBrokenStatus 참조.
@@ -89,7 +88,6 @@ public class TaskService {
      * @param taskId 수·발주 번호
      * @return 제품·수량 목록
      */
-    @Transactional(readOnly = true)
     public List<TaskHistoryRow> histories(int taskId) {
         return taskMapper.findHistories(taskId);
     }
@@ -100,7 +98,6 @@ public class TaskService {
      * @param id 의뢰 번호
      * @return 수·발주. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public TaskDetail get(int id) {
         return taskMapper.findById(id);
     }

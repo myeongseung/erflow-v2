@@ -4,7 +4,6 @@ import com.erflow.common.Pagination;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 게시판 업무.
@@ -40,7 +39,6 @@ public class BoardService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public BoardPage list(String keyword, int requestedPage) {
         int total = boardMapper.countBy(keyword);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -71,7 +69,6 @@ public class BoardService {
      * @param id 게시판 번호
      * @return 게시판. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public Board get(int id) {
         return boardMapper.findById(id);
     }

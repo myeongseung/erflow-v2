@@ -2,7 +2,6 @@ package com.erflow.user;
 
 import java.util.List;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 사용자 찾기 팝업이 쓰는 조회.
@@ -29,7 +28,6 @@ public class UserFinder {
      *
      * @return 부서명 목록
      */
-    @Transactional(readOnly = true)
     public List<String> departments() {
         return userMapper.findDepartmentNames();
     }
@@ -39,7 +37,6 @@ public class UserFinder {
      *
      * @return 직급명 목록
      */
-    @Transactional(readOnly = true)
     public List<String> jobs() {
         return userMapper.findJobNames();
     }
@@ -54,7 +51,6 @@ public class UserFinder {
      * @param search 검색 조건
      * @return 사용자 목록
      */
-    @Transactional(readOnly = true)
     public List<UserRow> search(UserSearch search) {
         return userMapper.findUserViews(search);
     }
@@ -65,7 +61,6 @@ public class UserFinder {
      * @param id 사번
      * @return 이름. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public String name(String id) {
         return userMapper.findUserName(id);
     }

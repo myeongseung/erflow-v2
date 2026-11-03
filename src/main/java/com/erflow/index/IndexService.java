@@ -3,14 +3,16 @@ package com.erflow.index;
 import com.erflow.message.MessageMapper;
 import com.erflow.message.MessageRow;
 import com.erflow.message.MessageSearch;
+import com.erflow.post.PostExtra;
 import com.erflow.post.PostMapper;
 import com.erflow.post.PostRow;
 import com.erflow.post.PostSearch;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 메인 화면 업무.
@@ -76,11 +78,19 @@ public class IndexService {
      * @param cutName 작성자 이름도 자를지. 자유게시판만 자른다
      * @return 위젯에 그릴 줄
      */
-    @Transactional(readOnly = true)
     public List<IndexPostRow> posts(int boardId, boolean cutName) {
         List<PostRow> found =
                 postMapper.findPage(boardId, PostSearch.none(), 0, WIDGET_SIZE);
         int total = postMapper.countBy(boardId, PostSearch.none());
+
+        // 댓글 수는 위젯당 한 번에 읽는다 — 글마다 물으면 DB 왕복이 줄 수만큼 는다(D-152).
+        Map<Integer, Integer> commentCounts = new HashMap<>();
+        if (!found.isEmpty()) {
+            for (PostExtra extra : postMapper.findListExtras(
+                    found.stream().map(PostRow::id).toList())) {
+                commentCounts.put(extra.postId(), extra.commentCount());
+            }
+        }
 
         List<IndexPostRow> rows = new ArrayList<>();
         for (int i = 0; i < found.size(); ++i) {
@@ -95,7 +105,7 @@ public class IndexService {
                     post.userId(),
                     post.createdAt() == null ? null : post.createdAt().format(SHOWN),
                     post.count(),
-                    postMapper.countComments(post.id())));
+                    commentCounts.getOrDefault(post.id(), 0)));
         }
         return rows;
     }
@@ -106,7 +116,6 @@ public class IndexService {
      * @param userId 사번
      * @return 위젯에 그릴 줄
      */
-    @Transactional(readOnly = true)
     public List<IndexProposalRow> proposals(String userId) {
         return indexMapper.findRecentProposals(userId, 0, WIDGET_SIZE);
     }
@@ -117,7 +126,6 @@ public class IndexService {
      * @param userId 사번
      * @return 위젯에 그릴 줄
      */
-    @Transactional(readOnly = true)
     public List<IndexMessageRow> messages(String userId) {
         MessageSearch search = new MessageSearch(null, null);
         List<MessageRow> found =

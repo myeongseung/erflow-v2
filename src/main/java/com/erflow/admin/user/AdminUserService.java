@@ -48,7 +48,6 @@ public class AdminUserService {
      * @param requestedPage 요청된 페이지
      * @return 목록과 페이징
      */
-    @Transactional(readOnly = true)
     public UserPage list(AdminUserSearch search, int requestedPage) {
         int total = adminUserMapper.countBy(search);
         Pagination pagination = Pagination.of(total, requestedPage);
@@ -63,7 +62,6 @@ public class AdminUserService {
      * @param id 사번
      * @return 주소. 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public AdminUserAddress address(String id) {
         return adminUserMapper.findAddress(id);
     }
@@ -75,7 +73,6 @@ public class AdminUserService {
      *
      * @return 직급·부서 목록
      */
-    @Transactional(readOnly = true)
     public Options registerForm() {
         return new Options(adminUserMapper.findJobs(), adminUserMapper.findDepartments());
     }
@@ -89,7 +86,6 @@ public class AdminUserService {
      * @param id 사번
      * @return 화면 한 벌. 사원이 없으면 {@code null}
      */
-    @Transactional(readOnly = true)
     public UserForm updateForm(String id) {
         AdminUserForm user = adminUserMapper.findForUpdate(id);
         if (user == null) {
