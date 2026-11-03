@@ -11,7 +11,7 @@
   주민등록번호는 뒷자리 한 자리만 남긴다(D-117). 비밀번호 초기화는 D-134.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('사원 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/userListAddress.js', '/js/admin/userList.js', '/js/common/dialog.js'} })}">
+<head th:replace="~{fragments/head :: page('사원 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js', '/js/admin/admin.js', '/js/admin/location.js', '/js/admin/userList.js', '/js/common/dialog.js'} })}">
 </head>
 <body th:insert="~{fragments/admin-shell :: shell('관리자 &gt; 사원 관리', |전체 ${page.totalRecord}명|, ~{::content})}">
 <th:block th:fragment="content">
@@ -76,10 +76,9 @@
                             <td th:text="${user.mobilePhone}">개인 번호</td>
                             <td th:text="${user.email}">이메일</td>
                             <td th:text="${user.hiredAtLabel}">입사일</td>
-                            <!--/* Thymeleaf 는 문자열을 JS 호출에 끼워 넣는 것을 거부해
-                                   data 속성으로 넘긴다(D-035). */-->
-                            <td><a href="javascript:void(0);" class="a-user-address"
-                                   th:data-id="${user.id}">보기</a></td>
+                            <!--/* 주소는 줄마다 붙는 대화상자로 본다(D-157). */-->
+                            <td><button type="button" class="link-btn"
+                                        th:data-dialog-open="'user-address-' + ${user.id}">보기</button></td>
                             <!--/* 비밀번호 초기화(D-134). 임시 비밀번호는 처리 결과 화면에
                                    한 번만 보인다. 이벤트 속성에는 동적 값을 못 넣으므로
                                    (D-035) 확인 문구는 고정이다. */-->
@@ -183,6 +182,102 @@
                         <button class="btn btn-primary" type="submit">사원 생성</button>
                     </div>
                 </form>
+            </dialog>
+
+            <!--/* 사원 수정 (D-157). 사번·주민번호·우편번호·도로명은 못 고친다. 직급·부서
+                   콤보는 추가와 달리 이름순이다(D-058). */-->
+            <dialog id="user-edit" class="dialog" th:if="${editUser != null}" data-open-on-load="true">
+                <form th:action="@{/admin/user/update-proc}" method="post">
+                    <div class="dialog-head">
+                        <h2 class="dialog-title" th:text="|사원 수정 · ${editUser.user.name}|">사원 수정 · 홍길동</h2>
+                        <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                            <i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="dialog-body">
+                        <div class="form-group">
+                            <label for="user-edit-id">사원 번호</label>
+                            <input type="text" id="user-edit-id" name="id" th:value="${editUser.user.id}" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-name">이름</label>
+                            <input type="text" id="user-edit-name" name="name" th:value="${editUser.user.name}" autofocus>
+                        </div>
+                        <div class="form-group">
+                            <!--/* 뒷자리 한 자리만 남긴다(D-117). 폼과 함께 가지만 갱신 문장에
+                                   social_number 가 없어 저장되는 곳이 없다. */-->
+                            <label for="user-edit-social">주민 번호</label>
+                            <input type="text" id="user-edit-social" name="socialNumber"
+                                   th:value="${editUser.user.socialNumberMasked()} ?: ''" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-email">Email</label>
+                            <input type="email" id="user-edit-email" name="email" th:value="${editUser.user.email} ?: ''">
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-postcode">사원 주소</label>
+                            <div class="address-group">
+                                <div class="address-line">
+                                    <input type="text" id="user-edit-postcode" placeholder="우편번호" name="postalCode"
+                                           th:value="${editUser.user.postalCode} ?: ''" readonly>
+                                    <button type="button" class="btn btn_execDaumPostcode">우편번호 찾기</button>
+                                </div>
+                                <input type="text" placeholder="도로명 주소" name="address1" aria-label="도로명 주소"
+                                       th:value="${editUser.user.address1} ?: ''" readonly>
+                                <input type="text" placeholder="참고항목 (동/읍/면)" aria-label="참고항목" readonly>
+                                <input type="text" placeholder="상세주소" name="address2" aria-label="상세주소"
+                                       th:value="${editUser.user.address2} ?: ''">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-job">직급</label>
+                            <select name="job" id="user-edit-job">
+                                <option th:each="job : ${editUser.options.jobs}" th:value="${job.id}"
+                                        th:selected="${job.id == editUser.user.jobId}" th:text="${job.name}">직급</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-dept">부서</label>
+                            <select name="dept" id="user-edit-dept">
+                                <option th:each="dept : ${editUser.options.departments}" th:value="${dept.id}"
+                                        th:selected="${dept.id == editUser.user.deptId}" th:text="${dept.name}">부서</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-extension">내선 번호</label>
+                            <input type="text" id="user-edit-extension" name="extensionPhone"
+                                   th:value="${editUser.user.extensionPhone} ?: ''">
+                        </div>
+                        <div class="form-group">
+                            <label for="user-edit-mobile">휴대 전화</label>
+                            <input type="text" id="user-edit-mobile" name="mobilePhone"
+                                   th:value="${editUser.user.mobilePhone} ?: ''">
+                        </div>
+                    </div>
+                    <div class="btn-group dialog-foot">
+                        <button type="button" class="btn" data-dialog-close>취소</button>
+                        <button class="btn btn-primary" type="submit">저장</button>
+                    </div>
+                </form>
+            </dialog>
+
+            <!--/* 사원 주소 — 줄마다 하나 (D-157). 새 창 팝업을 대신한다. */-->
+            <dialog th:each="user : ${users}" class="dialog is-narrow"
+                    th:id="'user-address-' + ${user.id}">
+                <div class="dialog-head">
+                    <h2 class="dialog-title" th:text="|${user.name} ${user.jobName ?: ''}의 주소|">홍길동 사원의 주소</h2>
+                    <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                        <i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="dialog-body">
+                    <dl class="detail-list">
+                        <dt>우편번호</dt>
+                        <dd th:text="${user.postalCode} ?: '-'">-</dd>
+                        <dt>도로명 주소</dt>
+                        <dd th:text="${user.address1} ?: '-'">-</dd>
+                        <dt>상세 주소</dt>
+                        <dd th:text="${user.address2} ?: '-'">-</dd>
+                    </dl>
+                </div>
             </dialog>
 </th:block>
 </body>

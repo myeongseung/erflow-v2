@@ -39,14 +39,6 @@ public interface AdminUserMapper {
     int countBy(@Param("search") AdminUserSearch search);
 
     /**
-     * 한 사원의 주소.
-     *
-     * @param id 사번
-     * @return 주소. 없으면 {@code null}
-     */
-    AdminUserAddress findAddress(@Param("id") String id);
-
-    /**
      * 수정 화면이 채울 사원 한 명.
      *
      * @param id 사번

@@ -12,12 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <pre>
  * admin/user/userList.jsp        GET  /admin/user/list
- * admin/user/userAddress.jsp     GET  /admin/user/address?id=
- * admin/user/userRegister.jsp    GET  /admin/user/register
+ * admin/user/userRegister.jsp    GET  /admin/user/register    (목록 + 추가 대화상자)
  * admin/user/userRegisterProc    POST /admin/user/register-proc
- * admin/user/userUpdate.jsp      GET  /admin/user/update?id=
+ * admin/user/userUpdate.jsp      GET  /admin/user/update?id=  (목록 + 수정 대화상자)
  * admin/user/userUpdateProc      POST /admin/user/update-proc
  * </pre>
+ *
+ * <p>주소 팝업(userAddress.jsp)은 없앴다 — 목록 줄마다 주소 대화상자가 붙는다(D-157).
  *
  * <p>권한은 여기서 보지 않는다. 레거시는 화면마다 {@code isAdmin(session)} 을 물었지만,
  * 이 아래는 {@code SecurityConfig} 의 {@code /admin/**} 규칙이 통째로 막는다(D-053).
@@ -72,28 +73,6 @@ public class AdminUserController {
         model.addAttribute("keyfield", search.keyfield());
         model.addAttribute("keyword", search.keyword());
         model.addAttribute("options", adminUserService.registerForm());
-    }
-
-    /**
-     * 주소 팝업.
-     *
-     * <p>레거시는 사원을 찾지 못하면 로그인 화면으로 보내려 했다. 그런데 가리키는
-     * 주소가 없는 파일이고({@code ../../login.jsp}), {@code return} 이 없어 그 전에
-     * {@code NullPointerException} 으로 죽는다. 죽음은 옮기지 않고 다른 화면과 같은
-     * 잘못된 접근 안내로 보낸다(D-033 과 같은 판단).
-     *
-     * @param id 사번
-     * @param model 뷰 모델
-     * @return 주소 팝업 템플릿. 대상이 없으면 잘못된 접근 화면
-     */
-    @GetMapping("/address")
-    public String address(@RequestParam(required = false) String id, Model model) {
-        AdminUserAddress address = id == null ? null : adminUserService.address(id);
-        if (address == null) {
-            return "redirect:/access-error";
-        }
-        model.addAttribute("address", address);
-        return "admin/user/address";
     }
 
     /**
@@ -164,14 +143,13 @@ public class AdminUserController {
     }
 
     /**
-     * 사원 수정 화면.
+     * 사원 수정 — 목록을 그 사원의 수정 대화상자가 열린 채로 그린다 (D-157).
      *
-     * <p>레거시는 사번이 없거나 그런 사원이 없으면 <b>빈 화면</b>을 냈다({@code return;}
-     * 만 하고 아무것도 그리지 않는다). 다른 수정 화면과 같이 잘못된 접근으로 보낸다.
+     * <p>사번이 없거나 그런 사원이 없으면 잘못된 접근으로 보낸다.
      *
      * @param id 사번
      * @param model 뷰 모델
-     * @return 수정 템플릿. 대상이 없으면 잘못된 접근 화면
+     * @return 사원 관리 템플릿. 대상이 없으면 잘못된 접근 화면
      */
     @GetMapping("/update")
     public String updateForm(@RequestParam(required = false) String id, Model model) {
@@ -179,9 +157,9 @@ public class AdminUserController {
         if (form == null) {
             return "redirect:/access-error";
         }
-        model.addAttribute("user", form.user());
-        model.addAttribute("options", form.options());
-        return "admin/user/update";
+        fillList(null, null, 1, model);
+        model.addAttribute("editUser", form);
+        return "admin/user/list";
     }
 
     /**
@@ -231,7 +209,7 @@ public class AdminUserController {
                 job, dept, extensionPhone, blankToNull(mobilePhone)));
 
         return result(model, updated ? "수정에 성공했습니다." : "등록에 실패했습니다.",
-                updated ? "/admin/user/list" : "/admin/user/update");
+                "/admin/user/list");
     }
 
     /**

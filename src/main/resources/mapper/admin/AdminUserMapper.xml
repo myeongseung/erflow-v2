@@ -49,7 +49,10 @@
                extension_phone  AS extensionPhone,
                mobile_phone     AS mobilePhone,
                email,
-               hired_at         AS hiredAt
+               hired_at         AS hiredAt,
+               postal_code      AS postalCode,
+               address1,
+               address2
           FROM user_view
         <include refid="searchCondition"/>
          ORDER BY dept_name, job_name, id
@@ -67,16 +70,6 @@
       레거시 getUserView(id): select * from user_view where id = ?
       주소 팝업이 쓰는 칸만 읽는다.
     -->
-    <select id="findAddress" resultType="com.erflow.admin.user.AdminUserAddress">
-        SELECT name,
-               job_name    AS jobName,
-               postal_code AS postalCode,
-               address1,
-               address2
-          FROM user_view
-         WHERE id = #{id}
-    </select>
-
     <!--
       레거시 getUser(id): select * from user_tbl where id = ?
       수정 화면은 뷰가 아니라 원본 표를 읽는다 — 직급·부서를 번호로 골라야 하는데

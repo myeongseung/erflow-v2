@@ -1820,6 +1820,31 @@
         width: min(64rem, calc(100vw - 2rem));
     }
 
+    /* 주소 보기처럼 몇 줄뿐인 것(D-157) */
+    .dialog.is-narrow {
+        width: min(28rem, calc(100vw - 2rem));
+    }
+
+    /* 이름표 · 값 짝 — 주소 대화상자 */
+    .detail-list {
+        display: grid;
+        grid-template-columns: 6rem minmax(0, 1fr);
+        gap: 0.5rem 1rem;
+        margin: 0;
+        font-size: 0.8125rem;
+    }
+
+    .detail-list > dt {
+        color: var(--color-ink-mute);
+        font-weight: 500;
+    }
+
+    .detail-list > dd {
+        margin: 0;
+        color: var(--color-ink);
+        overflow-wrap: anywhere;
+    }
+
     /* 편집기가 드는 폼(문서 양식)은 44rem 이 좁다 — 64rem */
     form.template-form:has(.form-group) {
         max-width: 64rem;

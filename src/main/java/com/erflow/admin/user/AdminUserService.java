@@ -57,16 +57,6 @@ public class AdminUserService {
     }
 
     /**
-     * 한 사원의 주소.
-     *
-     * @param id 사번
-     * @return 주소. 없으면 {@code null}
-     */
-    public AdminUserAddress address(String id) {
-        return adminUserMapper.findAddress(id);
-    }
-
-    /**
      * 사원 추가 화면의 콤보.
      *
      * <p>직급·부서를 <b>DB 가 주는 순서</b> 그대로 그린다. 레거시가 정렬하지 않는다.

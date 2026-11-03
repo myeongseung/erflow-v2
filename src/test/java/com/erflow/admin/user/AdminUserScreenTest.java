@@ -81,14 +81,6 @@ class AdminUserScreenTest {
     }
 
     @Test
-    @DisplayName("관리자가 아니면 주소 팝업도 볼 수 없다")
-    void nonAdminCannotSeeAddress() throws Exception {
-        mockMvc.perform(get("/admin/user/address").param("id", "admin")
-                        .with(user(TestUsers.noPermission())))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
     @DisplayName("관리자 발판 화면도 관리자만 볼 수 있다")
     void scaffoldIsAdminOnly() throws Exception {
         mockMvc.perform(get("/admin/board/list").with(user(TestUsers.noPermission())))
@@ -159,28 +151,22 @@ class AdminUserScreenTest {
     }
 
     @Test
-    @DisplayName("주소 팝업이 그려진다")
-    void addressRenders() throws Exception {
-        List<String> ids = jdbc.queryForList(
-                "SELECT id FROM user_view WHERE id != 'admin' LIMIT 1", String.class);
-        assumeTrue(!ids.isEmpty(), "사용자가 없어 건너뛴다");
+    @DisplayName("주소는 줄마다 붙는 대화상자로 본다 — 새 창 팝업은 없다(D-157)")
+    void listCarriesAddressDialogs() throws Exception {
+        var row = jdbc.queryForMap(
+                "SELECT id, address1 FROM user_view WHERE id != 'admin' "
+                        + "AND address1 IS NOT NULL AND address1 != '' LIMIT 1");
 
-        String html = mockMvc.perform(get("/admin/user/address").param("id", ids.get(0))
+        String html = mockMvc.perform(get("/admin/user/list")
+                        .param("keyfield", "id").param("keyword", (String) row.get("id"))
                         .with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("의 주소").contains("우편번호 :")
-                .contains("도로명 주소 :").contains("상세 주소 :");
-    }
-
-    @Test
-    @DisplayName("없는 사번이면 잘못된 접근으로 보낸다")
-    void addressWithoutUserRedirects() throws Exception {
-        mockMvc.perform(get("/admin/user/address").param("id", "no-such-user")
-                        .with(user(TestUsers.admin())))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/access-error"));
+        assertThat(html).contains("id=\"user-address-" + row.get("id") + "\"")
+                .contains("data-dialog-open=\"user-address-" + row.get("id") + "\"")
+                .contains((String) row.get("address1"))
+                .doesNotContain("/admin/user/address");
     }
 
     @Test
@@ -199,7 +185,7 @@ class AdminUserScreenTest {
     }
 
     @Test
-    @DisplayName("사원 수정 화면이 값으로 채워진다")
+    @DisplayName("사원 수정 주소는 목록을 그 사원의 대화상자가 열린 채로 그린다(D-157)")
     void updateFormRenders() throws Exception {
         var row = jdbc.queryForMap(
                 "SELECT id, name FROM user_tbl WHERE id != 'admin' LIMIT 1");
@@ -210,9 +196,12 @@ class AdminUserScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("관리자 &gt; 사원 관리 &gt; 사원 수정")
+        assertThat(html).contains("관리자 &gt; 사원 관리")
+                .contains("id=\"user-edit\"").contains("data-open-on-load")
+                .contains("사원 수정 · " + row.get("name"))
                 .contains("value=\"" + row.get("id") + "\"")
-                .contains("value=\"" + row.get("name") + "\"");
+                .contains("value=\"" + row.get("name") + "\"")
+                .contains("/admin/user/update-proc");
     }
 
     @Test
