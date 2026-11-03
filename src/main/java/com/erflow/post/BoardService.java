@@ -2,69 +2,67 @@ package com.erflow.post;
 
 import com.erflow.common.Pagination;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 /**
- * 게시판 업무.
+ * 게시판 목록 업무.
  *
- * <p>레거시는 게시판 목록 화면 스크립틀릿에서 게시판마다 글 수와 최신글을 다시
- * 질의했다. 질의 횟수를 줄이면 결과가 같아도 순서나 경계가 달라질 수 있어, 호출을
- * 서비스로 옮기기만 하고 질의 구조는 그대로 둔다.
+ * <p>목록 한 쪽은 게시판 전부를 읽어 쪽만큼 잘라 낸 뒤, 그 쪽의 글 수와 최신 글을
+ * <b>한 번에</b> 읽는다(D-154). 게시판마다 따로 물으면 DB 왕복이 둘씩 는다.
  */
 @Service
 public class BoardService {
 
     private final BoardMapper boardMapper;
-    private final PostMapper postMapper;
 
     /**
      * @param boardMapper 게시판 매퍼
-     * @param postMapper 게시글 매퍼
      */
-    public BoardService(BoardMapper boardMapper, PostMapper postMapper) {
+    public BoardService(BoardMapper boardMapper) {
         this.boardMapper = boardMapper;
-        this.postMapper = postMapper;
     }
 
     /**
-     * 게시판 목록 한 페이지.
+     * 게시판 목록 한 쪽 — 글 수와 최신 글을 달고.
      *
-     * <p>레거시는 {@code start} 를 계산해 두고 쓰지 않아 몇 페이지를 눌러도 0번부터
-     * 15건이 나왔다(D-025 — 게시판이 4개뿐이라 드러나지 않았다). 2단계에서
-     * 고쳤다(D-108) — {@code pagination.start()} 부터 자른다. 목록 순서는 레거시
-     * 그대로 두었다({@code ORDER BY} 를 더하면 지금 화면의 순서가 달라진다).
-     *
-     * @param keyword 검색어
-     * @param requestedPage 요청된 페이지
-     * @return 목록과 페이징
+     * @param keyword 게시판 이름 검색어. {@code null} 이거나 비면 전체
+     * @param requestedPage 요청된 쪽
+     * @return 목록과 쪽 번호
      */
     public BoardPage list(String keyword, int requestedPage) {
-        int total = boardMapper.countBy(keyword);
-        Pagination pagination = Pagination.of(total, requestedPage);
-
         List<Board> boards = boardMapper.findAll(keyword);
-        List<BoardRow> rows = new ArrayList<>();
-        for (int i = pagination.start();
-                i < pagination.start() + pagination.numPerPage() && i < boards.size(); ++i) {
-            Board board = boards.get(i);
-            int postCount = postMapper.countBy(board.id(), PostSearch.none());
-            List<PostRow> recent =
-                    postMapper.findPage(board.id(), PostSearch.none(), 0, 1);
-            PostRow head = recent.isEmpty() ? null : recent.get(0);
+        Pagination pagination = Pagination.of(boards.size(), requestedPage);
+        int from = Math.min(pagination.start(), boards.size());
+        int to = Math.min(pagination.start() + pagination.numPerPage(), boards.size());
+        List<Board> page = boards.subList(from, to);
+
+        Map<Integer, BoardSummary> summaries = new HashMap<>();
+        if (!page.isEmpty()) {
+            for (BoardSummary summary : boardMapper.findSummaries(
+                    page.stream().map(Board::id).toList())) {
+                summaries.put(summary.boardId(), summary);
+            }
+        }
+
+        List<BoardRow> rows = new ArrayList<>(page.size());
+        for (Board board : page) {
+            BoardSummary summary = summaries.get(board.id());
             rows.add(new BoardRow(
                     board.id(),
                     board.subject(),
-                    postCount,
-                    head == null ? null : head.id(),
-                    head == null ? null : head.subject(),
-                    head == null ? null : head.createdAt()));
+                    summary == null ? 0 : summary.postCount(),
+                    summary == null ? null : summary.recentPostId(),
+                    summary == null ? null : summary.recentSubject(),
+                    summary == null ? null : summary.recentCreatedAt()));
         }
         return new BoardPage(rows, pagination);
     }
 
     /**
-     * 게시판 한 건을 읽는다.
+     * 게시판 한 건.
      *
      * @param id 게시판 번호
      * @return 게시판. 없으면 {@code null}
@@ -74,10 +72,10 @@ public class BoardService {
     }
 
     /**
-     * 게시판 목록 한 페이지.
+     * 목록 한 쪽.
      *
-     * @param rows 게시판 줄
-     * @param pagination 페이징
+     * @param rows 게시판 줄들
+     * @param pagination 쪽 번호
      */
     public record BoardPage(List<BoardRow> rows, Pagination pagination) {
     }

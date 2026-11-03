@@ -31,4 +31,12 @@ public interface BoardMapper {
      * @return 게시판. 없으면 {@code null}
      */
     Board findById(@Param("id") int id);
+
+    /**
+     * 게시판들의 글 수와 최신 글을 한 번에 읽는다 (D-154).
+     *
+     * @param ids 게시판 번호들. 비어 있으면 안 된다
+     * @return 게시판마다 한 줄. 글이 없는 게시판도 들어 있다
+     */
+    List<BoardSummary> findSummaries(@Param("ids") List<Integer> ids);
 }

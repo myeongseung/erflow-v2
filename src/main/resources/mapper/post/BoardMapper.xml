@@ -41,6 +41,26 @@
         </if>
     </select>
 
+    <!--
+      게시판 목록 한 쪽의 글 수와 최신 글 (D-154). 게시판마다 묻지 않고 한 번에 읽는다.
+      최신 글은 글 목록과 같은 순서(depth 내림차순, pos)의 첫 줄이다.
+    -->
+    <select id="findSummaries" resultType="com.erflow.post.BoardSummary">
+        SELECT b.id AS boardId,
+               (SELECT COUNT(*) FROM post_view p WHERE p.board_id = b.id) AS postCount,
+               h.id         AS recentPostId,
+               h.subject    AS recentSubject,
+               h.created_at AS recentCreatedAt
+          FROM board_tbl b
+          LEFT JOIN post_view h
+            ON h.id = (SELECT p2.id FROM post_view p2
+                        WHERE p2.board_id = b.id
+                        ORDER BY p2.depth DESC, p2.pos
+                        LIMIT 1)
+         WHERE b.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
     <!-- 레거시: select * from board_tbl where id = ? -->
     <select id="findById" resultType="com.erflow.post.Board">
         SELECT <include refid="boardColumns"/>
