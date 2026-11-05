@@ -60,7 +60,20 @@ class ProposalRouteScreenTest {
         Files.createDirectories(OUT);
         Files.writeString(OUT.resolve("proposal-route-list.html"), html);
 
-        assertThat(html).contains("결재라인 관리").contains("결재관리번호").contains("결재경로");
+        assertThat(html).contains("결재라인 관리").contains("결재 경로").contains("결재라인 만들기")
+                .contains("class=\"list-card\"");
+    }
+
+    @Test
+    @DisplayName("만들기 화면은 직원 고르기 대화상자를 품고 있다 — 새 창이 아니다(D-160)")
+    void registerFormHasUserPicker() throws Exception {
+        String html = mockMvc.perform(get("/proposal/route-register").with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertThat(html).contains("결재라인 만들기").contains("id=\"pick-users\"")
+                .contains("직원 추가").contains("name=\"pickId\"")
+                .doesNotContain("window.open").doesNotContain("jquery-ui");
     }
 
     @Test

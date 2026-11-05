@@ -1,65 +1,48 @@
 <!DOCTYPE html>
 <!--/*
-  기안 작성. 추가와 수정을 겸한다.
+  기안 작성 · 기안 수정 (D-160). 추가와 수정을 겸한다.
   출처: legacy/ERFlow/src/main/webapp/document/documentRegister.jsp
 
-  양식을 고르면 화면이 다시 열리면서 **편집기 내용이 그 양식으로 덮인다** — 쓰던 글이
-  있어도 사라진다. 레거시 그대로다(js/main/documentRegister.js 가 readFrm 을 제출한다).
-
-  이미 결재에 올라간 문서를 고치면 고치지 않고 **새 문서로 등록된다.** 결재선이 본
-  내용이 달라지면 안 되기 때문이다 — 처리 결과에 그렇게 알려 준다.
-
-  본문은 CKEditor 4 가 만든다(CDN). 새 문서일 때 숨은 id 는 -1 이다.
+  게시글 쓰기와 같은 64rem 폼 카드(양식 · 제목 · 본문 · 취소/저장).
+  양식을 고르면 js/document/write.js 가 같은 주소에 template 을 달아 다시 연다 —
+  본문이 비어 있을 때만 양식이 들어간다(D-110). 수정 모드에서는 flag 와 docId 를
+  함께 싣는다(옛 화면은 docId 를 빠뜨려 양식을 고르면 잘못된 접근으로 튕겼다).
+  이미 결재에 올라간 문서를 고치면 새 문서로 등록된다 — 결재선이 본 내용이 달라지면
+  안 되기 때문이다. 처리 결과가 그렇게 알려 준다.
+  새 문서일 때 숨은 id 는 -1 이다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('문서 작성', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jodit-4.13.23.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/main/index.js', '/js/main/documentRegister.js', '/js/common/editor.js'} })}">
+<head th:replace="~{fragments/head :: page(${flag == 'update' ? '기안 수정' : '기안 작성'}, ${ {'/js/vendor/jodit-4.13.23.min.js', '/js/common/editor.js', '/js/document/write.js'} })}">
 </head>
-<body>
-<div class="wrap">
-    <th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-    <div class="content-wrap">
-        <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-        <div class="body">
-            <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 문서 관리 &gt; 기안 작성|)}"></div>
-            <div class="section">
-                <form th:action="@{/document/register-proc}" name="writeFrm" method="post">
-                    <input type="hidden" name="flag" th:value="${flag}">
-                    <input type="hidden" name="id" th:value="${docId}">
-                    <ul class="column">
-                        <li class="title">양식분류</li>
-                        <li>
-                            <select class="select" name="templateId">
-                                <option value="0">빈 문서</option>
-                                <option th:each="template : ${templates}"
-                                        th:value="${template.id}"
-                                        th:selected="${selectedTemplate != null
-                                                and selectedTemplate == template.id}"
-                                        th:text="${template.subject}">양식명</option>
-                            </select>
-                        </li>
-                        <li class="title">제목</li>
-                        <li>
-                            <input type="text" name="subject" class="input-width"
-                                   th:value="${subject}"/>
-                        </li>
-                    </ul>
-                    <textarea id="editor1" name="content" class="ckeditor-textarea"
-                              rows="10" cols="80" th:text="${content}"></textarea>
-                    <h2>
-                        <input type="submit" value="확인"/>
-                        <input type="reset" value="다시입력"/>
-                    </h2>
-                </form>
-                <form name="readFrm" th:action="@{/document/register}" method="get">
-                    <input type="hidden" name="flag" th:value="${flag}">
-                    <input type="hidden" name="id" th:value="${docId}">
-                    <input type="hidden" name="template">
-                </form>
-            </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 문서 관리 &gt; ' + ${flag == 'update' ? '기안 수정' : '기안 작성'}, '양식을 고르면 비어 있는 본문에 양식이 들어갑니다', ~{::content})}">
+<th:block th:fragment="content">
+    <form class="wide-form" th:action="@{/document/register-proc}" method="post">
+        <input type="hidden" name="flag" th:value="${flag}">
+        <input type="hidden" name="id" th:value="${docId}">
+        <div class="form-group">
+            <label for="templateId">양식</label>
+            <select id="templateId" name="templateId"
+                    th:data-reload="${flag == 'update'} ? @{/document/register(flag='update',docId=${docId})} : @{/document/register}">
+                <option value="0">빈 문서</option>
+                <option th:each="template : ${templates}" th:value="${template.id}"
+                        th:selected="${selectedTemplate != null and selectedTemplate == template.id}"
+                        th:text="${template.subject}">양식명</option>
+            </select>
         </div>
-    </div>
-</div>
+        <div class="form-group">
+            <label for="subject">제목</label>
+            <input type="text" id="subject" name="subject" placeholder="제목을 입력해주세요"
+                   th:value="${subject}" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="editor1">본문</label>
+            <textarea id="editor1" name="content" rows="10" cols="80" th:text="${content}"></textarea>
+        </div>
+        <div class="btn-group">
+            <a class="btn" th:href="@{/document/list}">취소</a>
+            <button class="btn btn-primary" type="submit" th:text="${flag == 'update' ? '저장' : '등록'}">등록</button>
+        </div>
+    </form>
+</th:block>
 </body>
 </html>

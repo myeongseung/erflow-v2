@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--/*
+  결재라인 만들기 · 고치기 (D-160). 한 템플릿이 둘을 맡는다(mode 가 insert / update).
+  출처: legacy/ERFlow/src/main/webapp/proposal/proposalRouteRegister.jsp · proposalRouteUpdate.jsp
+
+  폼 카드 하나 — 이름과 결재자 표. 결재자는 «직원 추가» 가 여는 대화상자에서 체크해
+  표에 넣고, 줄마다 위로·아래로·빼기로 순서를 잡는다(js/proposal/route-form.js). 옛
+  화면은 window.open 팝업과 jQuery UI 끌어놓기였다.
+  만들기는 처리가 만든 사람(나)을 결재 순서 맨 앞에 넣는다 — 표에는 고른 사람만 둔다.
+  고치기는 표의 순서를 그대로 저장한다(나를 다시 넣지 않는다).
+*/-->
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: page(${mode == 'update' ? '결재라인 고치기' : '결재라인 만들기'}, ${ {'/js/common/dialog.js', '/js/proposal/route-form.js'} })}">
+</head>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 전자결재 &gt; 결재라인 관리 &gt; ' + ${mode == 'update' ? '결재라인 고치기' : '결재라인 만들기'}, ${mode == 'update' ? null : '만든 사람(나)은 결재 순서 맨 앞에 자동으로 들어갑니다'}, ~{::content})}">
+<th:block th:fragment="content">
+    <form class="wide-form" id="routeFrm" method="post"
+          th:action="${mode == 'update'} ? @{/proposal/route-update-proc} : @{/proposal/route-register-proc}">
+        <input type="hidden" name="proposalId" th:if="${mode == 'update'}" th:value="${proposalId}">
+        <div class="form-group">
+            <label for="nickname">결재라인 이름</label>
+            <input type="text" id="nickname" name="nickname" placeholder="예) 기안 결재" th:value="${nickname}" required autofocus>
+        </div>
+        <div class="form-group">
+            <label>결재자 <small class="label-hint">결재 순서대로</small></label>
+            <div class="table-scroll route-table-wrap">
+                <table class="table table-nowrap route-table">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="num-col">순서</th>
+                        <th scope="col">이름</th>
+                        <th scope="col">사번</th>
+                        <th scope="col">부서</th>
+                        <th scope="col">직급</th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody id="routeRows">
+                    <tr th:each="u : ${routeUsers}" th:data-id="${u.id}">
+                        <td class="num-col order-cell">1</td>
+                        <td><b th:text="${#strings.isEmpty(u.name)} ? ${u.id} : ${u.name}">이름</b>
+                            <input type="hidden" name="routeId" th:value="${u.id}"></td>
+                        <td th:text="${u.id}">사번</td>
+                        <td th:text="${u.deptName}">부서</td>
+                        <td th:text="${u.jobName}">직급</td>
+                        <td class="nowrap-cell row-actions">
+                            <button type="button" class="link-btn" data-move="up">위로</button>
+                            <button type="button" class="link-btn" data-move="down">아래로</button>
+                            <button type="button" class="link-btn" data-remove>빼기</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p class="empty-note" id="routeEmpty" th:hidden="${!#lists.isEmpty(routeUsers)}">아직 고른 결재자가 없습니다.</p>
+            </div>
+            <div class="route-table-actions">
+                <button type="button" class="btn" data-dialog-open="pick-users">직원 추가</button>
+            </div>
+        </div>
+        <p class="form-error" id="routeError" hidden>결재자를 한 명 이상 넣어야 합니다.</p>
+        <div class="btn-group">
+            <a class="btn" th:href="@{/proposal/route-list}">취소</a>
+            <button class="btn btn-primary" type="submit" th:text="${mode == 'update' ? '저장' : '만들기'}">만들기</button>
+        </div>
+    </form>
+
+    <!--/* 직원 고르기 — 직원 전부를 내려 두고 화면에서 거른다(55명) */-->
+    <dialog id="pick-users" class="dialog is-wide">
+        <div class="dialog-head">
+            <h2 class="dialog-title">직원 고르기</h2>
+            <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                <i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="dialog-body picker-body">
+            <div class="picker-filter">
+                <select aria-label="부서" data-filter-dept>
+                    <option value="">전체 부서</option>
+                    <option th:each="dept : ${departments}" th:value="${dept}" th:text="${dept}">부서</option>
+                </select>
+                <select aria-label="직급" data-filter-job>
+                    <option value="">전체 직급</option>
+                    <option th:each="job : ${jobs}" th:value="${job}" th:text="${job}">직급</option>
+                </select>
+                <input type="search" placeholder="이름으로 거르기" aria-label="이름 거르기" data-filter-name>
+            </div>
+            <div class="table-scroll">
+                <table class="table table-striped table-nowrap">
+                    <thead>
+                    <tr>
+                        <th scope="col" class="check-col"><input type="checkbox" data-check-visible aria-label="보이는 사람 모두 선택"></th>
+                        <th scope="col">이름</th>
+                        <th scope="col">사번</th>
+                        <th scope="col">부서</th>
+                        <th scope="col">직급</th>
+                    </tr>
+                    </thead>
+                    <tbody id="pickRows">
+                    <tr th:each="user : ${users}" th:data-id="${user.id}" th:data-name="${user.name}"
+                        th:data-dept="${user.deptName}" th:data-job="${user.jobName}">
+                        <td class="check-col"><input type="checkbox" name="pickId" th:value="${user.id}" th:aria-label="${user.name}"></td>
+                        <td th:text="${user.name}">이름</td>
+                        <td th:text="${user.id}">사번</td>
+                        <td th:text="${user.deptName}">부서</td>
+                        <td th:text="${user.jobName}">직급</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="btn-group dialog-foot">
+            <button type="button" class="btn" data-dialog-close>취소</button>
+            <button type="button" class="btn btn-primary" data-add-users>추가</button>
+        </div>
+    </dialog>
+</th:block>
+</body>
+</html>

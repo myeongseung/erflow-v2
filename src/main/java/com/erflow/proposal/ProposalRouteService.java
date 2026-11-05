@@ -4,7 +4,10 @@ import com.erflow.common.Pagination;
 import com.erflow.user.UserMapper;
 import com.erflow.user.UserRow;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,36 +48,55 @@ public class ProposalRouteService {
         List<ProposalRouteListRow> rows = proposalRouteMapper.findPage(
                 userId, search, pagination.start(), pagination.numPerPage());
 
+        Map<String, UserRow> users = usersOf(
+                rows.stream().map(ProposalRouteListRow::route).toList());
         List<ProposalRouteListItem> items = new ArrayList<>();
         for (ProposalRouteListRow row : rows) {
-            items.add(new ProposalRouteListItem(
-                    row.id(), row.nickname(), routeChain(row.route()), row.createdAt()));
+            items.add(item(row.id(), row.nickname(), row.route(), row.createdAt(), users));
         }
         return new RoutePage(items, pagination);
     }
 
     /**
-     * 사번을 {@code ;} 로 이은 결재경로를 «[부서/직급] 이름(사번) -&gt; ...» 로 푼다.
+     * 내 결재라인 전부(상한 1000). 결재 리스트 위의 «결재 올리기» 대화상자가 쓴다
+     * (D-161) — 쪽을 넘기는 자리가 아니라 한 번에 다 보여 준다. 결재 리스트를 열 때마다
+     * 읽으므로 사람 풀이까지 질의 둘이다.
+     *
+     * @param userId 사번
+     * @return 결재라인들. 사람을 풀어 둔 채
+     */
+    public List<ProposalRouteListItem> all(String userId) {
+        List<ProposalRouteRow> rows = proposalRouteMapper.findByUser(userId);
+        Map<String, UserRow> users = usersOf(rows.stream().map(ProposalRouteRow::route).toList());
+        List<ProposalRouteListItem> items = new ArrayList<>();
+        for (ProposalRouteRow row : rows) {
+            items.add(item(row.id(), row.nickname(), row.route(), null, users));
+        }
+        return items;
+    }
+
+    private static ProposalRouteListItem item(
+            int id, String nickname, String route, String createdAt, Map<String, UserRow> users) {
+        List<RouteUser> steps = resolveUsers(route, users);
+        return new ProposalRouteListItem(id, nickname, routeChain(steps), steps, createdAt);
+    }
+
+    /**
+     * 사람마다 푼 결재경로를 «[부서/직급] 이름(사번) -&gt; ...» 한 줄로 잇는다.
      *
      * <p>레거시가 화면에서 사번마다 {@code getUserView} 를 불러 만들던 문자열이다.
      * 사번이 사라진 사용자를 가리키면 레거시는 {@code null} 에서 예외로 죽었다 — 여기서는
      * 그 사번만 «(사번)» 으로 두어 화면이 뜨게 한다.
      *
-     * @param route 사번을 {@code ;} 로 이은 문자열
-     * @return 사람마다 푼 결재경로
+     * @param steps 결재 순서대로의 사람들
+     * @return 한 줄로 이은 결재경로
      */
-    private String routeChain(String route) {
-        if (route == null || route.isBlank()) {
-            return "";
-        }
-        return java.util.Arrays.stream(route.split(";"))
-                .map(sabun -> {
-                    UserRow user = userMapper.findUserView(sabun);
-                    return user == null
-                            ? "(" + sabun + ")"
-                            : "[" + user.deptName() + "/" + user.jobName() + "] "
-                                    + user.name() + "(" + user.id() + ")";
-                })
+    private static String routeChain(List<RouteUser> steps) {
+        return steps.stream()
+                .map(user -> user.name().isEmpty()
+                        ? "(" + user.id() + ")"
+                        : "[" + user.deptName() + "/" + user.jobName() + "] "
+                                + user.name() + "(" + user.id() + ")")
                 .collect(Collectors.joining(" -> "));
     }
 
@@ -170,17 +192,42 @@ public class ProposalRouteService {
     }
 
     private List<RouteUser> resolveUsers(String route) {
-        List<RouteUser> users = new ArrayList<>();
-        if (route == null || route.isBlank()) {
+        return resolveUsers(route, usersOf(List.of(route)));
+    }
+
+    /**
+     * 여러 결재경로의 사번을 모아 한 번에 묻는다(D-161). 사번마다 한 번씩 묻던 왕복을
+     * 하나로 — 결재 리스트가 열릴 때마다 결재라인 전부를 풀게 됐기 때문이다(D-152).
+     */
+    private Map<String, UserRow> usersOf(List<String> routes) {
+        List<String> ids = routes.stream()
+                .filter(route -> route != null && !route.isBlank())
+                .flatMap(route -> Arrays.stream(route.split(";")))
+                .distinct()
+                .toList();
+        Map<String, UserRow> users = new HashMap<>();
+        if (ids.isEmpty()) {
             return users;
         }
-        for (String sabun : route.split(";")) {
-            UserRow user = userMapper.findUserView(sabun);
-            users.add(user == null
-                    ? new RouteUser(sabun, "", "")
-                    : new RouteUser(user.id(), user.name(), user.jobName()));
+        for (UserRow user : userMapper.findUserViewsByIds(ids)) {
+            users.put(user.id(), user);
         }
         return users;
+    }
+
+    /** 결재경로의 사번을 순서대로 사람으로 바꾼다. 모르는 사번(사라진 사용자)은 사번만. */
+    private static List<RouteUser> resolveUsers(String route, Map<String, UserRow> users) {
+        List<RouteUser> steps = new ArrayList<>();
+        if (route == null || route.isBlank()) {
+            return steps;
+        }
+        for (String sabun : route.split(";")) {
+            UserRow user = users.get(sabun);
+            steps.add(user == null
+                    ? new RouteUser(sabun, "", "", "")
+                    : new RouteUser(user.id(), user.name(), user.deptName(), user.jobName()));
+        }
+        return steps;
     }
 
     /**

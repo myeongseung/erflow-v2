@@ -1,95 +1,152 @@
 <!DOCTYPE html>
 <!--/*
-  결재 리스트.
-  출처: legacy/ERFlow/src/main/webapp/proposal/proposalList.jsp
+  결재 리스트 (D-160) — «결재 올리기» 대화상자를 품는다(D-161).
+  출처: legacy/ERFlow/src/main/webapp/proposal/proposalList.jsp · proposalRegister.jsp
 
-  상태 필터(결재진행중/승인/반려)로 본다. 내가 결재선에 든 진행중 결재와, 내가 기안한
-  결재 중 선택 상태를 함께 보여준다. 등록·문서 상세·승인/반려는 다음 단계.
+  목록 틀(D-148)의 카드 하나. 상태(진행 중 · 승인 · 반려)는 도구줄의 탭 링크로 고른다.
+  진행 중 탭은 내 차례인 결재, 승인·반려 탭은 내가 올린 결재 중 그 상태인 것(D-162).
+  제목을 누르면
+  결재 문서 보기로 간다. 옛 화면의 체크상자는 아무 동작도 걸려 있지 않아 뺐다.
+  쪽 번호는 보통의 GET 링크다 — 옛 화면은 block()/paging() 이 없어 눌러도 아무 일이
+  없었다(D-045). 쪽 수는 «내 차례» 거르기 전 건수로 세어진다(D-052).
 
-  페이징 링크의 block()/paging() 은 정의하지 않는다 — 레거시도 이 화면에 두 함수를 두지
-  않아 페이징이 동작하지 않았다(message 와 같은 D-045). 그대로 옮긴다.
+  결재 올리기는 별도 화면이 아니라 이 목록 위의 대화상자다(D-161). 왼쪽 표에서 문서
+  하나, 오른쪽 표에서 결재라인 하나를 라디오로 고른다(js/proposal/register.js). 옛
+  주소 /proposal/register 로 들어오면 대화상자가 열린 채 그려지고(openRegister), 문서
+  리스트의 «결재 올리기» 가 달고 오는 ?documentId= 는 그 문서를 미리 골라 둔다
+  (pickedDocumentId).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('결재 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/proposal/proposal.js', '/js/main/index.js'} })}">
+<head th:replace="~{fragments/head :: page('결재 리스트', ${ {'/js/common/dialog.js', '/js/proposal/register.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="table-wrap">
-        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 전자결재 &gt; 결재 리스트|)}"></div>
-
-        <form action="" method="post" name="proposalFrm">
-            <div class="table-header-container">
-                <div class="button-group">
-                    <button type="button" class="btn btn-primary" id="register-button">생성</button>
-                </div>
-                <div class="search-option">
-                    <select name="keyfield" id="" class="selectbox">
-                        <option value="3" th:selected="${keyfield == 3}">결재진행중</option>
-                        <option value="1" th:selected="${keyfield == 1}">승인</option>
-                        <option value="2" th:selected="${keyfield == 2}">반려</option>
-                    </select>
-                    <div class="main-search-container">
-                        <div class="main-search-icon">
-                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
-                        </div>
-                    </div>
-                </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 전자결재 &gt; 결재 리스트', null, ~{::content})}">
+<th:block th:fragment="content">
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <button type="button" class="btn btn-primary" data-dialog-open="proposal-register">결재 올리기</button>
             </div>
-
-            <table class="table table-striped">
+            <nav class="filter-tabs" aria-label="결재 상태">
+                <a th:href="@{/proposal/list(keyfield=3)}" th:classappend="${keyfield == 3} ? 'is-current'">결재 진행 중</a>
+                <a th:href="@{/proposal/list(keyfield=1)}" th:classappend="${keyfield == 1} ? 'is-current'">승인</a>
+                <a th:href="@{/proposal/list(keyfield=2)}" th:classappend="${keyfield == 2} ? 'is-current'">반려</a>
+            </nav>
+        </div>
+        <div class="table-scroll">
+            <table class="table table-striped table-nowrap">
                 <thead>
                 <tr>
-                    <th scope="col"><input type="checkbox" id="chkAll"></th>
-                    <th scope="col">번호</th>
-                    <th scope="col">문서번호</th>
-                    <th scope="col">문서제목</th>
-                    <th scope="col">문서보기</th>
-                    <th scope="col">생성날짜</th>
+                    <th scope="col" class="num-col">번호</th>
+                    <th scope="col" class="num-col">문서번호</th>
+                    <th scope="col">문서 제목</th>
+                    <th scope="col">받은 시각</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:if="${#lists.isEmpty(proposals)}">
+                    <td colspan="4" class="empty-cell"
+                        th:text="${keyfield == 3} ? '내 차례인 결재가 없습니다.' : (${keyfield == 1} ? '내가 올린 결재 중 승인된 것이 없습니다.' : '내가 올린 결재 중 반려된 것이 없습니다.')">내 차례인 결재가 없습니다.</td>
+                </tr>
                 <tr th:each="proposal : ${proposals}">
-                    <th scope="col" class="proposal-id">
-                        <input type="checkbox" name="proposalId" th:value="${proposal.id}">
-                    </th>
-                    <td th:text="${proposal.id}">1</td>
-                    <td th:text="${proposal.documentId}">문서번호</td>
-                    <td th:text="${proposal.subject}">문서제목</td>
-                    <td><a th:href="@{/proposal/document(proposalId=${proposal.id})}">문서 보기</a></td>
-                    <td th:text="${proposal.receivedAt}">생성날짜</td>
+                    <td class="num-col" th:text="${proposal.id}">1</td>
+                    <td class="num-col" th:text="${proposal.documentId}">문서번호</td>
+                    <td class="ellipsis-cell"><a class="row-link" th:href="@{/proposal/document(proposalId=${proposal.id})}"
+                           th:text="${proposal.subject}" th:title="${proposal.subject}">문서 제목</a></td>
+                    <td th:text="${proposal.receivedAt}">받은 시각</td>
                 </tr>
                 </tbody>
-                <tfoot>
-                <td colspan="5"></td>
-                <td></td>
-                </tfoot>
             </table>
-        </form>
-
-        <form name="readFrm" th:action="@{/proposal/list}" method="get">
-            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
-            <input type="hidden" name="keyfield" th:value="${keyfield}">
-        </form>
-
-        <!--/* 페이징 — block()/paging() 은 정의되지 않는다(D-045) */-->
-        <div class="page-controller">
-            <a th:if="${page.hasPreviousBlock()}" class="disabled"
-               th:href="|javascript:block(5, ${page.nowBlock - 1})|">이전</a>
+        </div>
+        <div class="page-controller" th:if="${page.totalPage > 1}">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="@{/proposal/list(nowPage=${page.pagePerBlock * (page.nowBlock - 2) + 1},keyfield=${keyfield})}">이전</a>
             <ul class="page-numbers">
-                <a th:each="number : ${page.pageNumbers}"
-                   th:href="|javascript:paging(${number})|"
-                   th:classappend="${number == page.nowPage} ? 'disabled'">
-                    <li th:text="${number}">1</li>
-                </a>
+                <li th:each="n : ${page.pageNumbers}">
+                    <a th:href="@{/proposal/list(nowPage=${n},keyfield=${keyfield})}"
+                       th:classappend="${n == page.nowPage} ? 'disabled'" th:text="${n}">1</a>
+                </li>
             </ul>
             <a th:if="${page.hasNextBlock()}"
-               th:href="|javascript:block(5, ${page.nowBlock + 1})|">다음</a>
+               th:href="@{/proposal/list(nowPage=${page.pagePerBlock * page.nowBlock + 1},keyfield=${keyfield})}">다음</a>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!--/* 결재 올리기 — 왼쪽에서 문서 하나, 오른쪽에서 결재라인 하나 (D-161) */-->
+    <dialog id="proposal-register" class="dialog is-wide" th:data-open-on-load="${openRegister} ? 'true' : null">
+        <form id="proposalFrm" th:action="@{/proposal/register-proc}" method="post">
+            <div class="dialog-head">
+                <h2 class="dialog-title">결재 올리기</h2>
+                <button type="button" class="dialog-close" data-dialog-close aria-label="닫기">
+                    <i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="dialog-body picker-body pick-panes">
+                <section class="pick-pane">
+                    <div class="pick-pane-head">
+                        <b>결재 문서</b>
+                        <input type="search" placeholder="번호나 제목으로 거르기" aria-label="문서 거르기" data-filter="pick-document-rows">
+                    </div>
+                    <div class="table-scroll">
+                        <table class="table table-striped table-nowrap">
+                            <thead>
+                            <tr>
+                                <th scope="col" class="check-col"></th>
+                                <th scope="col" class="num-col">번호</th>
+                                <th scope="col">제목</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pick-document-rows">
+                            <tr th:if="${#lists.isEmpty(pickDocuments)}">
+                                <td colspan="3" class="empty-cell">결재에 올릴 수 있는 문서가 없습니다.
+                                    <a th:href="@{/document/register}">기안 작성</a>으로 먼저 문서를 만드세요.</td>
+                            </tr>
+                            <tr th:each="document : ${pickDocuments}" th:data-text="${document.id} + ' ' + ${document.subject}">
+                                <td class="check-col"><input type="radio" name="documentId" th:id="|pick-document-${document.id}|"
+                                        th:value="${document.id}" th:checked="${document.id == pickedDocumentId}"
+                                        th:aria-label="${document.subject}"></td>
+                                <td class="num-col" th:text="${document.id}">1</td>
+                                <td class="ellipsis-cell" th:text="${document.subject}" th:title="${document.subject}">제목</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="pick-pane">
+                    <div class="pick-pane-head">
+                        <b>결재라인</b>
+                        <input type="search" placeholder="이름이나 사람으로 거르기" aria-label="결재라인 거르기" data-filter="pick-route-rows">
+                    </div>
+                    <div class="table-scroll">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th scope="col" class="check-col"></th>
+                                <th scope="col">이름</th>
+                                <th scope="col">결재 경로</th>
+                            </tr>
+                            </thead>
+                            <tbody id="pick-route-rows">
+                            <tr th:if="${#lists.isEmpty(pickRoutes)}">
+                                <td colspan="3" class="empty-cell">결재라인이 없습니다.
+                                    <a th:href="@{/proposal/route-register}">결재라인 만들기</a>로 먼저 만드세요.</td>
+                            </tr>
+                            <tr th:each="route : ${pickRoutes}" th:data-text="${route.nickname} + ' ' + ${route.routeChain}">
+                                <td class="check-col"><input type="radio" name="routeId" th:id="|pick-route-${route.id}|"
+                                        th:value="${route.id}" th:aria-label="${route.nickname}"></td>
+                                <td class="nowrap-cell"><b th:text="${route.nickname}">이름</b></td>
+                                <td class="chain-cell"><th:block th:replace="~{fragments/route-chain :: chain(${route.steps})}"></th:block></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            <div class="btn-group dialog-foot">
+                <p class="form-error" id="pickError" hidden>문서와 결재라인을 하나씩 골라야 합니다.</p>
+                <button type="button" class="btn" data-dialog-close>취소</button>
+                <button class="btn btn-primary" type="submit">결재 올리기</button>
+            </div>
+        </form>
+    </dialog>
+</th:block>
 </body>
 </html>

@@ -63,36 +63,68 @@ class ProposalScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("결재 리스트").contains("문서제목").contains("결재진행중");
+        assertThat(html).contains("결재 리스트").contains("문서 제목").contains("결재 진행 중")
+                .contains("class=\"filter-tabs\"").contains("결재 올리기")
+                // 결재 올리기는 목록 위의 대화상자다 — 문서 표와 결재라인 표(D-161)
+                .contains("id=\"proposal-register\"").contains("id=\"pick-document-rows\"")
+                .contains("id=\"pick-route-rows\"").doesNotContain("data-open-on-load");
     }
 
     @Test
-    @DisplayName("상태 필터로 다른 인박스가 나온다")
-    void statusFilterChangesInbox() {
-        // 결재선에 실제로 든 사용자를 찾는다(진행중 결재의 route 에서).
-        var owners = jdbc.queryForList(
-                "SELECT DISTINCT original_user FROM proposal_view LIMIT 5", String.class);
-        assumeTrue(!owners.isEmpty(), "결재 데이터가 없어 건너뛴다");
+    @DisplayName("탭은 상태대로 거른다 — 진행 중 결재가 승인·반려 탭에 섞이지 않는다(D-162)")
+    @Transactional
+    void tabsFilterByState() {
+        Chain chain = freshChain();
+        String me = chain.route()[0];
+        long first = proposalService.create(me, chain.documentId(), chain.routeId());
 
-        String who = owners.get(0);
-        // 진행중과 승인은 서로 다른 필터다 — 같은 인박스가 나오면 필터가 무시된 것이다.
-        var inProgress = proposalService.list(who, ProposalService.IN_PROGRESS, 1)
-                .pagination().totalRecord();
-        var approved = proposalService.list(who, ProposalService.APPROVED, 1)
-                .pagination().totalRecord();
-        // 최소한 진행중 인박스는 조회가 되어야 한다(0 이상). 예외 없이 도는지 확인.
-        assertThat(inProgress).isGreaterThanOrEqualTo(0);
-        assertThat(approved).isGreaterThanOrEqualTo(0);
+        // 올린 직후 — 진행 중 탭에만 있다. 레거시는 세 탭 모두에 나왔다.
+        assertThat(idsOf(me, ProposalService.IN_PROGRESS)).contains(first);
+        assertThat(idsOf(me, ProposalService.APPROVED)).doesNotContain(first);
+        assertThat(idsOf(me, ProposalService.REJECTED)).doesNotContain(first);
+
+        // 결재선 끝까지 승인하면 — 내가 올린 결재이므로 승인 탭에 생기고 진행 중에서는 사라진다.
+        long id = first;
+        for (int step = 0; step < chain.route().length; ++step) {
+            proposalService.decide(id, chain.route()[step], "confirm", "확인");
+            id = jdbc.queryForObject(
+                    "SELECT MAX(id) FROM proposal_tbl WHERE document_tbl_id = ?",
+                    Long.class, chain.documentId());
+        }
+        assertThat(idsOf(me, ProposalService.APPROVED)).contains(first);
+        assertThat(idsOf(me, ProposalService.IN_PROGRESS)).doesNotContain(first, id);
+        assertThat(idsOf(me, ProposalService.REJECTED)).doesNotContain(first);
     }
 
     @Test
-    @DisplayName("결재 등록 화면이 그려진다")
-    void registerFormRenders() throws Exception {
+    @DisplayName("옛 결재 올리기 주소는 결재 리스트를 대화상자가 열린 채로 그린다(D-161)")
+    void registerAddressOpensDialog() throws Exception {
         String html = mockMvc.perform(get("/proposal/register").with(user(TestUsers.admin())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        assertThat(html).contains("결재 생성").contains("문서 찾기").contains("결재라인 찾기");
+        assertThat(html).contains("결재 리스트").contains("id=\"proposal-register\"")
+                .contains("data-open-on-load").doesNotContain("window.open");
+    }
+
+    @Test
+    @DisplayName("문서 리스트에서 문서를 달고 오면 그 문서가 미리 골라져 있다(D-161)")
+    void registerAddressPicksDocument() throws Exception {
+        List<Long> ids = jdbc.queryForList(
+                "SELECT d.id FROM document_tbl d WHERE d.user_tbl_id = 'admin' "
+                        + "AND NOT EXISTS (SELECT 1 FROM proposal_tbl p "
+                        + "WHERE p.document_tbl_id = d.id) LIMIT 1", Long.class);
+        assumeTrue(!ids.isEmpty(), "결재에 올릴 수 있는 admin 문서가 없어 건너뛴다");
+
+        String html = mockMvc.perform(get("/proposal/register")
+                        .param("documentId", String.valueOf(ids.get(0)))
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        // Thymeleaf 는 checked 를 속성 맨 뒤에 붙인다 — 같은 input 안에 있는지만 본다
+        assertThat(html).contains("data-open-on-load")
+                .containsPattern("id=\"pick-document-" + ids.get(0) + "\"[^>]*checked=\"checked\"");
     }
 
     @Test
@@ -138,7 +170,12 @@ class ProposalScreenTest {
 
     /** 그 사람의 결재진행중 인박스에 뜨는 결재번호. */
     private List<Long> idsOf(String userId) {
-        return proposalService.list(userId, ProposalService.IN_PROGRESS, 1).rows()
+        return idsOf(userId, ProposalService.IN_PROGRESS);
+    }
+
+    /** 그 사람의 그 탭(진행 중 · 승인 · 반려)에 뜨는 결재번호. */
+    private List<Long> idsOf(String userId, int result) {
+        return proposalService.list(userId, result, 1).rows()
                 .stream().map(ProposalRow::id).toList();
     }
 
@@ -155,7 +192,7 @@ class ProposalScreenTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(html).contains("결재 문서 보기").contains("담당").contains("승인")
-                .contains("코멘트");
+                .contains("결재 의견").contains("class=\"approval-paper\"");
     }
 
     @Test
@@ -287,6 +324,9 @@ class ProposalScreenTest {
         assertThat(jdbc.queryForObject(
                 "SELECT COUNT(*) FROM proposal_tbl WHERE document_tbl_id = ?",
                 Integer.class, chain.documentId())).isEqualTo(1);
+        // 내가 올린 결재이므로 반려 탭에 뜨고 진행 중 탭에서는 사라진다(D-162).
+        assertThat(idsOf(chain.route()[0], ProposalService.REJECTED)).contains(first);
+        assertThat(idsOf(chain.route()[0])).doesNotContain(first);
     }
 
     @Test

@@ -1,97 +1,81 @@
 <!DOCTYPE html>
 <!--/*
-  결재라인 관리 — 목록.
+  결재라인 관리 — 목록 (D-160).
   출처: legacy/ERFlow/src/main/webapp/proposal/proposalRouteList.jsp
 
-  내가 만든 결재라인만 보인다. 결재경로(사번을 ; 로 이은 문자열)를 사람마다 풀어
-  «[부서/직급] 이름(사번) -> ...» 로 보여준다. 등록·수정·삭제는 다음 단계에서 붙인다.
+  목록 틀(D-148)의 카드 하나. 내가 만든 결재라인만 보인다. 결재 경로는 사람마다
+  «이름 직급» 알약으로 줄지어 보여 준다(fragments/route-chain). 이름을 누르면 고치기로,
+  «결재라인 만들기» 는 만들기 화면으로 간다. 삭제는 체크한 줄을 빈 폼에 실어 보낸다.
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('결재 라인 관리', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/admin/admin.js', '/js/proposal/proposalRoute.js'} })}">
+<head th:replace="~{fragments/head :: page('결재라인 관리', ${ {'/js/common/table.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="table-wrap">
-        <div th:replace="~{fragments/page-head :: head(|사용자 &gt; 전자결재 &gt; 결재라인 관리|)}"></div>
-
-        <form th:action="@{/proposal/route-delete-proc}" method="post" name="proposalFrm">
-            <div class="table-header-container">
-                <div class="button-group">
-                    <button type="button" class="btn btn-danger" id="delete-button"
-                            name="flag" value="delete">삭제</button>
-                    <button type="button" class="btn btn-primary" id="register-button">생성</button>
-                </div>
-                <div class="search-option">
-                    <select name="keyfield" id="">
-                        <option value="" th:selected="${keyfield == ''}">전체조회</option>
-                        <option value="id" th:selected="${keyfield == 'id'}">문서번호</option>
-                        <option value="route" th:selected="${keyfield == 'route'}">결재경로</option>
-                    </select>
-                    <div class="main-search-container">
-                        <div class="main-search-border">
-                            <input class="main-search-text" type="search" placeholder="결재 검색"
-                                   aria-label="Search" name="keyword" th:value="${keyword}">
-                        </div>
-                        <div class="main-search-icon">
-                            <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
-                        </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 전자결재 &gt; 결재라인 관리', |결재라인 ${page.totalRecord}|, ~{::content})}">
+<th:block th:fragment="content">
+    <section class="list-card">
+        <div class="toolbar">
+            <div class="toolbar-actions">
+                <a class="btn btn-primary" th:href="@{/proposal/route-register}">결재라인 만들기</a>
+                <button type="submit" class="btn btn-danger" form="routeFrm">삭제</button>
+            </div>
+            <form class="toolbar-search" th:action="@{/proposal/route-list}" method="get">
+                <select name="keyfield" aria-label="검색할 칸">
+                    <option value="" th:selected="${keyfield == ''}">전체 조회</option>
+                    <option value="id" th:selected="${keyfield == 'id'}">번호</option>
+                    <option value="route" th:selected="${keyfield == 'route'}">결재 경로(사번)</option>
+                </select>
+                <div class="main-search-container">
+                    <div class="main-search-border">
+                        <input class="main-search-text" type="search" name="keyword"
+                               placeholder="결재라인 검색" aria-label="결재라인 검색어" th:value="${keyword}">
+                    </div>
+                    <div class="main-search-icon">
+                        <i class="fa-solid fa-magnifying-glass fa-lg" title="검색하기"></i>
                     </div>
                 </div>
-            </div>
-
+            </form>
+        </div>
+        <form id="routeFrm" th:action="@{/proposal/route-delete-proc}" method="post"
+              onsubmit="return confirm('선택한 결재라인을 지울까요?');"></form>
+        <div class="table-scroll">
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th scope="col" style="width: 5%"><input type="checkbox" id="chkAll"></th>
-                    <th scope="col" style="width: 8%">결재관리번호</th>
-                    <th scope="col" style="width: 8%">결재라인명</th>
-                    <th scope="col">결재경로</th>
-                    <th scope="col" style="width: 12%">생성 시간</th>
+                    <th scope="col" class="check-col"><input type="checkbox" data-check-all="proposalId" aria-label="모두 선택"></th>
+                    <th scope="col" class="num-col">번호</th>
+                    <th scope="col">이름</th>
+                    <th scope="col">결재 경로</th>
+                    <th scope="col">만든 시각</th>
                 </tr>
                 </thead>
                 <tbody>
+                <tr th:if="${#lists.isEmpty(routes)}">
+                    <td colspan="5" class="empty-cell">결재라인이 없습니다. «결재라인 만들기» 로 첫 결재라인을 만드세요.</td>
+                </tr>
                 <tr th:each="route : ${routes}">
-                    <th scope="col" class="proposal-id">
-                        <input type="checkbox" name="proposalId" th:value="${route.id}">
-                    </th>
-                    <td><a th:href="@{/proposal/route-update(id=${route.id})}" th:text="${route.id}">1</a></td>
-                    <td th:text="${route.nickname}">결재라인명</td>
-                    <td th:text="${route.routeChain}">결재경로</td>
-                    <td th:text="${route.createdAt}">생성 시간</td>
+                    <td class="check-col"><input type="checkbox" name="proposalId" form="routeFrm" th:value="${route.id}"></td>
+                    <td class="num-col" th:text="${route.id}">1</td>
+                    <td class="nowrap-cell"><a class="row-link" th:href="@{/proposal/route-update(id=${route.id})}"
+                           th:text="${route.nickname}">이름</a></td>
+                    <td class="chain-cell"><th:block th:replace="~{fragments/route-chain :: chain(${route.steps})}"></th:block></td>
+                    <td class="nowrap-cell" th:text="${route.createdAt}">만든 시각</td>
                 </tr>
                 </tbody>
-                <tfoot>
-                <td colspan="4"></td>
-                <td></td>
-                </tfoot>
             </table>
-        </form>
-
-        <form name="readFrm" th:action="@{/proposal/route-list}" method="get">
-            <input type="hidden" name="nowPage" th:value="${page.nowPage}">
-            <input type="hidden" name="keyfield" th:value="${keyfield}">
-            <input type="hidden" name="keyword" th:value="${keyword}">
-        </form>
-
-        <!--/* 페이징 (proposalRoute.js 의 block/paging 이 readFrm 을 제출한다) */-->
-        <div class="page-controller">
-            <a th:if="${page.hasPreviousBlock()}" class="disabled"
-               th:href="|javascript:block(5, ${page.nowBlock - 1})|">이전</a>
+        </div>
+        <div class="page-controller" th:if="${page.totalPage > 1}">
+            <a th:if="${page.hasPreviousBlock()}"
+               th:href="@{/proposal/route-list(nowPage=${page.pagePerBlock * (page.nowBlock - 2) + 1},keyfield=${keyfield},keyword=${keyword})}">이전</a>
             <ul class="page-numbers">
-                <a th:each="number : ${page.pageNumbers}"
-                   th:href="|javascript:paging(${number})|"
-                   th:classappend="${number == page.nowPage} ? 'disabled'">
-                    <li th:text="${number}">1</li>
-                </a>
+                <li th:each="n : ${page.pageNumbers}">
+                    <a th:href="@{/proposal/route-list(nowPage=${n},keyfield=${keyfield},keyword=${keyword})}"
+                       th:classappend="${n == page.nowPage} ? 'disabled'" th:text="${n}">1</a>
+                </li>
             </ul>
             <a th:if="${page.hasNextBlock()}"
-               th:href="|javascript:block(5, ${page.nowBlock + 1})|">다음</a>
+               th:href="@{/proposal/route-list(nowPage=${page.pagePerBlock * page.nowBlock + 1},keyfield=${keyfield},keyword=${keyword})}">다음</a>
         </div>
-    </div>
-</div>
+    </section>
+</th:block>
 </body>
 </html>

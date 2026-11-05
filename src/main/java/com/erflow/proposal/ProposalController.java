@@ -1,6 +1,7 @@
 package com.erflow.proposal;
 
 import com.erflow.auth.ErflowUserDetails;
+import com.erflow.document.DocumentFinder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <pre>
  * proposalList.jsp      GET  /proposal/list
- * proposalRegister.jsp  GET  /proposal/register
+ * proposalRegister.jsp  GET  /proposal/register   (결재 리스트 + 열린 대화상자, D-161)
  * proposalRegisterProc  POST /proposal/register-proc
  * proposalDocument.jsp  GET  /proposal/document?proposalId=
  * proposalDocumentProc  POST /proposal/document-proc
@@ -26,12 +27,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class ProposalController {
 
     private final ProposalService proposalService;
+    private final ProposalRouteService proposalRouteService;
+    private final DocumentFinder documentFinder;
 
     /**
      * @param proposalService 결재 업무
+     * @param proposalRouteService 결재라인(결재 올리기 대화상자가 고를 것)
+     * @param documentFinder 결재에 올릴 수 있는 내 문서(결재 올리기 대화상자가 고를 것)
      */
-    public ProposalController(ProposalService proposalService) {
+    public ProposalController(
+            ProposalService proposalService,
+            ProposalRouteService proposalRouteService,
+            DocumentFinder documentFinder) {
         this.proposalService = proposalService;
+        this.proposalRouteService = proposalRouteService;
+        this.documentFinder = documentFinder;
     }
 
     /**
@@ -49,42 +59,60 @@ public class ProposalController {
             @RequestParam(defaultValue = "1") int nowPage,
             @AuthenticationPrincipal ErflowUserDetails user,
             Model model) {
-
-        ProposalService.ProposalPage page = proposalService.list(user.id(), keyfield, nowPage);
-
-        model.addAttribute("proposals", page.rows());
-        model.addAttribute("page", page.pagination());
-        model.addAttribute("keyfield", keyfield);
+        fillList(keyfield, nowPage, user, model);
         return "proposal/list";
     }
 
     /**
-     * 결재 등록 화면.
+     * 결재 올리기 — 결재 리스트를 «결재 올리기» 대화상자가 열린 채로 그린다(D-161).
      *
-     * <p>문서 찾기·결재라인 찾기 팝업이 값을 채운다. 처음엔 비어 있다.
+     * <p>결재 올리기는 별도 화면이 아니라 결재 리스트 위의 대화상자다. 옛 주소로
+     * 들어와도 같은 곳에 닿도록 주소는 남긴다(관리자 화면의 옛 주소와 같은 방식,
+     * D-148). 문서 리스트의 «결재 올리기» 가 {@code ?documentId=} 를 달고 오면 그
+     * 문서가 미리 골라져 있다.
      *
+     * @param documentId 미리 고를 문서번호. 없으면 아무것도 골라져 있지 않다
      * @param user 로그인 사용자(기안자)
      * @param model 뷰 모델
-     * @return 등록 템플릿
+     * @return 결재 리스트 템플릿
      */
     @GetMapping("/proposal/register")
-    public String registerForm(@AuthenticationPrincipal ErflowUserDetails user, Model model) {
-        model.addAttribute("userId", user.id());
-        model.addAttribute("documentId", "");
-        model.addAttribute("documentName", "");
-        return "proposal/register";
+    public String registerForm(
+            @RequestParam(required = false) Long documentId,
+            @AuthenticationPrincipal ErflowUserDetails user,
+            Model model) {
+        fillList(ProposalService.IN_PROGRESS, 1, user, model);
+        model.addAttribute("openRegister", true);
+        model.addAttribute("pickedDocumentId", documentId);
+        return "proposal/list";
+    }
+
+    /**
+     * 결재 리스트의 모델을 채운다 — 목록과, 그 위의 «결재 올리기» 대화상자가 고를 것.
+     *
+     * <p>대화상자가 고를 목록(결재에 올린 적 없는 내 문서 · 내 결재라인)은 리스트를
+     * 열 때마다 읽는다. 그래서 문서는 한 질의, 결재라인은 사람 풀이까지 둘이다
+     * (D-161, D-152).
+     */
+    private void fillList(int keyfield, int nowPage, ErflowUserDetails user, Model model) {
+        ProposalService.ProposalPage page = proposalService.list(user.id(), keyfield, nowPage);
+        model.addAttribute("proposals", page.rows());
+        model.addAttribute("page", page.pagination());
+        model.addAttribute("keyfield", keyfield);
+        model.addAttribute("pickDocuments", documentFinder.search(user.id(), null));
+        model.addAttribute("pickRoutes", proposalRouteService.all(user.id()));
     }
 
     /**
      * 결재 등록 처리.
      *
-     * <p>레거시 {@code proposalRegisterProc.jsp} 를 옮겼다. 네 값(기안자·문서·결재라인·
-     * 결재경로)이 모두 있어야 등록한다. 저장에는 기안자·문서·결재라인만 쓴다 — 결재경로
-     * 문자열은 화면 표시용이라 넣지 않는다. 성공하면 그 결재의 문서 상세로 간다.
+     * <p>레거시 {@code proposalRegisterProc.jsp} 를 옮겼다. 문서와 결재라인이 모두
+     * 있어야 등록한다. 옛 화면이 함께 보내던 결재경로 문자열은 저장하지도 않던 값이라
+     * 받지 않는다(D-161). 성공하면 그 결재의 문서 상세로, 실패하면 대화상자가 열린
+     * 결재 리스트로 간다.
      *
      * @param documentId 문서번호
      * @param routeId 결재라인 번호
-     * @param route 결재경로(표시용). 있어야 하지만 저장하지 않는다
      * @param user 로그인 사용자(기안자)
      * @param model 뷰 모델
      * @return 결과 템플릿
@@ -93,11 +121,10 @@ public class ProposalController {
     public String register(
             @RequestParam(required = false) Long documentId,
             @RequestParam(required = false) Integer routeId,
-            @RequestParam(required = false) String route,
             @AuthenticationPrincipal ErflowUserDetails user,
             Model model) {
 
-        long created = documentId != null && routeId != null && route != null
+        long created = documentId != null && routeId != null
                 ? proposalService.create(user.id(), documentId, routeId)
                 : 0;
 

@@ -60,4 +60,13 @@ public interface UserMapper {
      * @return 사용자. 없으면 {@code null}
      */
     UserRow findUserView(@Param("id") String id);
+
+    /**
+     * 여러 사번의 사용자를 한 번에(D-161). 결재라인의 사람을 풀 때 사번마다 한 번씩
+     * 묻던 것을 한 질의로.
+     *
+     * @param ids 사번들. 비어 있으면 안 된다
+     * @return 있는 사용자만. 순서는 보장하지 않는다
+     */
+    List<UserRow> findUserViewsByIds(@Param("ids") List<String> ids);
 }

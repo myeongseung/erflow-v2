@@ -1,6 +1,8 @@
 package com.erflow.proposal;
 
 import com.erflow.auth.ErflowUserDetails;
+import com.erflow.user.UserFinder;
+import com.erflow.user.UserSearch;
 import java.util.List;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -24,20 +26,32 @@ import org.springframework.web.bind.annotation.RequestParam;
  *
  * <p>내가 만든 결재라인만 보인다 — 조회가 사번으로 좁혀져 있다.
  *
- * <p>등록 화면은 사용자 찾기로 결재자를 고르면 화면을 다시 그리는 self-reload 폼이다.
- * 고른 사번을 Base64(URL 인코딩)로 감싸 넘긴다.
+ * <p>등록·수정 화면의 결재자는 화면 안의 «직원 고르기» 대화상자가 표에 바로 넣는다
+ * (D-160). 그래서 직원 전부를 화면과 함께 내려 준다. {@code receiver} 로 되돌아오던
+ * 옛 self-reload 경로는 남겨 두되 화면은 더 쓰지 않는다.
  */
 @Controller
 @RequestMapping("/proposal")
 public class ProposalRouteController {
 
     private final ProposalRouteService proposalRouteService;
+    private final UserFinder userFinder;
 
     /**
      * @param proposalRouteService 결재라인 업무
+     * @param userFinder 직원 고르기 대화상자의 사람들
      */
-    public ProposalRouteController(ProposalRouteService proposalRouteService) {
+    public ProposalRouteController(
+            ProposalRouteService proposalRouteService, UserFinder userFinder) {
         this.proposalRouteService = proposalRouteService;
+        this.userFinder = userFinder;
+    }
+
+    /** 직원 고르기 대화상자가 쓰는 것 — 직원 전부와 부서·직급 이름(거르기 콤보). */
+    private void fillPicker(Model model) {
+        model.addAttribute("users", userFinder.search(UserSearch.none()));
+        model.addAttribute("departments", userFinder.departments());
+        model.addAttribute("jobs", userFinder.jobs());
     }
 
     /**
@@ -92,7 +106,9 @@ public class ProposalRouteController {
         model.addAttribute("nickname", nickname == null ? "" : nickname);
         model.addAttribute("routeUserNames", form.routeUserNames());
         model.addAttribute("routeUsers", form.users());
-        return "proposal/route-register";
+        model.addAttribute("mode", "insert");
+        fillPicker(model);
+        return "proposal/route-form";
     }
 
     /**
@@ -133,7 +149,9 @@ public class ProposalRouteController {
         model.addAttribute("proposalId", id);
         model.addAttribute("nickname", form.nickname());
         model.addAttribute("routeUsers", form.users());
-        return "proposal/route-update";
+        model.addAttribute("mode", "update");
+        fillPicker(model);
+        return "proposal/route-form";
     }
 
     /**

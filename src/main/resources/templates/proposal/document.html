@@ -1,123 +1,88 @@
 <!DOCTYPE html>
 <!--/*
-  결재 문서 보기.
+  결재 문서 보기 (D-160).
   출처: legacy/ERFlow/src/main/webapp/proposal/proposalDocument.jsp
 
-  왼쪽이 문서(결재 스탬프 표 + 내용), 오른쪽이 결재 의견과 승인·반려 폼이다.
-  이 화면에는 «사용자 > 전자결재 > ...» 안내줄이 없다 — 레거시가 그 자리를 빈
-  proposal-left-header 로 두었다. 없는 것을 넣지 않는다.
-
-  스탬프 표는 결재선 자리마다 한 칸이다. 이름과 날짜는 승인된 자리에만 찍히고,
-  결재 행이 아직 없는 자리는 &nbsp;&nbsp; 로 폭만 잡는다.
-
-  레거시는 이 화면만 bootstrap.css 대신 bootstrap2.css 를 읽는다. 두 파일은
-  `border-width: 0` 한 줄만 다르고 나머지가 같은 Bootstrap 5.3.1 이라, 공통
-  head 조각(bootstrap.css)을 그대로 쓴다. 둘 다 읽으면 먼저 읽은 쪽이 남아
-  bootstrap2 만 읽은 것과도 달라진다.
-
-  문서 내용은 저장된 HTML 을 그대로 내보낸다. 레거시 out.println(content) 과 같다
-  (게시글 본문과 같은 O-010).
+  왼쪽이 문서 한 장(제목 · 결재선 도장 표 · 본문), 오른쪽이 결재 의견 카드와 승인·반려.
+  도장 표는 결재선 자리마다 한 칸이다. 이름과 날짜는 승인된 자리에만 찍히고, 결재 행이
+  아직 없는 자리는 빈 칸으로 폭만 잡는다.
+  본문은 저장된 HTML 이다. 표와 서식이 인라인 style 에 있어 이스케이프도 style 제거도
+  할 수 없다 — 허용목록으로 거른다(D-118, O-010).
+  승인·반려는 내 차례일 때만 나온다. 반려는 사유가 있어야 보내진다(js/proposal/document.js).
 */-->
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: page('결재 문서 보기', ${ {'/js/vendor/jquery-3.7.1.min.js', '/js/vendor/jquery-ui-1.13.3.min.js', '/js/bootjs/bootstrap.bundle.js', '/js/proposal/proposalDocument.js', '/js/main/index.js'} })}">
+<head th:replace="~{fragments/head :: page('결재 문서 보기', ${ {'/js/proposal/document.js'} })}">
 </head>
-<body>
-<th:block th:replace="~{fragments/header :: header(${headerMenu}, ${currentUser})}"></th:block>
-
-<div class="content-wrap">
-    <th:block th:replace="~{fragments/side-menu :: side(${sideMenu})}"></th:block>
-
-    <div class="proposal-insert-wrap">
-        <div class="proposal-left-wrap">
-            <div class="proposal-left-header"></div>
-            <div class="proposal-left-content">
-                <div class="page">
-                    <div class="subpage">
-                        <div class="approval-header">
-                            <div class="approval-title">
-                                <span class="approval-title-span" th:text="${document.subject}">문서제목</span>
-                            </div>
-                            <div class="approval-wrap">
-                                <table class="approval-table">
-                                    <tr>
-                                        <th rowspan="4">결<br>재<br>라<br>인
-                                        </th>
-                                        <td>담당</td>
-                                        <td th:each="cell : ${document.reviewCells}">검토</td>
-                                        <td>승인</td>
-                                    </tr>
-                                    <tr>
-                                        <th:block th:each="stamp : ${document.stamps}">
-                                            <td th:if="${stamp.filled}" rowspan="2" class="proposal-stamp"
-                                                th:text="${stamp.name}">결재자</td>
-                                            <td th:unless="${stamp.filled}" rowspan="2">&nbsp;&nbsp;</td>
-                                        </th:block>
-                                    </tr>
-                                    <tr></tr>
-                                    <tr>
-                                        <th:block th:each="stamp : ${document.stamps}">
-                                            <td th:if="${stamp.filled}" th:text="${stamp.approvedAt}">01/01</td>
-                                            <td th:unless="${stamp.filled}">&nbsp;&nbsp;</td>
-                                        </th:block>
-                                    </tr>
-                                </table>
-                            </div>
-                        </div>
-                        <hr>
-                        <!--/*
-                          문서 본문은 표 HTML 이고 테두리·배경색이 인라인 style 에
-                          있다. 그래서 이스케이프도, style 제거도 할 수 없다 —
-                          허용목록으로 거른다(D-118, O-010).
-                        */-->
-                        <div class="approval-content" th:utext="${document.contentSafe}">
-                            <!--/* 문서 가져오기 */-->
-                        </div>
-                    </div>
+<body th:insert="~{fragments/user-shell :: shell('사용자 &gt; 전자결재 &gt; 결재 문서 보기', null, ~{::content})}">
+<th:block th:fragment="content">
+    <div class="approval-layout">
+        <article class="approval-paper">
+            <div class="approval-header">
+                <div class="approval-title">
+                    <span class="approval-title-span" th:text="${document.subject}">문서제목</span>
+                </div>
+                <div class="approval-wrap">
+                    <table class="approval-table">
+                        <tr>
+                            <th rowspan="4">결<br>재<br>라<br>인</th>
+                            <td>담당</td>
+                            <td th:each="cell : ${document.reviewCells}">검토</td>
+                            <td>승인</td>
+                        </tr>
+                        <tr>
+                            <th:block th:each="stamp : ${document.stamps}">
+                                <td th:if="${stamp.filled}" rowspan="2" class="proposal-stamp" th:text="${stamp.name}">결재자</td>
+                                <td th:unless="${stamp.filled}" rowspan="2">&nbsp;&nbsp;</td>
+                            </th:block>
+                        </tr>
+                        <tr></tr>
+                        <tr>
+                            <th:block th:each="stamp : ${document.stamps}">
+                                <td th:if="${stamp.filled}" th:text="${stamp.approvedAt}">01/01</td>
+                                <td th:unless="${stamp.filled}">&nbsp;&nbsp;</td>
+                            </th:block>
+                        </tr>
+                    </table>
                 </div>
             </div>
-        </div>
-        <div class="proposal-right-wrap">
-            <div class="proposal-comment-list">
-                <table class="table table-striped">
-                    <thead>
-                    <tr>
-                        <th class="comment-name">결재자</th>
-                        <th class="comeent-content">코멘트</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="comment : ${document.comments}">
-                        <td class="comment-name" th:text="${comment.userName}">결재자</td>
-                        <td class="comment-content" th:text="${comment.comment}">코멘트</td>
-                    </tr>
-                    </tbody>
-                    <tfoot>
-                    <tr>
-                        <td colspan="4"></td>
-                    </tr>
-                    </tfoot>
-                </table>
-            </div>
-            <form th:action="@{/proposal/document-proc}" method="post" name="proposalFrm">
-                <input type="hidden" id="proposalId" name="proposalId" th:value="${document.id}">
-                <input type="hidden" id="step" name="step" th:value="${document.step}">
-                <div class="input-group" th:style="${document.editable} ? '' : 'display:none;'">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">코멘트</span>
-                    </div>
-                    <textarea class="form-control" aria-label="With textarea" name="comment"></textarea>
-                </div>
-                <div class="button-group" th:style="${document.editable} ? '' : 'display:none;'">
-                    <input type="hidden" value="" name="result">
-                    <button class="btn btn-primary confirm-button" type="button">승인</button>
+            <hr>
+            <div class="approval-content" th:utext="${document.contentSafe}"></div>
+        </article>
 
-                    <button th:if="${document.step != 0}" class="btn btn-danger reject-button"
-                            type="button">반려</button>
+        <aside class="approval-side">
+            <section class="list-card">
+                <div class="toolbar">
+                    <h2 class="card-title">결재 의견</h2>
+                    <span class="count-badge" th:text="${#lists.size(document.comments)}">0</span>
+                </div>
+                <ul class="opinion-list" th:unless="${#lists.isEmpty(document.comments)}">
+                    <li th:each="comment : ${document.comments}">
+                        <b th:text="${comment.userName}">결재자</b>
+                        <p th:text="${comment.comment}">의견</p>
+                    </li>
+                </ul>
+                <p class="empty-note" th:if="${#lists.isEmpty(document.comments)}">아직 남긴 의견이 없습니다.</p>
+            </section>
+
+            <form class="decision-form" th:action="@{/proposal/document-proc}" method="post"
+                  th:if="${document.editable}" id="decisionFrm">
+                <input type="hidden" name="proposalId" th:value="${document.id}">
+                <input type="hidden" name="step" th:value="${document.step}">
+                <input type="hidden" name="result" value="">
+                <div class="form-group">
+                    <label for="comment">내 의견</label>
+                    <textarea id="comment" name="comment" rows="4" placeholder="승인할 때는 비워도 됩니다. 반려할 때는 사유를 적어 주세요."></textarea>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" data-decide="confirm">승인</button>
+                    <button type="button" class="btn btn-danger" data-decide="reject" th:if="${document.step != 0}">반려</button>
                 </div>
             </form>
+            <p class="empty-note is-boxed" th:unless="${document.editable}">지금은 내 차례가 아니거나 결재가 끝난 문서입니다.</p>
 
-        </div>
+            <a class="btn back-link" th:href="@{/proposal/list}">결재 리스트로</a>
+        </aside>
     </div>
-</div>
+</th:block>
 </body>
 </html>

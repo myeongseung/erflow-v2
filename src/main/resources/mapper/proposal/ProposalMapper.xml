@@ -14,23 +14,27 @@
             or (original_user = userId and user_id = userId and result = ?)
          order by id desc limit ?, ?
 
-      첫 절은 «내가 결재선에 든 진행중 결재»(상태 필터와 무관), 둘째 절은 «내가 기안한
-      결재 중 선택 상태». OR 로 묶여 함께 나온다 — 레거시 그대로다.
+      첫 절은 «내가 결재선에 든 진행중 결재», 둘째 절은 «내가 기안한 결재 중 선택 상태».
+      레거시는 첫 절을 상태 필터와 무관하게 OR 로 붙여, 승인·반려 탭에도 진행 중 결재가
+      그대로 섞여 나왔다 — 탭 셋이 같은 목록이었다(D-162). 이제 첫 절은 «결재 진행 중»
+      탭(result 3)에서만 붙는다. 승인·반려 탭은 둘째 절만 — 내가 올린 결재 중 그 상태인 것.
 
       상태 필터가 0(내 차례가 끝난 결재)이면 `and approved_at is null` 이 덧붙는다.
-      레거시는 괄호 없이 이어 붙여 그 AND 가 뒤쪽 절에만 걸린다 — 결합 순서까지
-      그대로 옮겼다. 화면 콤보에는 0 이 없고 주소로만 들어올 수 있다.
+      레거시에서도 그 AND 는 둘째 절에만 걸렸다. 화면 탭에는 0 이 없고 주소로만 들어올
+      수 있다.
 
-      **이 조건만으로는 목록이 좁혀지지 않는다.** 첫 절의 `route like '%나%'` 는
+      **진행 중 탭은 이 조건만으로는 좁혀지지 않는다.** 첫 절의 `route like '%나%'` 는
       결재선 어딘가에 내가 있기만 하면 걸리므로, 아직 오지 않은 차례와 이미 지나간
       차례까지 함께 나온다. 레거시는 조회한 뒤 Java 에서 «지금 내 차례인 것»만 걸러
       냈다 — ProposalService.list 가 그 자리다(D-052).
     -->
     <sql id="inbox">
-        WHERE (result = 3 AND route LIKE CONCAT('%', #{userId}, '%'))
-           OR (original_user = #{userId} AND user_id = #{userId} AND result = #{result})
+        WHERE (original_user = #{userId} AND user_id = #{userId} AND result = #{result})
+        <if test="result == 3">
+           OR (result = 3 AND route LIKE CONCAT('%', #{userId}, '%'))
+        </if>
         <if test="result == 0">
-            AND approved_at IS NULL
+          AND approved_at IS NULL
         </if>
     </sql>
 

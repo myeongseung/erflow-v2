@@ -1289,13 +1289,7 @@
       폭은 44rem 이다(D-137). 처음 36rem 은 주소·이메일처럼 긴 칸이 답답하게
       좁았다 — 화면마다 제멋대로로 보이던 나머지 절반이 이것이다.
     */
-    /*
-      결재 생성·결재라인 등록의 폼은 form-group 대신 input-group 만 쓴다 —
-      라벨이 입력 앞에 붙는(prepend) 레거시 구조다. 같은 카드·같은 폭을
-      받아야 하므로 선택자에 함께 적는다(D-139).
-    */
-    form:has(.form-group),
-    .proposal-form > form:has(.input-group) {
+    form:has(.form-group) {
         max-width: 44rem;
         padding: 1.25rem 1.375rem 1.375rem;
         border: 1px solid var(--color-line);
@@ -1307,20 +1301,13 @@
         margin-bottom: 0;
     }
 
-    /* 카드 안의 구분선(hr) 뒤에 오는 입력 짝은 위 여백을 갖는다 — mb-3 유틸리티가
-       아래 여백만 주기 때문이다. */
-    .proposal-form hr + .input-group {
-        margin-top: 0.875rem;
-    }
-
     .btn-group {
         display: flex;
         align-items: center;
         gap: 0.375rem;
     }
 
-    form:has(.form-group) .btn-group,
-    .proposal-form > form:has(.input-group) .btn-group {
+    form:has(.form-group) .btn-group {
         margin-top: 1.125rem;
         padding-top: 1.125rem;
         border-top: 1px solid var(--color-line);
@@ -1687,20 +1674,229 @@
         white-space: nowrap;
     }
 
+    /* ── 결재 상태 탭(D-160) — 결재 리스트의 상태 고르기는 검색이 아니라 탭이다 */
+    .filter-tabs {
+        display: inline-flex;
+        gap: 0.125rem;
+        padding: 0.1875rem;
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-sharp);
+        background: var(--color-surface);
+    }
+
+    .filter-tabs > a {
+        display: inline-flex;
+        align-items: center;
+        height: 1.625rem;
+        padding: 0 0.75rem;
+        border-radius: calc(var(--radius-sharp) - 1px);
+        color: var(--color-ink-soft);
+        font-size: 0.8125rem;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .filter-tabs > a:hover {
+        background: var(--color-paper-sunk);
+        color: var(--color-ink);
+    }
+
+    .filter-tabs > a.is-current {
+        background: var(--color-accent);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    /* ── 결재 경로 알약 줄(D-160) — 사람마다 «이름 직급», 사이에 화살표 */
+    .route-chain {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .route-step {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3125rem;
+        padding: 0.125rem 0.5rem;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        background: var(--color-paper-sunk);
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .route-step > b {
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .route-step > small {
+        color: var(--color-ink-mute);
+        font-size: 0.6875rem;
+    }
+
+    .route-arrow {
+        width: 0.875rem;
+        height: 0.875rem;
+        background: currentColor;
+        color: var(--color-ink-mute);
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8h9M8.5 4.5 12 8l-3.5 3.5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8h9M8.5 4.5 12 8l-3.5 3.5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .table td.chain-cell {
+        white-space: normal;
+        line-height: 1.6;
+    }
+
+    /* ── 고르기 대화상자(D-160) — 거르기 줄 위, 표가 구른다 */
+    .dialog .picker-body {
+        padding: 0;
+    }
+
+    .picker-filter {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.625rem 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+    }
+
+    .picker-filter > select {
+        width: auto;
+        min-width: 8rem;
+    }
+
+    .picker-filter > input[type="search"] {
+        flex: 1 1 10rem;
+        min-width: 0;
+    }
+
+    .dialog .picker-body .table {
+        border: 0;
+        border-radius: 0;
+    }
+
+    /* ── 결재 올리기 대화상자(D-161) — 왼쪽 문서 표, 오른쪽 결재라인 표. 줄 아무 데나
+       누르면 그 줄의 라디오가 골라지고 줄에 색이 든다. 표는 저마다 구른다 */
+    .pick-panes {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pick-pane {
+        min-width: 0;
+    }
+
+    .pick-pane + .pick-pane {
+        border-left: 1px solid var(--color-line);
+    }
+
+    .pick-pane-head {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+        background: color-mix(in srgb, var(--color-paper) 55%, white);
+        font-size: 0.8125rem;
+    }
+
+    .pick-pane-head > b {
+        flex: none;
+    }
+
+    .pick-pane-head > input[type="search"] {
+        flex: 1 1 8rem;
+        min-width: 0;
+    }
+
+    .pick-pane > .table-scroll {
+        max-height: 24rem;
+        overflow: auto;
+    }
+
+    .pick-pane tbody > tr[data-text] {
+        cursor: pointer;
+    }
+
+    /* 줄무늬·hover 보다 세다 */
+    .pick-pane .table-striped > tbody > tr.is-picked > td {
+        background: var(--color-accent-soft);
+    }
+
+    /* 대화상자 발의 오류 글은 단추 반대편(왼쪽)에 */
+    .dialog-foot > .form-error {
+        margin: 0 auto 0 0;
+    }
+
+    @media (max-width: 900px) {
+        .pick-panes {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .pick-pane + .pick-pane {
+            border-left: 0;
+            border-top: 1px solid var(--color-line);
+        }
+    }
+
+    .form-error {
+        margin: 0 0 0.875rem;
+        color: var(--color-bad);
+        font-size: 0.8125rem;
+    }
+
+    .label-hint {
+        margin-left: 0.25rem;
+        color: var(--color-ink-mute);
+        font-weight: 400;
+    }
+
+    /* 결재자 표는 폼 카드 안의 작은 표 — 비었을 때의 한 줄도 같은 테두리 안 */
+    .route-table-wrap {
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-sharp);
+    }
+
+    .route-table-wrap > .table {
+        border: 0;
+        border-radius: 0;
+    }
+
+    .route-table-actions {
+        margin-top: 0.5rem;
+    }
+
+    .row-actions > .link-btn + .link-btn {
+        margin-left: 0.5rem;
+    }
+
+    .row-actions > .link-btn:disabled {
+        color: var(--color-ink-mute);
+        cursor: default;
+        text-decoration: none;
+    }
+
     /* 카드가 세로로 둘이면 사이를 띄운다 — 격자(.list-grid) 안의 나란한 둘은 아니다 */
     .admin-page > .list-card + .list-card,
     .page > .list-card + .list-card {
         margin-top: 1.5rem;
     }
 
-    /* ═══ 사용자 껍데기(D-159) — 관리자 본문 상자와 같은 폭 규칙 ══════════ */
+    /* ═══ 사용자 껍데기(D-159) — 본문이 기둥을 꽉 채운다(D-161) ═══════════
+       관리자 본문 상자는 80rem 가운데(D-137)인데, 사용자 화면은 사이드바 옆
+       기둥을 끝까지 쓴다. 1920 화면에서 양옆 200px 이 비는 것이 불편하다는
+       지적이었다. 사이드바가 이미 폭을 한 번 자르므로 상한은 두지 않는다. */
 
     .main-column > .page {
         flex: 1 1 auto;
         width: 100%;
-        max-width: 80rem;
         min-width: 0;
-        margin-inline: auto;
         padding: 1.25rem 1.5rem 2.5rem;
     }
 
@@ -2952,39 +3148,42 @@
         display: none;
     }
 
-    /* ═══ 결재 문서 보기 ═══════════════════════════════════════════════
-       왼쪽이 문서(결재선 도장 + 본문), 오른쪽이 의견과 승인·반려.        */
+    /* ═══ 결재 문서 보기(D-160) ═══════════════════════════════════════
+       왼쪽이 문서 한 장(제목 · 결재선 도장 표 · 본문), 오른쪽이 결재 의견 카드와
+       승인·반려 폼. 옛 proposal-insert-wrap 격자를 이름부터 바꿨다 — 그 격자는
+       결재 생성 폼까지 끌어들여 22rem 칸에 처박곤 했다(D-139).              */
 
-    .proposal-insert-wrap {
+    .approval-layout {
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
-        gap: 1rem;
+        gap: 1.5rem;
         align-items: start;
     }
 
     @media (max-width: 1200px) {
-        .proposal-insert-wrap {
+        .approval-layout {
             grid-template-columns: minmax(0, 1fr);
         }
     }
 
-    .proposal-left-wrap,
-    .proposal-right-wrap {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
+    /* 문서는 종이처럼 — 결재 문서니까 */
+    .approval-paper {
         min-width: 0;
-    }
-
-    /* 문서는 종이처럼 보여야 한다 — 결재 문서니까. */
-    .proposal-left-content > .page {
+        padding: 1.5rem 1.75rem 2rem;
         border: 1px solid var(--color-line);
         border-radius: var(--radius-soft);
         background: var(--color-surface);
     }
 
-    .subpage {
-        padding: 1.5rem 1.75rem 2rem;
+    .approval-paper > hr {
+        margin: 1.25rem 0;
+    }
+
+    .approval-side {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 0;
     }
 
     .approval-header {
@@ -3041,36 +3240,62 @@
         font-weight: 600;
     }
 
-    .subpage > hr {
-        margin: 1.25rem 0;
+    /* 결재 의견 — 이름과 의견 한 덩이씩 */
+    .opinion-list {
+        margin: 0;
+        padding: 0.25rem 0;
+        list-style: none;
     }
 
-    /* 오른쪽 — 의견 목록과 승인·반려 */
+    .opinion-list > li {
+        padding: 0.625rem 0.875rem;
+        border-bottom: 1px solid var(--color-line);
+        font-size: 0.8125rem;
+    }
 
-    .proposal-comment-list {
-        overflow: hidden;
-        border: 1px solid var(--color-line);
+    .opinion-list > li:last-child {
+        border-bottom: 0;
+    }
+
+    .opinion-list b {
+        display: block;
+        margin-bottom: 0.125rem;
+        color: var(--color-ink);
+        font-weight: 600;
+    }
+
+    .opinion-list p {
+        margin: 0;
+        color: var(--color-ink-soft);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    /* 빈 자리 한 줄 — 카드 안에서도, 카드 밖(상자로)에서도 */
+    .empty-note {
+        margin: 0;
+        padding: 1.25rem 0.875rem;
+        color: var(--color-ink-mute);
+        font-size: 0.8125rem;
+        text-align: center;
+    }
+
+    .empty-note.is-boxed {
+        border: 1px dashed var(--color-line-firm);
         border-radius: var(--radius-soft);
-        background: var(--color-surface);
     }
 
-    .proposal-comment-list > .table {
-        border: 0;
-        border-radius: 0;
+    /* 승인·반려 폼은 옆 칸을 꽉 채운다 — 44rem 상한은 넓은 폼의 것 */
+    form.decision-form:has(.form-group) {
+        max-width: none;
     }
 
-    .proposal-right-wrap form {
-        display: flex;
-        flex-direction: column;
-        gap: 0.625rem;
+    .decision-form textarea {
+        min-height: 5.5rem;
     }
 
-    .proposal-right-wrap .input-group {
-        align-items: stretch;
-    }
-
-    .proposal-right-wrap textarea {
-        min-height: 5rem;
+    .approval-side > .back-link {
+        align-self: flex-start;
     }
 
     /* ═══ 관리자 홈 ════════════════════════════════════════════════════

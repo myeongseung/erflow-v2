@@ -57,7 +57,9 @@ class DocumentScreenTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(html).contains("사용자 &gt; 문서 관리 &gt; 문서 리스트")
-                .contains("문서번호").contains("양식명").contains("결재 상태");
+                .contains("class=\"list-card\"").contains("결재 상태").contains("status-badge")
+                // 결재 올리기·삭제·기안 작성이 도구줄과 줄에 있다
+                .contains("기안 작성").contains("form=\"documentFrm\"");
     }
 
     @Test
@@ -82,12 +84,31 @@ class DocumentScreenTest {
     @Test
     @DisplayName("양식 없는 문서와 고치지 않은 문서에 안내 글자가 뜬다")
     void labelsFillTheBlanks() {
-        var row = new DocumentListRow(1, "제목", null, "2023-01-01", null, 0, 0);
+        var row = new DocumentListRow(1, "제목", null, "2023-01-01", null, null);
 
         assertThat(row.templateLabel()).isEqualTo("(빈 문서)");
         assertThat(row.updatedLabel()).isEqualTo("(수정하지 않음)");
-        assertThat(new DocumentListRow(1, "제목", "기안서", "2023-01-01", "2023-01-02", 0, 0)
+        assertThat(new DocumentListRow(1, "제목", "기안서", "2023-01-01", "2023-01-02", 3)
                 .templateLabel()).isEqualTo("기안서");
+    }
+
+    @Test
+    @DisplayName("결재 상태는 결재 행에서 읽는다 — 결재 전·진행 중·승인·반려 (D-160)")
+    void statusComesFromProposalRows() {
+        var fresh = new DocumentListRow(1, "제목", null, "2023-01-01", null, null);
+        assertThat(fresh.statusLabel()).isEqualTo("결재 전");
+        assertThat(fresh.statusClass()).isEqualTo("is-pending");
+        assertThat(fresh.canPropose()).isTrue();
+
+        var running = new DocumentListRow(1, "제목", null, "2023-01-01", null, 3);
+        assertThat(running.statusLabel()).isEqualTo("결재 진행 중");
+        assertThat(running.statusClass()).isEqualTo("is-running");
+        assertThat(running.canPropose()).isFalse();
+
+        assertThat(new DocumentListRow(1, "제목", null, "2023-01-01", null, 1).statusLabel())
+                .isEqualTo("승인");
+        assertThat(new DocumentListRow(1, "제목", null, "2023-01-01", null, 2).statusClass())
+                .isEqualTo("is-rejected");
     }
 
     @Test

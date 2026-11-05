@@ -47,8 +47,9 @@ public class DocumentFinder {
         String needle = search == null ? "" : search;
         long wanted = asId(needle);
 
-        return documentMapper.findByUser(userId).stream()
-                .filter(document -> documentMapper.countProposals(document.id()) == 0)
+        // «결재에 쓰이지 않은 내 문서» 는 한 질의로 받는다(D-161). 문서마다 결재 건수를
+        // 세던 왕복이 결재 리스트를 열 때마다 들게 되어 줄였다.
+        return documentMapper.findProposable(userId).stream()
                 .filter(document -> wanted == document.id()
                         || document.subject().contains(needle))
                 .toList();

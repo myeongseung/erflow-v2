@@ -19,11 +19,23 @@
     </select>
 
     <!--
-      레거시 hasProposal: select count(*) from proposal_tbl where document_tbl_id = ?
+      결재에 올린 적 없는 내 문서(D-161). 전에는 findByUser 뒤에 문서마다 countProposals
+      를 불렀다. 결재 올리기가 결재 리스트 위의 대화상자가 되면서 리스트를 열 때마다
+      이 목록을 읽게 됐으므로 한 질의로 줄였다(D-152) — «건수가 0» 과 «행이 없다» 는
+      같은 말이다.
+    -->
+    <select id="findProposable" resultType="com.erflow.document.DocumentRow">
+        SELECT d.id, d.subject
+          FROM document_view d
+         WHERE d.user_id = #{userId}
+           AND NOT EXISTS (SELECT 1 FROM proposal_tbl p WHERE p.document_tbl_id = d.id)
+         ORDER BY d.id DESC
+    </select>
 
-      찾기 팝업이 문서마다 이것을 다시 부른다. 한 번의 조인으로 합치면 질의는
-      줄지만 결과가 같은지 따로 증명해야 한다. 게시판 목록에서와 같은 판단으로
-      호출 구조를 그대로 둔다 — 사용자 본인 문서만 훑으므로 건수가 작다.
+    <!--
+      레거시 hasProposal: select count(*) from proposal_tbl where document_tbl_id = ?
+      문서 수정·삭제가 «결재 진행 중인가» 를 볼 때 쓴다. 찾기 쪽은 findProposable 로
+      합쳤다(D-161).
     -->
     <select id="countProposals" resultType="int">
         SELECT COUNT(*)
@@ -54,14 +66,24 @@
         </where>
     </sql>
 
+    <!--
+      결재 상태는 document_tbl.proposal_status 가 아니라 proposal_tbl 에서 읽는다(D-160).
+      그 칸은 넣을 때 0 을 적은 뒤 아무도 고치지 않는다. 결재는 한 차례마다 행이 하나
+      늘고(승인하면 다음 차례 행을 넣는다), 끝나면 그 문서의 행 전부를 1(승인)·2(반려)로
+      바꾼다. 그래서 마지막 행의 result 가 곧 문서의 결재 상태다 — 3 이면 진행 중.
+      행이 없으면 NULL — 결재에 올린 적이 없다.
+    -->
     <select id="findPage" resultType="com.erflow.document.DocumentListRow">
         SELECT id,
                subject,
                template_name AS templateName,
                created_at    AS createdAt,
                updated_at    AS updatedAt,
-               doc_status    AS docStatus,
-               proposal_status AS proposalStatus
+               (SELECT p.result
+                  FROM proposal_tbl p
+                 WHERE p.document_tbl_id = document_view.id
+                 ORDER BY p.id DESC
+                 LIMIT 1)    AS proposalStatus
           FROM document_view
         <include refid="searchCondition"/>
          ORDER BY id DESC

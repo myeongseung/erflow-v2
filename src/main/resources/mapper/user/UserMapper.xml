@@ -69,4 +69,15 @@
          WHERE id = #{id}
     </select>
 
+    <!-- 여러 사번을 한 번에(D-161). 결재라인의 결재 경로를 풀 때 쓴다 -->
+    <select id="findUserViewsByIds" resultType="com.erflow.user.UserRow">
+        SELECT dept_name AS deptName,
+               job_name  AS jobName,
+               id,
+               name
+          FROM user_view
+         WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">#{id}</foreach>
+    </select>
+
 </mapper>

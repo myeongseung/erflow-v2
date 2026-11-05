@@ -17,6 +17,14 @@ public interface DocumentMapper {
     List<DocumentRow> findByUser(@Param("userId") String userId);
 
     /**
+     * 결재에 올린 적 없는 내 문서 — 결재 올리기 대화상자가 고를 것(D-161).
+     *
+     * @param userId 사번
+     * @return 문서 목록. 번호 내림차순
+     */
+    List<DocumentRow> findProposable(@Param("userId") String userId);
+
+    /**
      * 문서에 걸린 결재 건수.
      *
      * @param documentId 문서번호

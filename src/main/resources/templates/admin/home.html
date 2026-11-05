@@ -40,7 +40,8 @@
                     <span class="stat-text">
                         <span class="stat-label">미결 결재</span>
                         <span class="stat-value">[[${stats.runningDocuments}]]<small>건</small></span>
-                        <span class="stat-note">결재가 돌고 있는 문서</span>
+                        <!--/* 회사 전체 건수다(D-163). 눌러 가는 결재 리스트는 내 차례만 보여 준다. */-->
+                        <span class="stat-note">회사 전체 · 결재가 돌고 있는 문서</span>
                     </span>
                 </a>
                 <a class="stat-tile" th:href="@{/post/board-list}">

@@ -120,7 +120,8 @@ class AdminHomeScreenTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         assertThat(html).contains("class=\"stat-tiles\"").contains("오늘 출근")
-                .contains("미결 결재").contains("새 글").contains("사원 수");
+                .contains("미결 결재").contains("회사 전체 · 결재가 돌고 있는 문서")
+                .contains("새 글").contains("사원 수");
     }
 
     @Test
