@@ -1,37 +1,11 @@
-$(function() {
-	// 날짜 검색 기능
-	$('.date-search').on('click', function() {
-		$('[name=readFrm]').find('input[name=date]').val($('input[type=month]').val());
-		$('[name=readFrm]').submit();
-	});
-	
-	// 검색 엔터키 적
-	$('.main-search-text[name=keyword]').on('keydown', function(e) {
-		if (e.keyCode == 13) {
-			e.preventDefault();
-			$('.main-search-icon i').trigger('click');
-		}
-	});
-	
-	// 검색 기능
-	$('.main-search-icon i').on('click', function() {
-		const _data = [ 'keyfield', 'keyword' ];
-		
-		_data.forEach(function(_key) {
-			$('[name=readFrm]').find(`[name=${_key}]`).val(
-				$('[name=workFrm]').find(`[name=${_key}]`).val()
-			);
-		});
-		$('[name=readFrm]').submit();
-	});
-});
-
-function block(base, blk) {
-	document.readFrm.nowPage.value = base * (blk - 1) + 1;
-	document.readFrm.submit();
-}
-
-function paging(page) {
-	document.readFrm.nowPage.value = page;
-	document.readFrm.submit();
-}
+// 근태 확인(D-164). 도구줄의 달 고르기는 값이 바뀌면 바로 보낸다 — 따로 단추를
+// 누르지 않는다. 검색은 공용 table.js(돋보기 · Enter)가 보내고, 달 넘기기와 쪽 번호는
+// 보통의 링크다.
+document.addEventListener('DOMContentLoaded', function() {
+  const picker = document.querySelector('.month-nav input[type="month"]')
+  if (picker) {
+    picker.addEventListener('change', function() {
+      picker.closest('form').requestSubmit()
+    })
+  }
+})

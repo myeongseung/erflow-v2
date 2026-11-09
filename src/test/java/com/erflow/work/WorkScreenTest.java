@@ -60,7 +60,28 @@ class WorkScreenTest {
 
         assertThat(html).contains("사용자 &gt; 근태 관리 &gt; 근태 확인")
                 .contains("성명").contains("부서").contains("직책")
-                .contains("정상").contains("지각").contains("조퇴").contains("연차");
+                .contains("정상").contains("지각").contains("조퇴").contains("연차")
+                .contains("list-card")
+                .doesNotContain("jquery");
+    }
+
+    @Test
+    @DisplayName("달 넘기기 — 이전 달·다음 달 링크가 있고, 올해 1월에서는 이전 달이 없다")
+    void monthLinks() throws Exception {
+        int year = workService.thisMonth().getYear();
+
+        String june = mockMvc.perform(get("/work").param("date", year + "-06")
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(june).contains("date=" + year + "-05").contains("date=" + year + "-07");
+
+        String january = mockMvc.perform(get("/work").param("date", year + "-01")
+                        .with(user(TestUsers.admin())))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(january).doesNotContain("date=" + (year - 1) + "-12")
+                .contains("date=" + year + "-02");
     }
 
     @Test

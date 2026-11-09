@@ -67,7 +67,12 @@ public class WorkController {
         model.addAttribute("rows", page.rows());
         model.addAttribute("page", page.pagination());
         model.addAttribute("month", month.toString());
-        model.addAttribute("minMonth", workService.minMonth().toString());
+        // 달 넘기기 링크(D-164). 하한(올해 1월) 아래로는 이전 달이 없다.
+        YearMonth minMonth = workService.minMonth();
+        model.addAttribute("minMonth", minMonth.toString());
+        model.addAttribute("prevMonth",
+                month.isAfter(minMonth) ? month.minusMonths(1).toString() : null);
+        model.addAttribute("nextMonth", month.plusMonths(1).toString());
         model.addAttribute("firstHeaders", workService.headers(month, 1, 16));
         model.addAttribute("secondHeaders", workService.headers(month, 17, 32));
         model.addAttribute("keyfield", field);
